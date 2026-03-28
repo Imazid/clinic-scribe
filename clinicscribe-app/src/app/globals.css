@@ -1,0 +1,152 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&display=swap');
+@import "tailwindcss";
+
+@theme inline {
+  --color-primary: #001736;
+  --color-primary-container: #002B5B;
+  --color-primary-light: #405f91;
+  --color-secondary: #006876;
+  --color-secondary-container: #58e6ff;
+  --color-secondary-fixed: #a1efff;
+  --color-secondary-fixed-dim: #44d8f1;
+  --color-surface: #fcf9f4;
+  --color-surface-dim: #dcdad5;
+  --color-surface-container-lowest: #ffffff;
+  --color-surface-container-low: #f6f3ee;
+  --color-surface-container: #f0ede8;
+  --color-surface-container-high: #ebe8e3;
+  --color-surface-container-highest: #e5e2dd;
+  --color-on-surface: #1c1c19;
+  --color-on-surface-variant: #43474f;
+  --color-on-primary: #ffffff;
+  --color-on-secondary: #ffffff;
+  --color-outline: #747780;
+  --color-outline-variant: #c4c6d0;
+  --color-error: #ba1a1a;
+  --color-error-container: #ffdad6;
+  --color-inverse-surface: #31302d;
+  --color-inverse-on-surface: #f3f0eb;
+  --color-tertiary: #011a24;
+  --color-tertiary-container: #172f39;
+  --color-background: var(--color-surface);
+  --color-foreground: var(--color-on-surface);
+  --color-success: #2e7d32;
+  --color-success-container: #c8e6c9;
+  --color-warning: #c98600;
+  --color-warning-container: #ffedb3;
+
+  --font-sans: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif;
+  --font-heading: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif;
+
+  --radius-xs: 0.375rem;
+  --radius-sm: 0.5rem;
+  --radius-md: 1rem;
+  --radius-lg: 1.5rem;
+  --radius-xl: 2rem;
+  --radius-2xl: 3rem;
+
+  --sidebar-width: 280px;
+  --sidebar-collapsed-width: 72px;
+  --header-height: 64px;
+
+  --animate-fade-in: fade-in 0.6s ease-out forwards;
+  --animate-fade-in-up: fade-in-up 0.6s ease-out forwards;
+  --animate-fade-in-down: fade-in-down 0.5s ease-out forwards;
+  --animate-pulse-slow: pulse-slow 3s ease-in-out infinite;
+  --animate-shimmer: shimmer 2s linear infinite;
+  --animate-slide-in-left: slide-in-left 0.3s ease-out forwards;
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes fade-in-up {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes fade-in-down {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes pulse-slow {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+@keyframes slide-in-left {
+  from { opacity: 0; transform: translateX(-20px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--color-surface);
+  color: var(--color-on-surface);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: var(--color-surface-container-low);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-outline-variant);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-outline);
+}
+
+::selection {
+  background: var(--color-secondary-fixed);
+  color: var(--color-primary);
+}
+
+.label-text {
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.gradient-text {
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-container) 50%, var(--color-secondary) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.glass {
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+
+.shadow-ambient {
+  box-shadow: 0px 20px 40px rgba(0, 43, 91, 0.06);
+}
+.shadow-ambient-sm {
+  box-shadow: 0px 8px 20px rgba(0, 43, 91, 0.04);
+}
+.shadow-ambient-lg {
+  box-shadow: 0px 30px 60px rgba(0, 43, 91, 0.08);
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
