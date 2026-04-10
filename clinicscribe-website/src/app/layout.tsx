@@ -13,28 +13,28 @@ const plusJakarta = Plus_Jakarta_Sans({
 
 export const metadata: Metadata = {
   title: {
-    default: `${BRAND.name} — ${BRAND.tagline}`,
+    default: `${BRAND.name} — ${BRAND.expandedName}`,
     template: `%s | ${BRAND.name}`,
   },
   description: BRAND.description,
   keywords: [
     "clinical documentation",
-    "AI scribe",
+    "clinical workflow copilot",
     "medical transcription",
     "SOAP notes",
     "healthcare AI",
-    "ambient transcription",
+    "consultation capture",
     "clinical notes",
     "Australia",
     "GP software",
-    "medical documentation",
+    "medical workflow",
   ],
   authors: [{ name: BRAND.name }],
   openGraph: {
     type: "website",
     locale: "en_AU",
     siteName: BRAND.name,
-    title: `${BRAND.name} — ${BRAND.tagline}`,
+    title: `${BRAND.name} — ${BRAND.expandedName}`,
     description: BRAND.description,
   },
 };

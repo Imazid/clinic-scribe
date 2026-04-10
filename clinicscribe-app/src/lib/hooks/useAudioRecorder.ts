@@ -10,11 +10,12 @@ interface AudioRecorderState {
   audioBlob: Blob | null;
   audioUrl: string | null;
   waveformData: number[];
+  activeStream: MediaStream | null;
 }
 
 export function useAudioRecorder() {
   const [state, setState] = useState<AudioRecorderState>({
-    isRecording: false, isPaused: false, duration: 0, audioBlob: null, audioUrl: null, waveformData: [],
+    isRecording: false, isPaused: false, duration: 0, audioBlob: null, audioUrl: null, waveformData: [], activeStream: null,
   });
 
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
@@ -24,13 +25,13 @@ export function useAudioRecorder() {
   const animFrameRef = useRef<number | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
 
-  const updateWaveform = useCallback(() => {
+  const updateWaveform = useCallback(function drawWaveform() {
     if (!analyserRef.current) return;
     const data = new Uint8Array(analyserRef.current.frequencyBinCount);
     analyserRef.current.getByteTimeDomainData(data);
     const samples = Array.from(data.slice(0, 64)).map((v) => (v - 128) / 128);
     setState((s) => ({ ...s, waveformData: samples }));
-    animFrameRef.current = requestAnimationFrame(updateWaveform);
+    animFrameRef.current = requestAnimationFrame(drawWaveform);
   }, []);
 
   const start = useCallback(async () => {
@@ -64,7 +65,7 @@ export function useAudioRecorder() {
     recorder.start(1000);
     mediaRecorderRef.current = recorder;
 
-    setState((s) => ({ ...s, isRecording: true, isPaused: false, duration: 0, audioBlob: null, audioUrl: null }));
+    setState((s) => ({ ...s, isRecording: true, isPaused: false, duration: 0, audioBlob: null, audioUrl: null, activeStream: stream }));
 
     timerRef.current = setInterval(() => {
       setState((s) => ({ ...s, duration: s.duration + 1 }));
@@ -100,7 +101,7 @@ export function useAudioRecorder() {
 
   const reset = useCallback(() => {
     if (state.audioUrl) URL.revokeObjectURL(state.audioUrl);
-    setState({ isRecording: false, isPaused: false, duration: 0, audioBlob: null, audioUrl: null, waveformData: [] });
+    setState({ isRecording: false, isPaused: false, duration: 0, audioBlob: null, audioUrl: null, waveformData: [], activeStream: null });
   }, [state.audioUrl]);
 
   return { ...state, start, stop, pause, resume, reset };

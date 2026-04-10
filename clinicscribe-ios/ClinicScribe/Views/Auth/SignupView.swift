@@ -80,6 +80,24 @@ struct SignupView: View {
                     .accessibilityLabel("Error: \(error)")
                 }
 
+                VStack(spacing: Theme.spacingXS) {
+                    Text("By creating an account, you agree to the service terms and acknowledge the privacy policy.")
+                        .font(.caption)
+                        .foregroundStyle(Theme.onSurfaceVariant)
+                        .multilineTextAlignment(.center)
+
+                    HStack(spacing: Theme.spacingMd) {
+                        NavigationLink("Privacy Policy") {
+                            LegalDocumentDetailView(document: LegalContentLibrary.privacyPolicy)
+                        }
+                        NavigationLink("Terms") {
+                            LegalDocumentDetailView(document: LegalContentLibrary.termsOfService)
+                        }
+                    }
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(Theme.secondary)
+                }
+
                 CSButton(title: "Create Account", isLoading: vm.isLoading) {
                     Task {
                         await vm.signUp()

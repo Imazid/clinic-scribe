@@ -69,7 +69,7 @@ export default function FaqPage() {
   return (
     <>
       {/* Hero */}
-      <section className="bg-surface-container-low pt-32 pb-16">
+      <section className="section-atmosphere overflow-hidden bg-surface-container-low pt-32 pb-16">
         <div className="max-w-7xl mx-auto px-6 text-center">
           <motion.p {...fadeUp} className="label-text text-secondary mb-4">
             FAQ
@@ -100,7 +100,7 @@ export default function FaqPage() {
       </section>
 
       {/* FAQ Sections by Category */}
-      <section className="py-20 bg-surface">
+      <section className="section-atmosphere py-20 bg-surface">
         <div className="max-w-3xl mx-auto px-6">
           {categoryOrder
             .filter((cat) => categorized[cat])
@@ -123,7 +123,7 @@ export default function FaqPage() {
                         key={faqId}
                         {...stagger}
                         transition={{ duration: 0.5, delay: i * 0.05 }}
-                        className="bg-surface-container-lowest rounded-xl shadow-ambient-sm overflow-hidden"
+                        className="card-lift group overflow-hidden rounded-xl border border-outline-variant/25 bg-surface-container-lowest/95 shadow-ambient-sm transition-shadow hover:shadow-ambient"
                       >
                         <button
                           onClick={() => toggleFaq(faqId)}
@@ -164,27 +164,27 @@ export default function FaqPage() {
       </section>
 
       {/* CTA */}
-      <section className="py-20 bg-surface-container-low">
+      <section className="section-atmosphere py-20 bg-surface-container-low">
         <div className="max-w-3xl mx-auto px-6 text-center">
           <motion.div {...fadeUp}>
             <h2 className="text-3xl md:text-4xl font-bold text-primary tracking-tight mb-4">
               Still Have Questions?
             </h2>
             <p className="text-on-surface-variant mb-8">
-              Book a demo to see {BRAND.name} in action, or reach out to our
-              team directly.
+              Join the waitlist for launch updates, or reach out to our team
+              directly if you need more detail now.
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <Link
-                href="/demo"
+                href="/#waitlist-form"
                 className="inline-flex items-center gap-2 px-8 py-3.5 text-sm font-semibold text-on-primary bg-gradient-to-r from-primary to-primary-container rounded-full hover:opacity-90 transition-opacity"
               >
-                Book a Demo
+                Join the Waitlist
                 <ArrowRight className="w-4 h-4" />
               </Link>
               <a
                 href={`mailto:${BRAND.supportEmail}`}
-                className="inline-flex items-center gap-2 px-8 py-3.5 text-sm font-semibold text-primary bg-surface-container-lowest rounded-full hover:bg-surface-container transition-colors shadow-ambient-sm"
+                className="inline-flex items-center gap-2 rounded-full border border-outline-variant/25 bg-surface-container-lowest px-8 py-3.5 text-sm font-semibold text-primary shadow-ambient-sm transition-colors hover:bg-surface-container"
               >
                 Email Us
               </a>

@@ -5,7 +5,7 @@ import { Card } from '@/components/ui/Card';
 import { Upload, FileAudio } from 'lucide-react';
 
 interface AudioUploaderProps {
-  onFileSelected: (blob: Blob) => void;
+  onFileSelected: (file: File) => void;
 }
 
 export function AudioUploader({ onFileSelected }: AudioUploaderProps) {

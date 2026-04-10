@@ -26,7 +26,7 @@ export function FAQPreview() {
         >
           <span className="label-text text-secondary">Common Questions</span>
           <h2 className="mt-3 text-3xl font-bold tracking-tight text-primary md:text-4xl">
-            Frequently asked questions
+            Questions about the workflow
           </h2>
         </motion.div>
 

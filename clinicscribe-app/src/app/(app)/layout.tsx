@@ -1,6 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { usePathname } from 'next/navigation';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Sidebar } from '@/components/layout/Sidebar';
 import { Header } from '@/components/layout/Header';
 import { ToastContainer } from '@/components/ui/Toast';
@@ -39,11 +41,13 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         }
 
         // Load profile — if missing (trigger didn't fire), create one
-        let { data: profileData, error: profileError } = await supabase
+        const profileResult = await supabase
           .from('profiles')
           .select('*')
           .eq('user_id', user.id)
           .single();
+        let profileData = profileResult.data;
+        const profileError = profileResult.error;
 
         if (profileError?.code === 'PGRST116') {
           console.log('No profile found, creating one...');
@@ -127,6 +131,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     return () => subscription.unsubscribe();
   }, [setProfile, setClinic, setLoading]);
 
+  const pathname = usePathname();
+
   return (
     <div className="h-full">
       <Sidebar />
@@ -149,7 +155,17 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
               </button>
             </div>
           ) : (
-            children
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={pathname}
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -8 }}
+                transition={{ duration: 0.2, ease: 'easeOut' }}
+              >
+                {children}
+              </motion.div>
+            </AnimatePresence>
           )}
         </main>
       </div>

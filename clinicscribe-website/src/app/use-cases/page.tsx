@@ -39,7 +39,7 @@ export default function UseCasesPage() {
   return (
     <>
       {/* Hero */}
-      <section className="bg-surface-container-low pt-32 pb-16">
+      <section className="section-atmosphere overflow-hidden bg-surface-container-low pt-32 pb-16">
         <div className="max-w-7xl mx-auto px-6 text-center">
           <motion.p {...fadeUp} className="label-text text-secondary mb-4">
             Use Cases
@@ -70,7 +70,7 @@ export default function UseCasesPage() {
         return (
           <section
             key={useCase.title}
-            className={`py-20 ${
+            className={`section-atmosphere py-20 ${
               isEven ? "bg-surface" : "bg-surface-container-low"
             }`}
           >
@@ -149,7 +149,7 @@ export default function UseCasesPage() {
                         key={oi}
                         {...stagger}
                         transition={{ duration: 0.4, delay: oi * 0.08 }}
-                        className="bg-surface-container-lowest rounded-xl p-5 shadow-ambient-sm hover:shadow-ambient transition-shadow"
+                        className="card-lift group bg-surface-container-lowest/95 rounded-xl border border-outline-variant/25 p-5 shadow-ambient-sm transition-shadow hover:shadow-ambient"
                       >
                         <div className="w-9 h-9 rounded-lg bg-secondary/10 flex items-center justify-center mb-3">
                           <FileText className="w-4 h-4 text-secondary" />
@@ -182,21 +182,21 @@ export default function UseCasesPage() {
       })}
 
       {/* CTA */}
-      <section className="py-20 bg-surface-container-low">
+      <section className="section-atmosphere py-20 bg-surface-container-low">
         <div className="max-w-3xl mx-auto px-6 text-center">
           <motion.div {...fadeUp}>
             <h2 className="text-3xl md:text-4xl font-bold text-primary tracking-tight mb-4">
               See How It Works for Your Specialty
             </h2>
             <p className="text-on-surface-variant mb-8">
-              Book a personalised demo tailored to your practice type and
-              clinical workflow.
+              Join the waitlist to hear when Miraa launches for your specialty
+              and when the 14-day free trial opens.
             </p>
             <Link
-              href="/demo"
+              href="/#waitlist-form"
               className="inline-flex items-center gap-2 px-8 py-3.5 text-sm font-semibold text-on-primary bg-gradient-to-r from-primary to-primary-container rounded-full hover:opacity-90 transition-opacity"
             >
-              Book a Demo
+              Join the Waitlist
               <ArrowRight className="w-4 h-4" />
             </Link>
           </motion.div>

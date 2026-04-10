@@ -9,7 +9,7 @@ import { CheckCircle, ArrowRight } from 'lucide-react';
 export default function CheckoutSuccessPage() {
   return (
     <div>
-      <PageHeader title="Welcome to ClinicScribe AI" description="" />
+      <PageHeader title="Welcome to Miraa" description="" />
 
       <Card className="max-w-lg mx-auto text-center">
         <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-6">

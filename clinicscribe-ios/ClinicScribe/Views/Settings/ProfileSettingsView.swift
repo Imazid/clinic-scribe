@@ -2,7 +2,6 @@ import SwiftUI
 
 struct ProfileSettingsView: View {
     @ObservedObject var vm: SettingsViewModel
-    @Environment(\.dismiss) private var dismiss
     @State private var showSavedConfirmation = false
 
     var body: some View {
@@ -68,5 +67,10 @@ struct ProfileSettingsView: View {
         }
         .background(Theme.surface)
         .navigationTitle("Edit Profile")
+        .task {
+            if vm.profile == nil {
+                await vm.load()
+            }
+        }
     }
 }

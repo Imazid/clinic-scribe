@@ -49,15 +49,24 @@ export default function BillingPage() {
   }
 
   return (
-    <div>
+    <div className="space-y-6">
       <PageHeader
+        eyebrow="Billing & Access"
         title="Subscription & Billing"
-        description="Manage your plan, seats, and payment method."
+        description="Manage your plan, seats, renewal timing, and payment actions."
       />
 
-      <div className="max-w-2xl space-y-6">
+      <div className="max-w-3xl space-y-6">
         {/* Current Plan */}
-        <Card>
+        <Card className="overflow-hidden p-0">
+          <div className="border-b border-outline-variant/40 px-6 py-5">
+            <p className="text-base font-semibold text-on-surface">Current plan</p>
+            <p className="mt-1 text-sm text-on-surface-variant">
+              Subscription details for your clinic workspace.
+            </p>
+          </div>
+
+          <div className="px-6 py-6">
           <div className="flex items-center justify-between mb-6">
             <h3 className="text-base font-bold text-on-surface">Current Plan</h3>
             <span className={`px-2.5 py-1 text-xs font-medium rounded-full ${statusStyle.bg} ${statusStyle.text}`}>
@@ -108,10 +117,19 @@ export default function BillingPage() {
               </div>
             </div>
           </div>
+          </div>
         </Card>
 
         {/* Actions */}
-        <Card>
+        <Card className="overflow-hidden p-0">
+          <div className="border-b border-outline-variant/40 px-6 py-5">
+            <p className="text-base font-semibold text-on-surface">Billing actions</p>
+            <p className="mt-1 text-sm text-on-surface-variant">
+              Open Stripe billing to manage payment details and subscription changes.
+            </p>
+          </div>
+
+          <div className="px-6 py-6">
           {hasSubscription ? (
             <div className="space-y-4">
               <p className="text-sm text-on-surface-variant">
@@ -121,7 +139,7 @@ export default function BillingPage() {
               <Button
                 onClick={openBillingPortal}
                 isLoading={portalLoading}
-                size="lg"
+                size="action"
               >
                 Manage Subscription
                 <ArrowRight className="w-4 h-4 ml-2" />
@@ -134,13 +152,14 @@ export default function BillingPage() {
                 started with a 14-day free trial.
               </p>
               <Link href="/checkout">
-                <Button size="lg">
+                <Button size="action">
                   Choose a Plan
                   <ArrowRight className="w-4 h-4 ml-2" />
                 </Button>
               </Link>
             </div>
           )}
+          </div>
         </Card>
       </div>
     </div>

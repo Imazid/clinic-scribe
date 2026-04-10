@@ -51,7 +51,7 @@ struct IntegrationsView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: Theme.spacingMd) {
-                Text("Connect ClinicScribe AI with your existing clinical systems.")
+                Text("Connect Miraa with your existing clinical systems.")
                     .font(.subheadline)
                     .foregroundStyle(Theme.onSurfaceVariant)
                     .padding(.horizontal)
@@ -59,6 +59,18 @@ struct IntegrationsView: View {
                 LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: Theme.spacingSm + Theme.spacingXS) {
                     ForEach(integrations) { integration in
                         IntegrationCard(integration: integration)
+                    }
+                }
+                .padding(.horizontal)
+
+                CSCard {
+                    VStack(alignment: .leading, spacing: Theme.spacingSm) {
+                        Text("Configuration happens on the web app")
+                            .font(.headline)
+                            .foregroundStyle(Theme.onSurface)
+                        Text("iPhone shows connection status and rollout readiness, but live connector setup is managed in the web workspace so governance and clinic-wide sync settings stay in one place.")
+                            .font(.subheadline)
+                            .foregroundStyle(Theme.onSurfaceVariant)
                     }
                 }
                 .padding(.horizontal)
@@ -116,18 +128,14 @@ private struct IntegrationCard: View {
                 .font(.caption2)
                 .foregroundStyle(Theme.outline)
 
-            Button {
-                // Configuration happens on web
-            } label: {
-                Text(integration.status == .planned ? "Coming Soon" : "Configure")
-                    .font(.caption.weight(.medium))
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, Theme.spacingSm)
-                    .background(Theme.surfaceContainer)
-                    .foregroundStyle(integration.status == .planned ? Theme.outline : Theme.primary)
-                    .clipShape(RoundedRectangle(cornerRadius: Theme.radiusSm))
-            }
-            .disabled(integration.status == .planned)
+            Text(integration.status == .planned ? "Planned for a later rollout" : "Managed from the web workspace")
+                .font(.caption.weight(.medium))
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.vertical, Theme.spacingSm)
+                .padding(.horizontal, Theme.spacingSm)
+                .background(Theme.surfaceContainer)
+                .foregroundStyle(integration.status == .planned ? Theme.outline : Theme.primary)
+                .clipShape(RoundedRectangle(cornerRadius: Theme.radiusSm))
         }
         .padding(Theme.spacingSm + Theme.spacingXS)
         .background(Theme.surfaceContainerLowest)

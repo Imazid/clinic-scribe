@@ -5,6 +5,16 @@ struct NoteGenerationRequest: Encodable {
     let transcript: String
     let patientContext: String?
     let consultationId: String
+    let templateKey: String?
+    let template: NoteTemplateSelectionPayload?
+
+    enum CodingKeys: String, CodingKey {
+        case transcript
+        case patientContext = "patientContext"
+        case consultationId = "consultationId"
+        case templateKey = "templateKey"
+        case template
+    }
 }
 
 struct NoteGenerationResponse: Decodable {
@@ -29,20 +39,29 @@ final class NoteGenerationService {
     private var supabase: SupabaseClient { SupabaseManager.shared.client }
     private init() {}
 
-    func generateNote(consultationId: UUID, transcript: String, patientContext: String? = nil) async throws -> ClinicalNote {
+    func generateNote(
+        consultationId: UUID,
+        transcript: String,
+        patientContext: String? = nil,
+        template: NoteTemplate? = nil
+    ) async throws -> ClinicalNote {
         let response: NoteGenerationResponse = try await APIClient.shared.request(
             method: "POST",
             path: "/api/generate-note",
             body: NoteGenerationRequest(
                 transcript: transcript,
                 patientContext: patientContext,
-                consultationId: consultationId.uuidString
+                consultationId: consultationId.uuidString,
+                templateKey: template?.id,
+                template: template.map { NoteTemplateSelectionPayload(template: $0) }
             )
         )
 
         // Store note in Supabase
         struct NoteInsert: Encodable {
             let consultation_id: UUID
+            let format: String
+            let template_key: String?
             let content: SOAPNote
             let confidence_scores: ConfidenceScores
             let medications: [MedicationDraft]
@@ -55,6 +74,8 @@ final class NoteGenerationService {
         let note: ClinicalNote = try await supabase.from("clinical_notes")
             .insert(NoteInsert(
                 consultation_id: consultationId,
+                format: template?.preferredFormat.rawValue ?? NoteFormat.soap.rawValue,
+                template_key: template?.id,
                 content: response.content,
                 confidence_scores: response.confidenceScores,
                 medications: response.medications,

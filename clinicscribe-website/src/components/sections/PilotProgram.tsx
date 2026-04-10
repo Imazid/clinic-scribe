@@ -2,26 +2,26 @@
 
 import { motion } from "framer-motion";
 import { Rocket, Headphones, MessageSquareHeart, ArrowRight } from "lucide-react";
-import Link from "next/link";
+
 
 const benefits = [
   {
     icon: Rocket,
-    title: "Structured Onboarding",
+    title: "Launch Priority",
     description:
-      "Guided setup, training sessions, and a dedicated implementation window tailored to your practice workflow.",
+      "Waitlist members hear first when Miraa opens and when onboarding windows become available.",
   },
   {
     icon: Headphones,
-    title: "Priority Support",
+    title: "14-Day Free Trial",
     description:
-      "Direct access to our clinical and engineering teams throughout the pilot period for rapid issue resolution.",
+      "Every plan will start with a 14-day free trial once the product is ready to go live.",
   },
   {
     icon: MessageSquareHeart,
-    title: "Shape the Product",
+    title: "Help Shape The Rollout",
     description:
-      "Your feedback directly influences product development. Pilot partners help define the features that matter most.",
+      "The waitlist tells us which practices want Miraa first and what matters most before launch.",
   },
 ];
 
@@ -37,12 +37,12 @@ export function PilotProgram() {
           className="mx-auto max-w-2xl text-center"
         >
           <h2 className="text-3xl font-bold tracking-tight text-primary md:text-4xl">
-            Join our pilot program
+            Join the launch waitlist
           </h2>
           <p className="mt-4 text-lg leading-relaxed text-primary/70">
-            Get early access to AI-powered clinical documentation with
-            structured onboarding, hands-on support, and a direct feedback loop
-            to our product team.
+            Miraa is still in pre-launch. Join the waitlist to hear when the
+            first rollout opens and when your 14-day free trial becomes
+            available.
           </p>
         </motion.div>
 
@@ -76,13 +76,17 @@ export function PilotProgram() {
           transition={{ duration: 0.5, delay: 0.4 }}
           className="mt-12 text-center"
         >
-          <Link
-            href="/demo"
+          <button
+            onClick={() =>
+              document
+                .getElementById("waitlist-form")
+                ?.scrollIntoView({ behavior: "smooth" })
+            }
             className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-primary to-primary-container px-8 py-4 font-semibold text-on-primary transition-shadow hover:shadow-ambient-lg"
           >
-            Apply for Early Access
+            Join the Waitlist
             <ArrowRight className="h-4 w-4" />
-          </Link>
+          </button>
         </motion.div>
       </div>
     </section>

@@ -10,13 +10,15 @@ interface Tab {
 
 interface TabsProps {
   tabs: Tab[];
+  value?: string;
   defaultValue?: string;
-  onChange?: (value: string) => void;
+  onChange?: (value: string) => boolean | void;
   className?: string;
 }
 
-export function Tabs({ tabs, defaultValue, onChange, className }: TabsProps) {
-  const [active, setActive] = useState(defaultValue || tabs[0]?.value);
+export function Tabs({ tabs, value, defaultValue, onChange, className }: TabsProps) {
+  const [internalActive, setInternalActive] = useState(defaultValue || tabs[0]?.value);
+  const active = value ?? internalActive;
 
   return (
     <div className={cn('flex gap-1 bg-surface-container-low rounded-xl p-1', className)}>
@@ -24,8 +26,10 @@ export function Tabs({ tabs, defaultValue, onChange, className }: TabsProps) {
         <button
           key={tab.value}
           onClick={() => {
-            setActive(tab.value);
-            onChange?.(tab.value);
+            const shouldUpdate = onChange?.(tab.value);
+            if (value === undefined && shouldUpdate !== false) {
+              setInternalActive(tab.value);
+            }
           }}
           className={cn(
             'px-4 py-2 text-sm font-medium rounded-lg transition-colors',

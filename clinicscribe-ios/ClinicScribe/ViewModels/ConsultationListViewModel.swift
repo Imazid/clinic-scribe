@@ -10,6 +10,10 @@ final class ConsultationListViewModel: ObservableObject {
 
     var clinicId: UUID?
 
+    init(statusFilter: ConsultationStatus? = nil) {
+        self.statusFilter = statusFilter
+    }
+
     var filteredConsultations: [Consultation] {
         guard !searchText.isEmpty else { return consultations }
         return consultations.filter {

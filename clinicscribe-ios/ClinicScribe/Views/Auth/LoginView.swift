@@ -17,13 +17,14 @@ struct LoginView: View {
                             .foregroundStyle(Theme.primary)
                             .accessibilityHidden(true)
 
-                        Text("ClinicScribe")
+                        Text("Miraa")
                             .font(.title.weight(.bold))
                             .foregroundStyle(Theme.primary)
 
-                        Text("AI-Powered Clinical Documentation")
-                            .font(.subheadline)
+                        Text("Medical Insights, Record, Automation and Assistance")
+                            .font(.caption.weight(.medium))
                             .foregroundStyle(Theme.onSurfaceVariant)
+                            .multilineTextAlignment(.center)
                     }
                     .padding(.top, 60)
 
@@ -126,6 +127,28 @@ struct LoginView: View {
                         }
                         .font(.subheadline)
                     }
+
+                    VStack(spacing: Theme.spacingXS) {
+                        Text("By continuing, you agree to the service terms and acknowledge the privacy policy.")
+                            .font(.caption)
+                            .foregroundStyle(Theme.onSurfaceVariant)
+                            .multilineTextAlignment(.center)
+
+                        HStack(spacing: Theme.spacingMd) {
+                            NavigationLink("Privacy Policy") {
+                                LegalDocumentDetailView(document: LegalContentLibrary.privacyPolicy)
+                            }
+                            NavigationLink("Terms") {
+                                LegalDocumentDetailView(document: LegalContentLibrary.termsOfService)
+                            }
+                            NavigationLink("Legal") {
+                                LegalHubView()
+                            }
+                        }
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(Theme.secondary)
+                    }
+                    .padding(.horizontal, Theme.spacingLg)
                 }
             }
             .background(Theme.surface)

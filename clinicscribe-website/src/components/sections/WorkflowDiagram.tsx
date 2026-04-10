@@ -2,28 +2,30 @@
 
 import { motion } from "framer-motion";
 import {
+  ClipboardList,
   Mic,
-  FileAudio,
   FileText,
-  UserCheck,
+  ShieldCheck,
   Upload,
   CheckCircle,
+  ListChecks,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { WORKFLOW_STEPS } from "@/lib/constants";
 
 const iconMap: Record<string, LucideIcon> = {
+  ClipboardList,
   Mic,
-  FileAudio,
   FileText,
-  UserCheck,
+  ShieldCheck,
   Upload,
   CheckCircle,
+  ListChecks,
 };
 
 export function WorkflowDiagram() {
   return (
-    <section className="bg-surface-container-low py-24 lg:py-32">
+    <section className="section-atmosphere bg-surface-container-low py-24 lg:py-32">
       <div className="mx-auto max-w-7xl px-6 lg:px-8">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -32,9 +34,9 @@ export function WorkflowDiagram() {
           transition={{ duration: 0.5 }}
           className="mx-auto max-w-2xl text-center"
         >
-          <span className="label-text text-secondary">How It Works</span>
+          <span className="label-text text-secondary">Workflow</span>
           <h2 className="mt-3 text-3xl font-bold tracking-tight text-primary md:text-4xl">
-            From consultation to completed note in minutes
+            From visit prep to closeout in one workflow
           </h2>
         </motion.div>
 
@@ -43,18 +45,25 @@ export function WorkflowDiagram() {
           <div className="relative grid grid-cols-6 gap-4">
             {/* Connecting line */}
             <div className="pointer-events-none absolute top-10 right-[8%] left-[8%] h-px border-t-2 border-dashed border-outline-variant" />
+            <motion.div
+              aria-hidden="true"
+              className="workflow-beam pointer-events-none absolute top-[39px] left-[8%] h-[3px] w-[16%] rounded-full"
+              animate={{ x: ["0%", "470%"] }}
+              transition={{ duration: 5.5, repeat: Infinity, ease: "linear" }}
+            />
 
             {WORKFLOW_STEPS.map((step, i) => {
               const Icon = iconMap[step.icon] || CheckCircle;
-              const isActive = step.step === 4; // Clinician Review highlighted
+              const isActive = step.step === 3; // Verification highlighted
 
               return (
                 <motion.div
                   key={step.step}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
+                  initial={{ opacity: 0, y: 30, scale: 0.95, filter: "blur(4px)" }}
+                  whileInView={{ opacity: 1, y: 0, scale: 1, filter: "blur(0px)" }}
                   viewport={{ once: true }}
-                  transition={{ duration: 0.5, delay: i * 0.1 }}
+                  transition={{ duration: 0.6, delay: i * 0.12, ease: [0.25, 0.1, 0.25, 1] }}
+                  whileHover={{ y: -8 }}
                   className="relative flex flex-col items-center text-center"
                 >
                   <div
@@ -64,6 +73,13 @@ export function WorkflowDiagram() {
                         : "bg-surface-container-lowest text-primary shadow-ambient-sm"
                     }`}
                   >
+                    {isActive && (
+                      <motion.div
+                        className="absolute inset-[-10px] rounded-[1.75rem] border border-secondary/30"
+                        animate={{ scale: [1, 1.08, 1], opacity: [0.35, 0.8, 0.35] }}
+                        transition={{ duration: 2.6, repeat: Infinity, ease: "easeInOut" }}
+                      />
+                    )}
                     <Icon className="h-7 w-7" />
                     <span
                       className={`absolute -top-2 -right-2 flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold ${
@@ -95,7 +111,7 @@ export function WorkflowDiagram() {
         <div className="mt-14 space-y-0 lg:hidden">
           {WORKFLOW_STEPS.map((step, i) => {
             const Icon = iconMap[step.icon] || CheckCircle;
-            const isActive = step.step === 4;
+            const isActive = step.step === 3;
             const isLast = i === WORKFLOW_STEPS.length - 1;
 
             return (
@@ -105,6 +121,7 @@ export function WorkflowDiagram() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.5, delay: i * 0.08 }}
+                whileHover={{ x: 6 }}
                 className="relative flex gap-5"
               >
                 {/* Vertical line + circle */}

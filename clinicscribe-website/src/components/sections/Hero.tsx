@@ -47,9 +47,9 @@ export function Hero() {
             className="max-w-xl"
           >
             <motion.div variants={item}>
-              <span className="label-text inline-flex items-center gap-1.5 rounded-full bg-secondary-fixed/20 px-3 py-1 text-secondary">
+              <span className="label-text inline-flex max-w-full flex-wrap items-center justify-center gap-1.5 rounded-full bg-secondary-fixed/20 px-3 py-1 text-center text-secondary">
                 <Sparkles className="h-3.5 w-3.5" />
-                {BRAND.tagline}
+                {BRAND.expandedName}
               </span>
             </motion.div>
 

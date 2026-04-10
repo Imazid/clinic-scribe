@@ -4,12 +4,14 @@ import { useEffect, useState } from 'react';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { MetricCard } from '@/components/dashboard/MetricCard';
 import { Card, CardTitle } from '@/components/ui/Card';
+import { Skeleton } from '@/components/ui/Skeleton';
 import { useAuthStore } from '@/lib/stores/auth-store';
 import { createClient } from '@/lib/supabase/client';
 import { BarChart3, Clock, FileCheck, TrendingUp } from 'lucide-react';
 
 export default function AnalyticsPage() {
   const clinicId = useAuthStore((s) => s.profile?.clinic_id);
+  const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({
     totalConsultations: 0,
     approvedNotes: 0,
@@ -21,30 +23,55 @@ export default function AnalyticsPage() {
   useEffect(() => {
     async function load() {
       if (!clinicId) return;
-      const supabase = createClient();
+      try {
+        const supabase = createClient();
 
-      const [totalRes, approvedRes] = await Promise.all([
-        supabase.from('consultations').select('id, consultation_type', { count: 'exact' }).eq('clinic_id', clinicId),
-        supabase.from('consultations').select('id', { count: 'exact' }).eq('clinic_id', clinicId).eq('status', 'approved'),
-      ]);
+        const [totalRes, approvedRes] = await Promise.all([
+          supabase.from('consultations').select('id, consultation_type', { count: 'exact' }).eq('clinic_id', clinicId),
+          supabase
+            .from('consultations')
+            .select('id', { count: 'exact' })
+            .eq('clinic_id', clinicId)
+            .in('status', ['approved', 'closeout_pending', 'closed', 'exported']),
+        ]);
 
-      // Group by type
-      const typeMap: Record<string, number> = {};
-      (totalRes.data || []).forEach((c) => {
-        const t = c.consultation_type || 'Unknown';
-        typeMap[t] = (typeMap[t] || 0) + 1;
-      });
+        // Group by type
+        const typeMap: Record<string, number> = {};
+        (totalRes.data || []).forEach((c) => {
+          const t = c.consultation_type || 'Unknown';
+          typeMap[t] = (typeMap[t] || 0) + 1;
+        });
 
-      setStats({
-        totalConsultations: totalRes.count || 0,
-        approvedNotes: approvedRes.count || 0,
-        avgConfidence: 0,
-        consultationsByType: Object.entries(typeMap).map(([type, count]) => ({ type, count })),
-        weeklyTrend: [],
-      });
+        setStats({
+          totalConsultations: totalRes.count || 0,
+          approvedNotes: approvedRes.count || 0,
+          avgConfidence: 0,
+          consultationsByType: Object.entries(typeMap).map(([type, count]) => ({ type, count })),
+          weeklyTrend: [],
+        });
+      } finally {
+        setLoading(false);
+      }
     }
     load();
   }, [clinicId]);
+
+  if (loading) {
+    return (
+      <div className="space-y-8">
+        <Skeleton variant="rectangular" className="h-8 w-48" />
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <Skeleton key={i} variant="rectangular" className="h-24 w-full" />
+          ))}
+        </div>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <Skeleton variant="rectangular" className="h-64 w-full" />
+          <Skeleton variant="rectangular" className="h-64 w-full" />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div>

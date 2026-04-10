@@ -429,27 +429,27 @@ export default function GenieIntegrationPage() {
             {[
               {
                 step: "1",
-                title: "Register as a ClinicScribe Partner",
+                title: `Register for ${BRAND.shortName}`,
                 description:
-                  "Sign up for ClinicScribe AI and indicate that your practice uses Genie Solutions. We will guide you through the partner onboarding.",
+                  `Sign up for ${BRAND.shortName} and indicate that your practice uses Genie Solutions. We will guide you through the partner onboarding.`,
               },
               {
                 step: "2",
                 title: "Marketplace Pairing",
                 description:
-                  "Pair your Genie practice with ClinicScribe through the Magentus Marketplace. This grants ClinicScribe secure, scoped API access to your practice data.",
+                  `Pair your Genie practice with ${BRAND.shortName} through the Magentus Marketplace. This grants ${BRAND.shortName} secure, scoped API access to your practice data.`,
               },
               {
                 step: "3",
                 title: "Configure Data Scope",
                 description:
-                  "Choose which data ClinicScribe can access — patient demographics, appointments, clinical data. Minimise data access to what your workflow needs.",
+                  `Choose which data ${BRAND.shortName} can access — patient demographics, appointments, clinical data. Minimise data access to what your workflow needs.`,
               },
               {
                 step: "4",
                 title: "Start Documenting",
                 description:
-                  "Begin using ClinicScribe with full Genie context. Patient data is pulled automatically, and approved notes flow back into Genie seamlessly.",
+                  `Begin using ${BRAND.shortName} with full Genie context. Patient data is pulled automatically, and approved notes flow back into Genie seamlessly.`,
               },
             ].map((item, i) => (
               <motion.div

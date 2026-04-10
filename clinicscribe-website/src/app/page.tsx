@@ -1,4 +1,4 @@
-import { Hero } from "@/components/sections/Hero";
+import { PreLaunchHero } from "@/components/sections/PreLaunchHero";
 import { TrustBar } from "@/components/sections/TrustBar";
 import { Problem } from "@/components/sections/Problem";
 import { WorkflowDiagram } from "@/components/sections/WorkflowDiagram";
@@ -11,13 +11,14 @@ import { ROISection } from "@/components/sections/ROISection";
 import { Testimonials } from "@/components/sections/Testimonials";
 import { Roadmap } from "@/components/sections/Roadmap";
 import { PilotProgram } from "@/components/sections/PilotProgram";
+import { EarlyAccessCTA } from "@/components/sections/EarlyAccessCTA";
 import { FAQPreview } from "@/components/sections/FAQPreview";
-import { FinalCTA } from "@/components/sections/FinalCTA";
+import { PreLaunchFinalCTA } from "@/components/sections/PreLaunchFinalCTA";
 
 export default function HomePage() {
   return (
     <>
-      <Hero />
+      <PreLaunchHero />
       <TrustBar />
       <Problem />
       <WorkflowDiagram />
@@ -30,8 +31,9 @@ export default function HomePage() {
       <Testimonials />
       <Roadmap />
       <PilotProgram />
+      <EarlyAccessCTA />
       <FAQPreview />
-      <FinalCTA />
+      <PreLaunchFinalCTA />
     </>
   );
 }

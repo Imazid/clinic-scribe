@@ -17,7 +17,9 @@ struct RecentConsultationsCard: View {
                 )
             } else {
                 ForEach(consultations) { c in
-                    NavigationLink(value: c.id) {
+                    NavigationLink {
+                        RecentConsultationDestination(consultationId: c.id)
+                    } label: {
                         HStack(spacing: Theme.spacingSm) {
                             CSAvatar(initials: c.patient?.initials ?? "?", size: 36)
 
@@ -48,8 +50,37 @@ struct RecentConsultationsCard: View {
             }
         }
         .cardStyle()
-        .navigationDestination(for: UUID.self) { id in
-            ConsultationDetailView(consultationId: id)
+    }
+}
+
+private struct RecentConsultationDestination: View {
+    let consultationId: UUID
+
+    var body: some View {
+        ConsultationDestinationRouter(consultationId: consultationId)
+    }
+}
+
+private struct ConsultationDestinationRouter: View {
+    let consultationId: UUID
+    @StateObject private var vm = ConsultationDetailViewModel()
+
+    var body: some View {
+        Group {
+            if let consultation = vm.consultation {
+                switch consultation.status {
+                case .recording, .transcribing, .generating:
+                    ConsultationSessionWorkspaceView(consultationId: consultationId)
+                case .reviewPending:
+                    ConsultationVerifyLoaderView(consultationId: consultationId)
+                default:
+                    ConsultationDetailView(consultationId: consultationId)
+                }
+            } else {
+                ProgressView("Loading consultation...")
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+            }
         }
+        .task { await vm.load(id: consultationId) }
     }
 }

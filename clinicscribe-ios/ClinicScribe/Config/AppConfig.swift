@@ -18,6 +18,13 @@ struct AppConfig {
         "Health Assessment",
     ]
 
+    static let workflowStages = [
+        WorkflowStage.prepare.rawValue,
+        WorkflowStage.capture.rawValue,
+        WorkflowStage.verify.rawValue,
+        WorkflowStage.tasks.rawValue,
+    ]
+
     static let audioMaxFileSizeMB = 24
     static let audioSampleRate: Double = 16000
     static let audioChannels: Int = 1

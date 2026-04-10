@@ -3,7 +3,7 @@ import { BRAND } from "@/lib/constants";
 
 const footerLinks = {
   Product: [
-    { label: "How It Works", href: "/product" },
+    { label: "Workflow", href: "/product" },
     { label: "Integrations", href: "/integrations" },
     { label: "Pricing", href: "/pricing" },
     { label: "Use Cases", href: "/use-cases" },
@@ -12,7 +12,7 @@ const footerLinks = {
     { label: "About", href: "/about" },
     { label: "Blog", href: "/blog" },
     { label: "FAQ", href: "/faq" },
-    { label: "Contact", href: "/demo" },
+    { label: "Contact", href: "/#waitlist-form" },
   ],
   Safety: [
     { label: "Safety & Compliance", href: "/safety" },

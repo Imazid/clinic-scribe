@@ -42,11 +42,16 @@ struct ClinicalNote: Codable, Identifiable {
     let consultationId: UUID
     var version: Int
     var format: NoteFormat
+    var templateKey: String?
     var content: SOAPNote
     var confidenceScores: ConfidenceScores
     var medications: [MedicationDraft]
     var followUpTasks: [FollowUpTask]
     var referrals: [String]
+    var verificationStatus: NoteVerificationStatus?
+    var provenance: [NoteProvenanceItem]?
+    var qaFindings: [NoteQAFinding]?
+    var patientSummarySnapshot: PatientSummarySnapshot?
     let aiModel: String
     let aiPromptVersion: String
     var isApproved: Bool
@@ -59,10 +64,15 @@ struct ClinicalNote: Codable, Identifiable {
         case id
         case consultationId = "consultation_id"
         case version, format, content
+        case templateKey = "template_key"
         case confidenceScores = "confidence_scores"
         case medications
         case followUpTasks = "follow_up_tasks"
         case referrals
+        case verificationStatus = "verification_status"
+        case provenance = "provenance_map"
+        case qaFindings = "qa_findings"
+        case patientSummarySnapshot = "patient_summary_snapshot"
         case aiModel = "ai_model"
         case aiPromptVersion = "ai_prompt_version"
         case isApproved = "is_approved"

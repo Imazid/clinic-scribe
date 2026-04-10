@@ -76,7 +76,7 @@ export default function AboutPage() {
   return (
     <>
       {/* Hero */}
-      <section className="bg-surface-container-low pt-32 pb-16">
+      <section className="section-atmosphere overflow-hidden bg-surface-container-low pt-32 pb-16">
         <div className="max-w-7xl mx-auto px-6 text-center">
           <motion.p {...fadeUp} className="label-text text-secondary mb-4">
             About Us
@@ -99,7 +99,7 @@ export default function AboutPage() {
       </section>
 
       {/* Mission */}
-      <section className="py-20 bg-surface">
+      <section className="section-atmosphere py-20 bg-surface">
         <div className="max-w-4xl mx-auto px-6">
           <motion.div {...fadeUp} className="text-center">
             <p className="label-text text-secondary mb-3">Our Mission</p>
@@ -131,7 +131,7 @@ export default function AboutPage() {
             ].map((item, i) => (
               <div
                 key={i}
-                className="bg-surface-container-lowest rounded-2xl p-6 shadow-ambient-sm text-center"
+                className="card-lift group bg-surface-container-lowest/95 rounded-2xl border border-outline-variant/25 p-6 shadow-ambient-sm text-center transition-shadow hover:shadow-ambient"
               >
                 <div className="w-12 h-12 rounded-xl bg-secondary/10 flex items-center justify-center mx-auto mb-4">
                   <item.icon className="w-6 h-6 text-secondary" />
@@ -147,7 +147,7 @@ export default function AboutPage() {
       </section>
 
       {/* Story */}
-      <section className="py-20 bg-surface-container-low">
+      <section className="section-atmosphere py-20 bg-surface-container-low">
         <div className="max-w-3xl mx-auto px-6">
           <motion.div {...fadeUp}>
             <p className="label-text text-secondary mb-3">Our Story</p>
@@ -196,7 +196,7 @@ export default function AboutPage() {
       </section>
 
       {/* Values */}
-      <section className="py-20 bg-surface">
+      <section className="section-atmosphere py-20 bg-surface">
         <div className="max-w-7xl mx-auto px-6">
           <motion.div {...fadeUp} className="text-center mb-12">
             <p className="label-text text-secondary mb-3">Our Values</p>
@@ -211,7 +211,7 @@ export default function AboutPage() {
                 key={i}
                 {...stagger}
                 transition={{ duration: 0.5, delay: i * 0.1 }}
-                className="bg-surface-container-lowest rounded-2xl p-6 shadow-ambient-sm"
+                className="card-lift group bg-surface-container-lowest/95 rounded-2xl border border-outline-variant/25 p-6 shadow-ambient-sm transition-shadow hover:shadow-ambient"
               >
                 <div className="flex items-start gap-4">
                   <div className="w-12 h-12 rounded-xl bg-secondary/10 flex items-center justify-center shrink-0">
@@ -233,7 +233,7 @@ export default function AboutPage() {
       </section>
 
       {/* Team */}
-      <section className="py-20 bg-surface-container-low">
+      <section className="section-atmosphere py-20 bg-surface-container-low">
         <div className="max-w-7xl mx-auto px-6">
           <motion.div {...fadeUp} className="text-center mb-12">
             <p className="label-text text-secondary mb-3">Our Team</p>
@@ -248,7 +248,7 @@ export default function AboutPage() {
                 key={i}
                 {...stagger}
                 transition={{ duration: 0.5, delay: i * 0.1 }}
-                className="bg-surface-container-lowest rounded-2xl p-6 shadow-ambient-sm text-center"
+                className="card-lift group bg-surface-container-lowest/95 rounded-2xl border border-outline-variant/25 p-6 shadow-ambient-sm text-center transition-shadow hover:shadow-ambient"
               >
                 <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-primary to-primary-container flex items-center justify-center mx-auto mb-5">
                   <span className="text-2xl font-bold text-on-primary">
@@ -282,27 +282,27 @@ export default function AboutPage() {
       </section>
 
       {/* CTA */}
-      <section className="py-20 bg-surface">
+      <section className="section-atmosphere py-20 bg-surface">
         <div className="max-w-3xl mx-auto px-6 text-center">
           <motion.div {...fadeUp}>
             <h2 className="text-3xl md:text-4xl font-bold text-primary tracking-tight mb-4">
               Want to Learn More?
             </h2>
             <p className="text-on-surface-variant mb-8">
-              We would love to show you how {BRAND.name} can help your practice.
-              Book a demo or reach out to our team.
+              Join the waitlist to hear when Miraa launches, or reach out to our
+              team directly if you want to talk through your practice needs.
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <Link
-                href="/demo"
+                href="/#waitlist-form"
                 className="inline-flex items-center gap-2 px-8 py-3.5 text-sm font-semibold text-on-primary bg-gradient-to-r from-primary to-primary-container rounded-full hover:opacity-90 transition-opacity"
               >
-                Book a Demo
+                Join the Waitlist
                 <ArrowRight className="w-4 h-4" />
               </Link>
               <a
                 href={`mailto:${BRAND.supportEmail}`}
-                className="inline-flex items-center gap-2 px-8 py-3.5 text-sm font-semibold text-primary bg-surface-container-lowest rounded-full hover:bg-surface-container transition-colors shadow-ambient-sm"
+                className="inline-flex items-center gap-2 rounded-full border border-outline-variant/25 bg-surface-container-lowest px-8 py-3.5 text-sm font-semibold text-primary shadow-ambient-sm transition-colors hover:bg-surface-container"
               >
                 Contact Us
               </a>

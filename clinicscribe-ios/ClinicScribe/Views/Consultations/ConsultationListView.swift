@@ -1,135 +1,170 @@
 import SwiftUI
 
+enum ConsultationListDestinationMode {
+    case detail
+    case sessionWorkspace
+    case verify
+}
+
 struct ConsultationListView: View {
-    @StateObject private var vm = ConsultationListViewModel()
+    @StateObject private var vm: ConsultationListViewModel
     @ObservedObject private var auth = AuthService.shared
+    let navigationTitle: String
+    let helperText: String
+    let destinationMode: ConsultationListDestinationMode
+
+    private var newSessionTitle: String {
+        navigationTitle == "Capture" ? "New Capture Session" : "New Consultation"
+    }
+
+    private var emptyDescription: String {
+        navigationTitle == "Capture" ? "Start your first capture session" : "Start your first consultation"
+    }
+
+    init(
+        navigationTitle: String = "Consultations",
+        helperText: String = "Track live capture sessions and review pending notes.",
+        defaultStatusFilter: ConsultationStatus? = nil,
+        destinationMode: ConsultationListDestinationMode = .detail
+    ) {
+        self.navigationTitle = navigationTitle
+        self.helperText = helperText
+        self.destinationMode = destinationMode
+        _vm = StateObject(wrappedValue: ConsultationListViewModel(statusFilter: defaultStatusFilter))
+    }
 
     var body: some View {
-        NavigationStack {
-            VStack(spacing: 0) {
-                VStack(spacing: Theme.spacingSm) {
-                    CSSearchBar(text: $vm.searchText, placeholder: "Search by patient...")
-
-                    ScrollView(.horizontal, showsIndicators: false) {
-                        HStack(spacing: Theme.spacingSm) {
-                            CSFilterChip(title: "All", isSelected: vm.statusFilter == nil) {
-                                vm.statusFilter = nil
-                                Task { await vm.load() }
-                            }
-                            ForEach(ConsultationStatus.allCases, id: \.self) { status in
-                                CSFilterChip(title: status.label, isSelected: vm.statusFilter == status) {
-                                    vm.statusFilter = status
-                                    Task { await vm.load() }
-                                }
-                            }
-                        }
-                    }
+        VStack(spacing: 0) {
+            VStack(spacing: Theme.spacingSm) {
+                VStack(alignment: .leading, spacing: Theme.spacingXS) {
+                    Text(navigationTitle)
+                        .font(.title3.weight(.bold))
+                        .foregroundStyle(Theme.primary)
+                    Text(helperText)
+                        .font(.caption)
+                        .foregroundStyle(Theme.onSurfaceVariant)
                 }
-                .padding(Theme.spacingMd)
+                .frame(maxWidth: .infinity, alignment: .leading)
 
-                // Error banner with retry
-                if let errorMessage = vm.errorMessage {
+                CSSearchBar(text: $vm.searchText, placeholder: "Search by patient...")
+
+                ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: Theme.spacingSm) {
-                        Image(systemName: "exclamationmark.triangle.fill")
-                            .foregroundStyle(Theme.error)
-                            .accessibilityHidden(true)
-                        Text(errorMessage)
-                            .font(.caption)
-                            .foregroundStyle(Theme.onSurface)
-                            .lineLimit(2)
-                        Spacer()
-                        Button("Retry") {
+                        CSFilterChip(title: "All", isSelected: vm.statusFilter == nil) {
+                            vm.statusFilter = nil
                             Task { await vm.load() }
                         }
-                        .font(.caption.weight(.semibold))
-                        .foregroundStyle(Theme.primary)
-                    }
-                    .padding(Theme.spacingSm)
-                    .background(Theme.errorContainer)
-                    .clipShape(RoundedRectangle(cornerRadius: Theme.radiusSm))
-                    .padding(.horizontal, Theme.spacingMd)
-                    .padding(.bottom, Theme.spacingSm)
-                }
 
-                if vm.isLoading {
-                    // Loading skeleton: 5 placeholder rows
-                    List {
-                        ForEach(0..<5, id: \.self) { _ in
-                            SkeletonConsultationRow()
-                                .listRowSeparator(.hidden)
+                        ForEach(ConsultationStatus.allCases, id: \.self) { status in
+                            CSFilterChip(title: status.label, isSelected: vm.statusFilter == status) {
+                                vm.statusFilter = status
+                                Task { await vm.load() }
+                            }
                         }
                     }
-                    .listStyle(.plain)
-                } else if vm.filteredConsultations.isEmpty {
-                    CSEmptyState(
-                        icon: "stethoscope",
-                        title: "No Consultations",
-                        description: "Start your first consultation",
-                        actionTitle: "New Consultation"
-                    ) {
-                        // Navigate handled via NavigationLink below
-                    }
-                    .frame(maxHeight: .infinity)
-                    .overlay {
-                        NavigationLink {
-                            NewConsultationView(clinicId: auth.clinicId, clinicianId: auth.profileId)
-                        } label: {
-                            Color.clear
-                        }
-                        .opacity(0)
-                        .allowsHitTesting(false)
-                    }
-                    // Overlay a visible navigation button
-                    .overlay(alignment: .bottom) {
-                        NavigationLink {
-                            NewConsultationView(clinicId: auth.clinicId, clinicianId: auth.profileId)
-                        } label: {
-                            Text("New Consultation")
-                                .font(.subheadline.weight(.semibold))
-                                .padding(.horizontal, 20)
-                                .padding(.vertical, CSButtonSize.sm.verticalPadding)
-                                .foregroundStyle(Theme.onPrimary)
-                                .background(Theme.primary)
-                                .clipShape(RoundedRectangle(cornerRadius: Theme.radiusMd))
-                        }
-                        .padding(.bottom, Theme.spacingXL)
-                    }
-                } else {
-                    List(vm.filteredConsultations) { c in
-                        NavigationLink(value: c.id) {
-                            ConsultationRow(consultation: c)
-                        }
-                    }
-                    .listStyle(.plain)
                 }
             }
-            .background(Theme.surface)
-            .navigationTitle("Consultations")
-            .toolbar {
-                NavigationLink {
-                    NewConsultationView(clinicId: auth.clinicId, clinicianId: auth.profileId)
-                } label: {
-                    Image(systemName: "plus")
-                        .accessibilityLabel("New consultation")
+            .padding(Theme.spacingMd)
+
+            if let errorMessage = vm.errorMessage {
+                HStack(spacing: Theme.spacingSm) {
+                    Image(systemName: "exclamationmark.triangle.fill")
+                        .foregroundStyle(Theme.error)
+                        .accessibilityHidden(true)
+                    Text(errorMessage)
+                        .font(.caption)
+                        .foregroundStyle(Theme.onSurface)
+                        .lineLimit(2)
+                    Spacer()
+                    Button("Retry") {
+                        Task { await vm.load() }
+                    }
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(Theme.primary)
                 }
+                .padding(Theme.spacingSm)
+                .background(Theme.errorContainer)
+                .clipShape(RoundedRectangle(cornerRadius: Theme.radiusSm))
+                .padding(.horizontal, Theme.spacingMd)
+                .padding(.bottom, Theme.spacingSm)
             }
-            .navigationDestination(for: UUID.self) { id in
-                ConsultationDetailView(consultationId: id)
+
+            if vm.isLoading {
+                List {
+                    ForEach(0..<5, id: \.self) { _ in
+                        SkeletonConsultationRow()
+                            .listRowSeparator(.hidden)
+                    }
+                }
+                .listStyle(.plain)
+            } else if vm.filteredConsultations.isEmpty {
+                CSEmptyState(
+                    icon: "stethoscope",
+                    title: "No Consultations",
+                    description: emptyDescription,
+                    actionTitle: newSessionTitle
+                ) {
+                    // Visible action is supplied below.
+                }
+                .frame(maxHeight: .infinity)
+                .overlay(alignment: .bottom) {
+                    NavigationLink {
+                        NewConsultationView(clinicId: auth.clinicId, clinicianId: auth.profileId)
+                    } label: {
+                        Text(newSessionTitle)
+                            .font(.subheadline.weight(.semibold))
+                            .padding(.horizontal, 20)
+                            .padding(.vertical, CSButtonSize.sm.verticalPadding)
+                            .foregroundStyle(Theme.onPrimary)
+                            .background(Theme.primary)
+                            .clipShape(RoundedRectangle(cornerRadius: Theme.radiusMd))
+                    }
+                    .padding(.bottom, Theme.spacingXL)
+                }
+            } else {
+                List(vm.filteredConsultations) { consultation in
+                    NavigationLink {
+                        destinationView(for: consultation)
+                    } label: {
+                        ConsultationRow(consultation: consultation)
+                    }
+                }
+                .listStyle(.plain)
             }
-            .refreshable { await vm.load() }
-            .task {
-                vm.clinicId = auth.clinicId
-                await vm.load()
+        }
+        .background(Theme.surface)
+        .navigationTitle(navigationTitle)
+        .toolbar {
+            NavigationLink {
+                NewConsultationView(clinicId: auth.clinicId, clinicianId: auth.profileId)
+            } label: {
+                Image(systemName: "plus")
+                    .accessibilityLabel(newSessionTitle)
             }
-            .onChange(of: auth.clinicId) { _, newValue in
-                vm.clinicId = newValue
-                Task { await vm.load() }
-            }
+        }
+        .refreshable { await vm.load() }
+        .task {
+            vm.clinicId = auth.clinicId
+            await vm.load()
+        }
+        .onChange(of: auth.clinicId) { _, newValue in
+            vm.clinicId = newValue
+            Task { await vm.load() }
+        }
+    }
+
+    @ViewBuilder
+    private func destinationView(for consultation: Consultation) -> some View {
+        switch destinationMode {
+        case .detail:
+            ConsultationDetailView(consultationId: consultation.id)
+        case .sessionWorkspace:
+            ConsultationSessionWorkspaceView(consultationId: consultation.id)
+        case .verify:
+            ConsultationVerifyLoaderView(consultationId: consultation.id)
         }
     }
 }
-
-// MARK: - Skeleton Row
 
 private struct SkeletonConsultationRow: View {
     @State private var isAnimating = false
@@ -164,8 +199,6 @@ private struct SkeletonConsultationRow: View {
     }
 }
 
-// MARK: - Consultation Row
-
 private struct ConsultationRow: View {
     let consultation: Consultation
 
@@ -178,7 +211,7 @@ private struct ConsultationRow: View {
                     .font(.body.weight(.medium))
                     .foregroundStyle(Theme.onSurface)
                     .lineLimit(1)
-                Text("\(consultation.consultationType) - \(DateFormatters.formatISO(consultation.startedAt))")
+                Text("\(consultation.consultationType) • \(DateFormatters.formatISO(consultation.startedAt))")
                     .font(.caption)
                     .foregroundStyle(Theme.onSurfaceVariant)
                     .lineLimit(1)

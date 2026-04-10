@@ -21,13 +21,13 @@ const controls: Control[] = [
     icon: Gauge,
     title: "Confidence Checks",
     description:
-      "AI outputs are scored for confidence. Low-certainty sections are flagged for clinician attention before review.",
+      "AI outputs are scored for confidence. Low-certainty sections are flagged before the note reaches approval.",
   },
   {
     icon: ShieldCheck,
     title: "Review Gates",
     description:
-      "Mandatory approval workflows ensure no note, referral, or prescription draft is finalised without clinician sign-off.",
+      "Mandatory approval workflows ensure no note, referral, or document is finalised without clinician sign-off.",
   },
   {
     icon: ScrollText,
@@ -45,7 +45,7 @@ const controls: Control[] = [
     icon: Fingerprint,
     title: "Traceability",
     description:
-      "All outputs link back to their source transcript, clinician edits, and approval actions for full provenance.",
+      "All outputs link back to their source transcript, chart context, clinician edits, and approval actions for full provenance.",
   },
 ];
 
@@ -62,10 +62,10 @@ export function RiskControl() {
         >
           <span className="label-text text-secondary">Safeguards</span>
           <h2 className="mt-3 text-3xl font-bold tracking-tight text-primary md:text-4xl">
-            Built-in controls at every step
+            Built-in verification at every step
           </h2>
           <p className="mt-4 text-lg leading-relaxed text-on-surface-variant">
-            Multiple layers of validation ensure safety, accuracy, and full
+            Multiple layers of validation ensure safety, provenance, and full
             auditability across every clinical output.
           </p>
         </motion.div>

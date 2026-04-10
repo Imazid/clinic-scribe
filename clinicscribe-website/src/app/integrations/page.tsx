@@ -14,7 +14,6 @@ import {
   Send,
   ShieldCheck,
   Users,
-  Calendar,
   FileText,
   Stethoscope,
   Database,
@@ -61,7 +60,7 @@ export default function IntegrationsPage() {
   return (
     <>
       {/* Hero */}
-      <section className="bg-surface-container-low pt-32 pb-16">
+      <section className="section-atmosphere overflow-hidden bg-surface-container-low pt-32 pb-16">
         <div className="max-w-7xl mx-auto px-6 text-center">
           <motion.p {...fadeUp} className="label-text text-secondary mb-4">
             Integrations
@@ -85,7 +84,7 @@ export default function IntegrationsPage() {
       </section>
 
       {/* Integration Grid by Category */}
-      <section className="py-20 bg-surface">
+      <section className="section-atmosphere py-20 bg-surface">
         <div className="max-w-7xl mx-auto px-6">
           {Object.entries(grouped).map(([category, items], catIdx) => {
             const CatIcon = categoryIcons[category] || Globe;
@@ -108,7 +107,7 @@ export default function IntegrationsPage() {
                         key={integration.name}
                         {...stagger}
                         transition={{ duration: 0.5, delay: i * 0.08 }}
-                        className="bg-surface-container-lowest rounded-2xl p-6 shadow-ambient-sm hover:shadow-ambient transition-shadow"
+                        className="card-lift group bg-surface-container-lowest/95 rounded-2xl border border-outline-variant/25 p-6 shadow-ambient-sm transition-shadow hover:shadow-ambient"
                       >
                         <div className="flex items-center justify-between mb-3">
                           <h3 className="text-base font-bold text-primary">
@@ -134,7 +133,7 @@ export default function IntegrationsPage() {
       </section>
 
       {/* Genie Solutions Featured Integration */}
-      <section className="py-24 bg-surface-container-low">
+      <section className="section-atmosphere py-24 bg-surface-container-low">
         <div className="max-w-7xl mx-auto px-6">
           <motion.div {...fadeUp} className="text-center mb-16">
             <p className="label-text text-secondary mb-4">Featured Integration</p>
@@ -160,7 +159,7 @@ export default function IntegrationsPage() {
             <motion.div
               {...fadeUp}
               transition={{ duration: 0.6, delay: 0.1 }}
-              className="bg-surface-container-lowest rounded-2xl p-8 shadow-ambient"
+              className="card-lift group bg-surface-container-lowest/95 rounded-2xl border border-outline-variant/25 p-8 shadow-ambient"
             >
               <div className="flex items-center gap-3 mb-6">
                 <div className="w-10 h-10 rounded-lg bg-secondary/10 flex items-center justify-center">
@@ -196,7 +195,7 @@ export default function IntegrationsPage() {
             <motion.div
               {...fadeUp}
               transition={{ duration: 0.6, delay: 0.2 }}
-              className="bg-surface-container-lowest rounded-2xl p-8 shadow-ambient"
+              className="card-lift group bg-surface-container-lowest/95 rounded-2xl border border-outline-variant/25 p-8 shadow-ambient"
             >
               <div className="flex items-center gap-3 mb-6">
                 <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
@@ -294,7 +293,7 @@ export default function IntegrationsPage() {
       </section>
 
       {/* FHIR / HL7 Standards */}
-      <section className="py-20 bg-surface-container-low">
+      <section className="section-atmosphere py-20 bg-surface-container-low">
         <div className="max-w-7xl mx-auto px-6">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
             <motion.div {...fadeUp}>
@@ -480,12 +479,12 @@ export default function IntegrationsPage() {
             </h2>
             <p className="text-on-surface-variant mb-8">
               We are actively building integrations based on clinician feedback.
-              If your clinical system is not listed, let us know — we prioritise
-              based on demand.
+              If your clinical system is not listed, tell us what matters most
+              and join the waitlist for launch updates.
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <Link
-                href="/demo"
+                href="/#waitlist-form"
                 className="inline-flex items-center gap-2 px-8 py-3.5 text-sm font-semibold text-on-primary bg-gradient-to-r from-primary to-primary-container rounded-full hover:opacity-90 transition-opacity"
               >
                 Request an Integration
@@ -493,7 +492,7 @@ export default function IntegrationsPage() {
               </Link>
               <a
                 href={`mailto:${BRAND.supportEmail}?subject=Integration Request`}
-                className="inline-flex items-center gap-2 px-8 py-3.5 text-sm font-semibold text-primary bg-surface-container-lowest rounded-full hover:bg-surface-container transition-colors"
+                className="inline-flex items-center gap-2 rounded-full border border-outline-variant/25 bg-surface-container-lowest px-8 py-3.5 text-sm font-semibold text-primary transition-colors hover:bg-surface-container"
               >
                 Email Us
               </a>

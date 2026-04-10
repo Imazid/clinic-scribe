@@ -1,8 +1,16 @@
-export async function generateNote(consultationId: string, transcript: string, patientContext?: string) {
-  const res = await fetch('/api/generate-note', {
+import type { TemplateCatalogItem } from '@/lib/types';
+
+export async function generateNote(
+  consultationId: string,
+  transcript: string,
+  patientContext?: string,
+  templateKey?: string | null,
+  template?: TemplateCatalogItem | null
+) {
+  const res = await fetch(`/api/consultations/${consultationId}/note/generate`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ consultationId, transcript, patientContext }),
+    body: JSON.stringify({ transcript, patientContext, templateKey, template }),
   });
 
   if (!res.ok) {

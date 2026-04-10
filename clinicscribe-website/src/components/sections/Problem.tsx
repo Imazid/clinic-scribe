@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Clock, Layers, Files, AlertTriangle } from "lucide-react";
+import { CalendarClock, Layers, Files, AlertTriangle } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
 interface PainPoint {
@@ -12,34 +12,34 @@ interface PainPoint {
 
 const painPoints: PainPoint[] = [
   {
-    icon: Clock,
-    title: "After-Hours Charting",
+    icon: CalendarClock,
+    title: "Pre-Visit Catch-Up",
     description:
-      "Clinicians routinely finish clinical notes at home, eating into personal time and accelerating burnout across the profession.",
+      "Clinicians still spend time before the consult reviewing charts, medications, and unresolved tasks across multiple systems.",
   },
   {
     icon: Layers,
-    title: "Fragmented Workflows",
+    title: "Fragmented Workflow",
     description:
-      "Switching between transcription tools, clinical software, and billing systems creates friction and increases the risk of errors.",
+      "Switching between context, capture, review, and follow-up tools creates friction and increases the risk of missed details.",
   },
   {
     icon: Files,
-    title: "Admin Overload",
+    title: "Loop Closure Gaps",
     description:
-      "Studies show clinicians spend 2+ hours per day on paperwork \u2014 time that could be spent on direct patient care.",
+      "Plans get documented, but reminders, recalls, and patient-facing instructions often live in separate systems or inboxes.",
   },
   {
     icon: AlertTriangle,
-    title: "Inconsistent Documentation",
+    title: "Verification Debt",
     description:
-      "Note quality varies between clinicians and sessions, creating gaps in clinical records and complicating handovers.",
+      "Without provenance and QA, clinicians have to re-read, cross-check, and manually reconcile every generated note.",
   },
 ];
 
 export function Problem() {
   return (
-    <section className="bg-surface py-24 lg:py-32">
+    <section className="section-atmosphere bg-surface py-24 lg:py-32">
       <div className="mx-auto max-w-7xl px-6 lg:px-8">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -50,11 +50,11 @@ export function Problem() {
         >
           <span className="label-text text-secondary">The Challenge</span>
           <h2 className="mt-3 text-3xl font-bold tracking-tight text-primary md:text-4xl">
-            The documentation burden is real
+            The consult does not start when the patient walks in
           </h2>
           <p className="mt-4 text-lg leading-relaxed text-on-surface-variant">
-            Clinical documentation consumes hours every day, pulling clinicians
-            away from the work that matters most.
+            The real work begins before the visit, continues during the consult,
+            and finishes only when the plan has been checked and closed out.
           </p>
         </motion.div>
 
@@ -62,19 +62,21 @@ export function Problem() {
           {painPoints.map((point, i) => (
             <motion.div
               key={point.title}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
+              initial={{ opacity: 0, y: 30, scale: 0.95, filter: "blur(4px)" }}
+              whileInView={{ opacity: 1, y: 0, scale: 1, filter: "blur(0px)" }}
               viewport={{ once: true }}
-              transition={{ duration: 0.5, delay: i * 0.1 }}
-              className="rounded-xl bg-surface-container-lowest p-6 shadow-ambient-sm"
+              transition={{ duration: 0.6, delay: i * 0.15, ease: [0.25, 0.1, 0.25, 1] }}
+              whileHover={{ y: -10, scale: 1.01 }}
+              className="card-lift group rounded-2xl border border-outline-variant/25 bg-surface-container-lowest/95 p-6 shadow-ambient-sm transition-shadow hover:shadow-ambient"
             >
-              <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-error-container/40">
+              <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,218,214,0.6),transparent_38%)] opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
+              <div className="relative flex h-11 w-11 items-center justify-center rounded-lg bg-error-container/40 transition-transform duration-300 group-hover:scale-110 group-hover:-rotate-6">
                 <point.icon className="h-5 w-5 text-error" />
               </div>
-              <h3 className="mt-5 text-lg font-semibold text-primary">
+              <h3 className="relative mt-5 text-lg font-semibold text-primary">
                 {point.title}
               </h3>
-              <p className="mt-2 text-sm leading-relaxed text-on-surface-variant">
+              <p className="relative mt-2 text-sm leading-relaxed text-on-surface-variant">
                 {point.description}
               </p>
             </motion.div>

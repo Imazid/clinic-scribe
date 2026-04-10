@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { BreadcrumbNav } from '@/components/layout/BreadcrumbNav';
@@ -9,34 +9,84 @@ import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { PatientTimeline } from '@/components/patients/PatientTimeline';
+import { PatientStorySummary } from '@/components/patients/PatientStorySummary';
+import { PatientStoryFeed } from '@/components/patients/PatientStoryFeed';
 import { Avatar } from '@/components/ui/Avatar';
 import { getPatient, getPatientConsultations } from '@/lib/api/patients';
+import { getPatientTimeline, getCareTasks, getGeneratedDocuments } from '@/lib/api/workflow';
+import { useAuthStore } from '@/lib/stores/auth-store';
 import { formatDate } from '@/lib/utils';
-import type { Patient, Consultation, ConsentStatus } from '@/lib/types';
-import { Edit, Phone, Mail, Calendar, Shield } from 'lucide-react';
+import { GENERATED_DOCUMENT_KIND_LABELS, GENERATED_DOCUMENT_STATUS_LABELS, CARE_TASK_STATUS_LABELS } from '@/lib/constants';
+import { cn } from '@/lib/utils';
+import type { Patient, Consultation, ConsentStatus, TimelineEvent, CareTask, GeneratedDocument } from '@/lib/types';
+import {
+  Edit,
+  Phone,
+  Mail,
+  Calendar,
+  Shield,
+  LayoutDashboard,
+  Clock,
+  FileOutput,
+  ClipboardCheck,
+  FileText,
+  CalendarClock,
+  AlertTriangle,
+} from 'lucide-react';
 
 const consentVariant: Record<ConsentStatus, 'success' | 'error' | 'warning'> = {
   granted: 'success', revoked: 'error', pending: 'warning',
 };
 
+type Tab = 'overview' | 'timeline' | 'documents' | 'tasks';
+
+const TABS: { id: Tab; label: string; icon: React.ComponentType<{ className?: string }> }[] = [
+  { id: 'overview', label: 'Overview', icon: LayoutDashboard },
+  { id: 'timeline', label: 'Timeline', icon: Clock },
+  { id: 'documents', label: 'Documents', icon: FileOutput },
+  { id: 'tasks', label: 'Tasks', icon: ClipboardCheck },
+];
+
 export default function PatientDetailPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
+  const clinicId = useAuthStore((state) => state.profile?.clinic_id);
   const [patient, setPatient] = useState<Patient | null>(null);
   const [consultations, setConsultations] = useState<Consultation[]>([]);
+  const [timelineEvents, setTimelineEvents] = useState<TimelineEvent[]>([]);
+  const [patientTasks, setPatientTasks] = useState<CareTask[]>([]);
+  const [patientDocuments, setPatientDocuments] = useState<GeneratedDocument[]>([]);
   const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState<Tab>('overview');
+
+  const load = useCallback(async () => {
+    try {
+      const [p, c] = await Promise.all([getPatient(id), getPatientConsultations(id)]);
+      setPatient(p);
+      setConsultations(c as Consultation[]);
+      const timeline = await getPatientTimeline(id);
+      setTimelineEvents((timeline.events || []) as unknown as TimelineEvent[]);
+
+      if (clinicId) {
+        const [allTasks, allDocs] = await Promise.all([
+          getCareTasks(clinicId, 'all'),
+          getGeneratedDocuments(clinicId),
+        ]);
+        setPatientTasks(allTasks.filter((t) => t.patient_id === id));
+        setPatientDocuments(allDocs.filter((d) => d.patient_id === id));
+      }
+    } catch (err) { console.error(err); }
+    finally { setLoading(false); }
+  }, [id, clinicId]);
 
   useEffect(() => {
-    async function load() {
-      try {
-        const [p, c] = await Promise.all([getPatient(id), getPatientConsultations(id)]);
-        setPatient(p);
-        setConsultations(c as Consultation[]);
-      } catch (err) { console.error(err); }
-      finally { setLoading(false); }
-    }
     load();
-  }, [id]);
+  }, [load]);
+
+  const openTaskCount = useMemo(
+    () => patientTasks.filter((t) => ['open', 'in_progress'].includes(t.status)).length,
+    [patientTasks]
+  );
 
   if (loading) {
     return (
@@ -63,6 +113,7 @@ export default function PatientDetailPage() {
       />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Left sidebar — patient info */}
         <div className="space-y-6">
           <Card>
             <div className="flex items-center gap-4 mb-4">
@@ -108,11 +159,161 @@ export default function PatientDetailPage() {
           )}
         </div>
 
-        <div className="lg:col-span-2">
-          <Card>
-            <CardTitle className="mb-4">Consultation History</CardTitle>
-            <PatientTimeline consultations={consultations} />
-          </Card>
+        {/* Right content — tabbed area */}
+        <div className="lg:col-span-2 space-y-6">
+          {/* Tab bar */}
+          <div className="flex gap-1 border-b border-outline-variant/20 pb-px">
+            {TABS.map((tab) => {
+              const Icon = tab.icon;
+              const count =
+                tab.id === 'tasks' ? openTaskCount :
+                tab.id === 'documents' ? patientDocuments.length :
+                tab.id === 'timeline' ? consultations.length + timelineEvents.length :
+                undefined;
+              return (
+                <button
+                  key={tab.id}
+                  type="button"
+                  onClick={() => setActiveTab(tab.id)}
+                  className={cn(
+                    'flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium rounded-t-lg transition-colors -mb-px',
+                    activeTab === tab.id
+                      ? 'bg-surface-container-lowest text-secondary border-b-2 border-secondary'
+                      : 'text-on-surface-variant hover:text-on-surface hover:bg-surface-container-low'
+                  )}
+                >
+                  <Icon className="w-4 h-4" />
+                  {tab.label}
+                  {count !== undefined && count > 0 && (
+                    <span className="text-[10px] font-bold bg-secondary/10 text-secondary px-1.5 py-0.5 rounded-full">
+                      {count}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Tab content */}
+          {activeTab === 'overview' && (
+            <div className="space-y-6">
+              <Card>
+                <PatientStorySummary consultations={consultations} events={timelineEvents} />
+              </Card>
+              <Card>
+                <PatientStoryFeed events={timelineEvents} />
+              </Card>
+            </div>
+          )}
+
+          {activeTab === 'timeline' && (
+            <Card>
+              <CardTitle className="mb-4">Patient Timeline</CardTitle>
+              <PatientTimeline consultations={consultations} timelineEvents={timelineEvents} />
+            </Card>
+          )}
+
+          {activeTab === 'documents' && (
+            <Card>
+              <CardTitle className="mb-4">Generated Documents</CardTitle>
+              {patientDocuments.length === 0 ? (
+                <div className="text-center py-8 text-sm text-on-surface-variant">
+                  No generated documents for this patient yet.
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {patientDocuments.map((doc) => (
+                    <div key={doc.id} className="rounded-xl bg-surface-container-low px-4 py-3">
+                      <div className="flex items-start justify-between gap-3 mb-2">
+                        <div>
+                          <div className="flex items-center gap-2 mb-1">
+                            <FileText className="w-4 h-4 text-secondary" />
+                            <p className="text-sm font-semibold text-on-surface">{doc.title}</p>
+                          </div>
+                          <p className="text-xs text-on-surface-variant">
+                            {GENERATED_DOCUMENT_KIND_LABELS[doc.kind] || doc.kind.replace('_', ' ')}
+                            {' · '}
+                            {formatDate(doc.created_at)}
+                          </p>
+                        </div>
+                        <Badge
+                          variant={
+                            doc.status === 'sent' ? 'success' :
+                            doc.status === 'ready' ? 'info' : 'warning'
+                          }
+                        >
+                          {GENERATED_DOCUMENT_STATUS_LABELS[doc.status]}
+                        </Badge>
+                      </div>
+                      <p className="text-sm text-on-surface-variant line-clamp-3 whitespace-pre-wrap">
+                        {doc.content}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </Card>
+          )}
+
+          {activeTab === 'tasks' && (
+            <Card>
+              <CardTitle className="mb-4">Care Tasks</CardTitle>
+              {patientTasks.length === 0 ? (
+                <div className="text-center py-8 text-sm text-on-surface-variant">
+                  No care tasks for this patient yet.
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {patientTasks.map((task) => {
+                    const isOverdue = task.due_at && new Date(task.due_at) < new Date();
+                    const isDone = task.status === 'completed';
+                    return (
+                      <div
+                        key={task.id}
+                        className={cn(
+                          'rounded-xl px-4 py-3',
+                          isDone ? 'bg-surface-container-low opacity-70' :
+                          isOverdue ? 'bg-error/5 ring-1 ring-error/20' :
+                          'bg-surface-container-low'
+                        )}
+                      >
+                        <div className="flex items-start justify-between gap-3 mb-1">
+                          <p className={cn(
+                            'text-sm font-semibold',
+                            isDone ? 'text-on-surface-variant line-through' : 'text-on-surface'
+                          )}>
+                            {task.title}
+                          </p>
+                          <Badge
+                            variant={
+                              task.status === 'completed' ? 'success' :
+                              task.status === 'in_progress' ? 'info' : 'default'
+                            }
+                          >
+                            {CARE_TASK_STATUS_LABELS[task.status]}
+                          </Badge>
+                        </div>
+                        {task.description && (
+                          <p className="text-sm text-on-surface-variant line-clamp-2 mb-2">{task.description}</p>
+                        )}
+                        {task.due_at && (
+                          <p className={cn(
+                            'text-xs flex items-center gap-1',
+                            isOverdue && !isDone ? 'text-error font-medium' : 'text-on-surface-variant'
+                          )}>
+                            {isOverdue && !isDone && <AlertTriangle className="w-3 h-3" />}
+                            <CalendarClock className="w-3.5 h-3.5" />
+                            {isOverdue && !isDone ? 'Overdue · ' : ''}
+                            Due {new Date(task.due_at).toLocaleDateString('en-AU')}
+                          </p>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </Card>
+          )}
         </div>
       </div>
     </div>

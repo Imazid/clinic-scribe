@@ -26,7 +26,7 @@ final class NewConsultationViewModel: ObservableObject {
         }
     }
 
-    func createConsultation() async -> Consultation? {
+    func createConsultation(templateKey: String?) async -> Consultation? {
         guard let clinicId, let clinicianId, let patientId = selectedPatientId else {
             errorMessage = "Please select a patient"
             return nil
@@ -39,7 +39,13 @@ final class NewConsultationViewModel: ObservableObject {
                     clinic_id: clinicId,
                     patient_id: patientId,
                     clinician_id: clinicianId,
-                    consultation_type: consultationType
+                    consultation_type: consultationType,
+                    template_key: templateKey,
+                    status: .recording,
+                    scheduled_for: DateFormatters.iso8601.string(from: Date()),
+                    reason_for_visit: consultationType,
+                    source: "manual",
+                    started_at: DateFormatters.iso8601.string(from: Date())
                 )
             )
             isCreating = false

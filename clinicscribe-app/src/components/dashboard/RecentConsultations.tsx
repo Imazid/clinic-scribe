@@ -10,11 +10,15 @@ import type { Consultation, ConsultationStatus } from '@/lib/types';
 import { Stethoscope, ArrowRight } from 'lucide-react';
 
 const statusVariant: Record<ConsultationStatus, 'default' | 'success' | 'warning' | 'error' | 'info'> = {
+  scheduled: 'info',
+  brief_ready: 'info',
   recording: 'error',
   transcribing: 'warning',
   generating: 'info',
   review_pending: 'warning',
   approved: 'success',
+  closeout_pending: 'info',
+  closed: 'success',
   exported: 'default',
 };
 

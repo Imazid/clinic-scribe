@@ -65,7 +65,7 @@ final class AudioService: NSObject, ObservableObject {
 
         try await supabase.storage
             .from("audio-recordings")
-            .upload(path: fileName, file: data, options: .init(contentType: "audio/m4a"))
+            .upload(fileName, data: data, options: .init(contentType: "audio/m4a"))
 
         struct AudioInsert: Encodable {
             let consultation_id: UUID

@@ -9,7 +9,7 @@ interface SearchInputProps extends React.InputHTMLAttributes<HTMLInputElement> {
 }
 
 export const SearchInput = forwardRef<HTMLInputElement, SearchInputProps>(
-  ({ className, onSearch, ...props }, ref) => {
+  ({ className, onSearch, onChange: externalOnChange, ...rest }, ref) => {
     return (
       <div className={cn('relative', className)}>
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-outline" />
@@ -17,8 +17,11 @@ export const SearchInput = forwardRef<HTMLInputElement, SearchInputProps>(
           ref={ref}
           type="search"
           className="w-full pl-10 pr-4 py-2 rounded-xl bg-surface-container-low border border-outline-variant text-on-surface placeholder:text-outline text-sm focus:outline-none focus:ring-2 focus:ring-secondary focus:border-transparent transition-colors"
-          onChange={(e) => onSearch?.(e.target.value)}
-          {...props}
+          onChange={(e) => {
+            onSearch?.(e.target.value);
+            externalOnChange?.(e);
+          }}
+          {...rest}
         />
       </div>
     );

@@ -26,7 +26,7 @@ const statusConfig = {
 export default function IntegrationsPage() {
   return (
     <div>
-      <PageHeader title="EHR Integration Hub" description="Connect ClinicScribe AI with your existing clinical systems." />
+      <PageHeader title="EHR Integration Hub" description="Connect Miraa with your existing clinical systems." />
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {integrations.map((integration) => {

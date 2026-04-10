@@ -37,11 +37,12 @@ export function SafetyFirst() {
             Safety by Design
           </span>
           <h2 className="mt-3 text-3xl font-bold tracking-tight text-on-primary md:text-4xl">
-            Clinician control at every step
+            Verification stays with the clinician
           </h2>
           <p className="mt-4 text-lg leading-relaxed text-on-primary/70">
-            Safety is not an afterthought. Every feature is built around the
-            principle that clinicians remain in full control.
+            Safety is not an afterthought. Every stage of the workflow keeps the
+            clinician in control of what was heard, what was found, and what is
+            still under review.
           </p>
         </motion.div>
 
@@ -87,10 +88,10 @@ export function SafetyFirst() {
             Not autonomous clinical decision-making
           </h3>
           <p className="mx-auto mt-3 max-w-xl text-sm leading-relaxed text-on-primary/70">
-            {BRAND.name} assists with documentation only. It does not diagnose,
-            prescribe, or make clinical decisions. The clinician is always
-            responsible for clinical judgment, and every AI output must be
-            reviewed and approved before it is finalised.
+            {BRAND.name} assists with documentation and workflow only. It does
+            not diagnose, prescribe, or make clinical decisions. The clinician
+            is always responsible for clinical judgment, and every AI output
+            must be reviewed and approved before it is finalised.
           </p>
         </motion.div>
       </div>

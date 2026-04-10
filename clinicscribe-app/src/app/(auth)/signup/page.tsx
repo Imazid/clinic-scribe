@@ -67,7 +67,7 @@ export default function SignupPage() {
         <div className="w-10 h-10 rounded-xl bg-secondary flex items-center justify-center">
           <Stethoscope className="w-5 h-5 text-on-secondary" />
         </div>
-        <span className="text-xl font-bold text-primary">ClinicScribe AI</span>
+        <span className="text-xl font-bold text-primary">Miraa</span>
       </div>
 
       <h2 className="text-2xl font-bold text-on-surface mb-1">Create your account</h2>
@@ -86,6 +86,17 @@ export default function SignupPage() {
         <Input id="email" label="Email" type="email" placeholder="you@clinic.com" value={form.email} onChange={(e) => update('email', e.target.value)} error={errors.email} />
         <Input id="password" label="Password" type="password" placeholder="Min. 8 characters" value={form.password} onChange={(e) => update('password', e.target.value)} error={errors.password} />
         <Input id="confirmPassword" label="Confirm Password" type="password" value={form.confirmPassword} onChange={(e) => update('confirmPassword', e.target.value)} error={errors.confirmPassword} />
+
+        <p className="text-xs leading-5 text-on-surface-variant">
+          By creating an account, you agree to the{' '}
+          <Link href="/terms" className="text-secondary hover:underline">
+            Terms of Service
+          </Link>{' '}
+          and acknowledge the{' '}
+          <Link href="/privacy" className="text-secondary hover:underline">
+            Privacy Policy
+          </Link>.
+        </p>
 
         <Button type="submit" className="w-full" size="lg" isLoading={loading}>
           Create Account

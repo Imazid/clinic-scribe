@@ -6,7 +6,6 @@ import { usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { Menu, X, ChevronDown } from "lucide-react";
 import { BRAND, NAV_ITEMS } from "@/lib/constants";
-import { APP_URL } from "@/lib/config";
 
 type NavItem = (typeof NAV_ITEMS)[number];
 function hasChildren(item: NavItem): item is NavItem & { children: ReadonlyArray<{ label: string; href: string; description: string }> } {
@@ -105,18 +104,12 @@ export function Navbar() {
 
         {/* Desktop CTAs */}
         <div className="hidden lg:flex items-center gap-3">
-          <a
-            href={`${APP_URL}/login`}
-            className="px-4 py-2 text-sm font-medium text-on-surface-variant hover:text-primary transition-colors"
-          >
-            Sign In
-          </a>
-          <a
-            href={`${APP_URL}/signup`}
+          <Link
+            href="/#waitlist-form"
             className="px-5 py-2.5 text-sm font-semibold text-on-primary bg-gradient-to-r from-primary to-primary-container rounded-full hover:opacity-90 transition-opacity"
           >
-            Get Started Free
-          </a>
+            Join the Waitlist
+          </Link>
         </div>
 
         {/* Mobile Menu Button */}
@@ -160,18 +153,12 @@ export function Navbar() {
                 </div>
               ))}
               <div className="pt-4 space-y-2">
-                <a
-                  href={`${APP_URL}/login`}
-                  className="block w-full text-center px-5 py-3 text-sm font-medium text-primary border border-outline-variant rounded-full hover:bg-surface-container-low transition-colors"
-                >
-                  Sign In
-                </a>
-                <a
-                  href={`${APP_URL}/signup`}
+                <Link
+                  href="/#waitlist-form"
                   className="block w-full text-center px-5 py-3 text-sm font-semibold text-on-primary bg-gradient-to-r from-primary to-primary-container rounded-full"
                 >
-                  Get Started Free
-                </a>
+                  Join the Waitlist
+                </Link>
               </div>
             </div>
           </motion.div>

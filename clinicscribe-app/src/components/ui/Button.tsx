@@ -4,7 +4,7 @@ import { forwardRef } from 'react';
 import { cn } from '@/lib/utils';
 
 type ButtonVariant = 'primary' | 'secondary' | 'outline' | 'ghost' | 'danger';
-type ButtonSize = 'sm' | 'md' | 'lg';
+type ButtonSize = 'sm' | 'md' | 'lg' | 'action';
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: ButtonVariant;
@@ -13,17 +13,22 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
 }
 
 const variantStyles: Record<ButtonVariant, string> = {
-  primary: 'bg-primary text-on-primary hover:bg-primary-container',
-  secondary: 'bg-secondary text-on-secondary hover:bg-secondary/90',
-  outline: 'border border-outline-variant text-on-surface hover:bg-surface-container-high',
+  primary:
+    'border border-primary/70 bg-primary text-on-primary shadow-ambient-sm hover:-translate-y-px hover:bg-primary-container hover:shadow-ambient active:translate-y-0',
+  secondary:
+    'border border-secondary/50 bg-secondary text-on-secondary shadow-ambient-sm hover:-translate-y-px hover:bg-secondary/90 hover:shadow-ambient active:translate-y-0',
+  outline:
+    'border border-outline-variant bg-surface-container-lowest text-on-surface shadow-[inset_0_1px_0_rgba(255,255,255,0.7)] hover:border-secondary/30 hover:bg-secondary/10 hover:text-secondary',
   ghost: 'text-on-surface-variant hover:bg-surface-container-high',
-  danger: 'bg-error text-white hover:bg-error/90',
+  danger:
+    'border border-error/40 bg-error text-white shadow-ambient-sm hover:-translate-y-px hover:bg-error/90 hover:shadow-ambient active:translate-y-0',
 };
 
 const sizeStyles: Record<ButtonSize, string> = {
   sm: 'px-3 py-1.5 text-sm rounded-md',
   md: 'px-4 py-2 text-sm rounded-lg',
   lg: 'px-6 py-3 text-base rounded-xl',
+  action: 'px-4 py-2.5 text-sm rounded-xl',
 };
 
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
@@ -32,7 +37,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       <button
         ref={ref}
         className={cn(
-          'inline-flex items-center justify-center gap-2 font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-secondary focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none',
+          'inline-flex items-center justify-center gap-2 font-semibold transition-[transform,box-shadow,background-color,border-color,color] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-secondary focus-visible:ring-offset-2 focus-visible:ring-offset-surface disabled:opacity-50 disabled:pointer-events-none',
           variantStyles[variant],
           sizeStyles[size],
           className

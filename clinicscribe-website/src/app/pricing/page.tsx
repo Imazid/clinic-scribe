@@ -4,8 +4,7 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Check, ArrowRight, ChevronDown, Building2 } from "lucide-react";
 import Link from "next/link";
-import { BRAND, PRICING_TIERS, PRICING_DISCLAIMER } from "@/lib/constants";
-import { APP_URL } from "@/lib/config";
+import { PRICING_TIERS, PRICING_DISCLAIMER } from "@/lib/constants";
 
 const fadeUp = {
   initial: { opacity: 0, y: 30 },
@@ -24,12 +23,12 @@ const pricingFaqs = [
   {
     question: "Is there a free trial?",
     answer:
-      "Yes. All plans include a 14-day free trial so you can evaluate the product with your actual clinical workflow before committing. A card is required at sign-up but you won't be charged until the trial ends, and you can cancel anytime.",
+      "Yes. Every plan will include a 14-day free trial once Miraa launches. We are not taking live sign-ups yet, so the current pricing page is a preview only.",
   },
   {
     question: "Can I change plans later?",
     answer:
-      "Absolutely. You can upgrade or downgrade your plan at any time. Changes take effect at the start of your next billing cycle. We will help you find the right plan for your practice size.",
+      "Yes. Once Miraa is live, you will be able to move between plans as your practice changes. We will share the exact billing rules closer to launch.",
   },
   {
     question: "What counts as a clinician seat?",
@@ -39,7 +38,7 @@ const pricingFaqs = [
   {
     question: "Do you offer discounts for larger practices?",
     answer:
-      "Yes. The Group Practice tier offers volume pricing, and Enterprise plans include custom pricing tailored to your deployment. Contact our sales team for a quote based on your specific needs.",
+      "Yes. Group and enterprise pricing will be finalised before launch. Join the waitlist if you want to hear when larger-practice pricing is confirmed.",
   },
 ];
 
@@ -49,7 +48,7 @@ export default function PricingPage() {
   return (
     <>
       {/* Hero */}
-      <section className="bg-surface-container-low pt-32 pb-16">
+      <section className="section-atmosphere overflow-hidden bg-surface-container-low pt-32 pb-16">
         <div className="max-w-7xl mx-auto px-6 text-center">
           <motion.p {...fadeUp} className="label-text text-secondary mb-4">
             Pricing
@@ -59,21 +58,22 @@ export default function PricingPage() {
             transition={{ duration: 0.6, delay: 0.1 }}
             className="text-4xl md:text-5xl lg:text-6xl font-bold text-primary tracking-tight mb-6"
           >
-            Simple, Transparent Pricing
+            Pricing Preview
           </motion.h1>
           <motion.p
             {...fadeUp}
             transition={{ duration: 0.6, delay: 0.2 }}
             className="text-lg md:text-xl text-on-surface-variant max-w-2xl mx-auto"
           >
-            Plans that scale with your practice. Start with a 14-day free
-            trial — your card won&apos;t be charged until it ends.
+            Miraa is not available to buy yet. These plans are an early preview,
+            and every tier will include a 14-day free trial when launch sign-up
+            opens.
           </motion.p>
         </div>
       </section>
 
       {/* Pricing Cards */}
-      <section className="py-20 bg-surface">
+      <section className="section-atmosphere py-20 bg-surface">
         <div className="max-w-7xl mx-auto px-6">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {PRICING_TIERS.map((tier, i) => (
@@ -81,10 +81,10 @@ export default function PricingPage() {
                 key={tier.name}
                 {...stagger}
                 transition={{ duration: 0.5, delay: i * 0.1 }}
-                className={`relative rounded-2xl p-6 flex flex-col ${
+                className={`card-lift group relative flex flex-col rounded-2xl border border-outline-variant/25 p-6 ${
                   tier.highlighted
                     ? "bg-gradient-to-b from-primary to-primary-container text-on-primary shadow-ambient-lg ring-2 ring-secondary-container"
-                    : "bg-surface-container-lowest shadow-ambient-sm"
+                    : "bg-surface-container-lowest/95 shadow-ambient-sm"
                 }`}
               >
                 {tier.highlighted && (
@@ -158,20 +158,16 @@ export default function PricingPage() {
                   ))}
                 </ul>
 
-                <Link
-                  href={
-                    tier.name === "Enterprise"
-                      ? `/demo?plan=enterprise`
-                      : `${APP_URL}/checkout?plan=${tier.name === "Group Practice" ? "group" : tier.name.toLowerCase()}`
-                  }
-                  className={`block w-full text-center py-3 text-sm font-semibold rounded-xl transition-all ${
+                <div
+                  aria-disabled="true"
+                  className={`block w-full text-center py-3 text-sm font-semibold rounded-xl cursor-not-allowed ${
                     tier.highlighted
-                      ? "bg-surface-container-lowest text-primary hover:bg-surface-container-low"
-                      : "bg-gradient-to-r from-primary to-primary-container text-on-primary hover:opacity-90"
+                      ? "bg-surface-container-lowest/80 text-primary/70"
+                      : "bg-surface-container-high text-on-surface-variant"
                   }`}
                 >
                   {tier.cta}
-                </Link>
+                </div>
               </motion.div>
             ))}
           </div>
@@ -187,11 +183,11 @@ export default function PricingPage() {
       </section>
 
       {/* Enterprise Note */}
-      <section className="py-16 bg-surface-container-low">
+      <section className="section-atmosphere py-16 bg-surface-container-low">
         <div className="max-w-4xl mx-auto px-6">
           <motion.div
             {...fadeUp}
-            className="bg-surface-container-lowest rounded-2xl p-8 md:p-10 shadow-ambient flex flex-col md:flex-row items-center gap-8"
+            className="card-lift group flex flex-col items-center gap-8 rounded-2xl border border-outline-variant/25 bg-surface-container-lowest/95 p-8 shadow-ambient md:flex-row md:p-10"
           >
             <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary to-primary-container flex items-center justify-center shrink-0">
               <Building2 className="w-8 h-8 text-on-primary" />
@@ -201,25 +197,21 @@ export default function PricingPage() {
                 Enterprise &amp; Multi-Site Deployments
               </h3>
               <p className="text-sm text-on-surface-variant leading-relaxed">
-                Custom pricing for larger multi-site deployments. Includes
-                dedicated account management, custom integrations, on-premise
-                deployment options, SLA guarantees, and compliance reporting
-                tailored to your organisation.
+                Enterprise pricing is still being finalised for larger and
+                multi-site deployments. We will share launch timing, rollout
+                details, and commercial options closer to release.
               </p>
             </div>
-            <Link
-              href="/demo?plan=enterprise"
-              className="inline-flex items-center gap-2 px-6 py-3 text-sm font-semibold text-on-primary bg-gradient-to-r from-primary to-primary-container rounded-full hover:opacity-90 transition-opacity whitespace-nowrap"
-            >
-              Contact Sales
+            <div className="inline-flex items-center gap-2 px-6 py-3 text-sm font-semibold text-on-surface-variant bg-surface-container rounded-full whitespace-nowrap">
+              Coming Soon
               <ArrowRight className="w-4 h-4" />
-            </Link>
+            </div>
           </motion.div>
         </div>
       </section>
 
       {/* Pricing FAQ */}
-      <section className="py-20 bg-surface">
+      <section className="section-atmosphere py-20 bg-surface">
         <div className="max-w-3xl mx-auto px-6">
           <motion.div {...fadeUp} className="text-center mb-12">
             <p className="label-text text-secondary mb-3">
@@ -236,7 +228,7 @@ export default function PricingPage() {
                 key={i}
                 {...stagger}
                 transition={{ duration: 0.5, delay: i * 0.08 }}
-                className="bg-surface-container-lowest rounded-xl shadow-ambient-sm overflow-hidden"
+                className="card-lift group overflow-hidden rounded-xl border border-outline-variant/25 bg-surface-container-lowest/95 shadow-ambient-sm transition-shadow hover:shadow-ambient"
               >
                 <button
                   onClick={() => setOpenFaq(openFaq === i ? null : i)}
@@ -274,21 +266,21 @@ export default function PricingPage() {
       </section>
 
       {/* CTA */}
-      <section className="py-20 bg-surface-container-low">
+      <section className="section-atmosphere py-20 bg-surface-container-low">
         <div className="max-w-3xl mx-auto px-6 text-center">
           <motion.div {...fadeUp}>
             <h2 className="text-3xl md:text-4xl font-bold text-primary tracking-tight mb-4">
-              Ready to Get Started?
+              Want first access when Miraa launches?
             </h2>
             <p className="text-on-surface-variant mb-8">
-              Start your 14-day free trial today. See how {BRAND.name} fits
-              your clinical workflow.
+              Join the waitlist now. We will email you when the 14-day free
+              trial goes live and sign-up is open.
             </p>
             <Link
-              href="/demo"
+              href="/#waitlist-form"
               className="inline-flex items-center gap-2 px-8 py-3.5 text-sm font-semibold text-on-primary bg-gradient-to-r from-primary to-primary-container rounded-full hover:opacity-90 transition-opacity"
             >
-              Book a Demo
+              Join the Waitlist
               <ArrowRight className="w-4 h-4" />
             </Link>
           </motion.div>

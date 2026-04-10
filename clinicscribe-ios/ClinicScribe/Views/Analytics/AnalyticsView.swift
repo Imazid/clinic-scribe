@@ -5,43 +5,41 @@ struct AnalyticsView: View {
     @StateObject private var vm = AnalyticsViewModel()
 
     var body: some View {
-        NavigationStack {
-            Group {
-                if vm.isLoading {
-                    ProgressView()
-                        .frame(maxWidth: .infinity, maxHeight: .infinity)
-                } else if vm.totalConsultations == 0 && vm.consultationsByType.isEmpty {
-                    CSEmptyState(
-                        icon: "chart.bar.xaxis",
-                        title: "No Analytics Data",
-                        description: "Analytics will appear here once consultations have been recorded.",
-                        actionTitle: "Refresh"
-                    ) {
-                        Task {
-                            if let clinicId = AuthService.shared.currentProfile?.clinicId {
-                                await vm.load(clinicId: clinicId)
-                            }
-                        }
-                    }
+        Group {
+            if vm.isLoading {
+                ProgressView()
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
-                } else {
-                    ScrollView {
-                        VStack(spacing: Theme.spacingMd) {
-                            summaryCards
-                            consultationsByTypeChart
-                        }
-                        .padding()
-                    }
-                    .refreshable {
+            } else if vm.totalConsultations == 0 && vm.consultationsByType.isEmpty {
+                CSEmptyState(
+                    icon: "chart.bar.xaxis",
+                    title: "No Analytics Data",
+                    description: "Analytics will appear here once consultations have been recorded.",
+                    actionTitle: "Refresh"
+                ) {
+                    Task {
                         if let clinicId = AuthService.shared.currentProfile?.clinicId {
                             await vm.load(clinicId: clinicId)
                         }
                     }
                 }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+            } else {
+                ScrollView {
+                    VStack(spacing: Theme.spacingMd) {
+                        summaryCards
+                        consultationsByTypeChart
+                    }
+                    .padding()
+                }
+                .refreshable {
+                    if let clinicId = AuthService.shared.currentProfile?.clinicId {
+                        await vm.load(clinicId: clinicId)
+                    }
+                }
             }
-            .background(Theme.surface)
-            .navigationTitle("Analytics")
         }
+        .background(Theme.surface)
+        .navigationTitle("Analytics")
         .task {
             if let clinicId = AuthService.shared.currentProfile?.clinicId {
                 await vm.load(clinicId: clinicId)

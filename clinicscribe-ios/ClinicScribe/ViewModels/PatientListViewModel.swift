@@ -10,6 +10,15 @@ final class PatientListViewModel: ObservableObject {
 
     var clinicId: UUID?
 
+    var filteredPatients: [Patient] {
+        let normalizedQuery = searchText.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        guard !normalizedQuery.isEmpty else { return patients }
+
+        return patients.filter { patient in
+            patient.fullName.lowercased().contains(normalizedQuery)
+        }
+    }
+
     func load() async {
         guard let clinicId else {
             print("⚠️ PatientListVM: clinicId is nil, cannot load patients")
@@ -21,7 +30,7 @@ final class PatientListViewModel: ObservableObject {
         do {
             patients = try await PatientService.shared.getPatients(
                 clinicId: clinicId,
-                search: searchText.isEmpty ? nil : searchText,
+                search: nil,
                 consentFilter: consentFilter
             )
         } catch {

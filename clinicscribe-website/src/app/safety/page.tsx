@@ -49,7 +49,7 @@ export default function SafetyPage() {
   return (
     <>
       {/* Hero */}
-      <section className="bg-surface-container-low pt-32 pb-16">
+      <section className="section-atmosphere overflow-hidden bg-surface-container-low pt-32 pb-16">
         <div className="max-w-7xl mx-auto px-6 text-center">
           <motion.p {...fadeUp} className="label-text text-secondary mb-4">
             Trust &amp; Governance
@@ -73,7 +73,7 @@ export default function SafetyPage() {
       </section>
 
       {/* Safety Principles Grid */}
-      <section className="py-20 bg-surface">
+      <section className="section-atmosphere py-20 bg-surface">
         <div className="max-w-7xl mx-auto px-6">
           <motion.div {...fadeUp} className="text-center mb-16">
             <p className="label-text text-secondary mb-3">Foundations</p>
@@ -90,7 +90,7 @@ export default function SafetyPage() {
                   key={i}
                   {...stagger}
                   transition={{ duration: 0.5, delay: i * 0.08 }}
-                  className="bg-surface-container-lowest rounded-2xl p-6 shadow-ambient-sm"
+                  className="card-lift group bg-surface-container-lowest/95 rounded-2xl border border-outline-variant/25 p-6 shadow-ambient-sm transition-shadow hover:shadow-ambient"
                 >
                   <div className="w-12 h-12 rounded-xl bg-secondary/10 flex items-center justify-center mb-4">
                     <Icon className="w-6 h-6 text-secondary" />
@@ -109,7 +109,7 @@ export default function SafetyPage() {
       </section>
 
       {/* 1. Clinician-in-the-Loop */}
-      <section className="py-20 bg-surface-container-low">
+      <section className="section-atmosphere py-20 bg-surface-container-low">
         <div className="max-w-7xl mx-auto px-6">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
             <motion.div {...fadeUp}>
@@ -133,7 +133,7 @@ export default function SafetyPage() {
             <motion.div
               {...fadeUp}
               transition={{ duration: 0.6, delay: 0.2 }}
-              className="bg-surface-container-lowest rounded-2xl p-8 shadow-ambient"
+              className="card-lift group bg-surface-container-lowest/95 rounded-2xl border border-outline-variant/25 p-8 shadow-ambient"
             >
               <div className="space-y-4">
                 {[
@@ -175,7 +175,7 @@ export default function SafetyPage() {
       </section>
 
       {/* 2. Mandatory Review */}
-      <section className="py-20 bg-surface">
+      <section className="section-atmosphere py-20 bg-surface">
         <div className="max-w-7xl mx-auto px-6">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
             <motion.div
@@ -183,7 +183,7 @@ export default function SafetyPage() {
               transition={{ duration: 0.6, delay: 0.2 }}
               className="order-2 lg:order-1"
             >
-              <div className="bg-surface-container-lowest rounded-2xl p-8 shadow-ambient">
+              <div className="card-lift group bg-surface-container-lowest/95 rounded-2xl border border-outline-variant/25 p-8 shadow-ambient">
                 <div className="flex items-center gap-3 mb-6">
                   <ShieldCheck className="w-5 h-5 text-secondary" />
                   <span className="text-sm font-bold text-primary">
@@ -244,7 +244,7 @@ export default function SafetyPage() {
       </section>
 
       {/* 3. Audit Logs */}
-      <section className="py-20 bg-surface-container-low">
+      <section className="section-atmosphere py-20 bg-surface-container-low">
         <div className="max-w-7xl mx-auto px-6">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
             <motion.div {...fadeUp}>
@@ -280,7 +280,7 @@ export default function SafetyPage() {
             <motion.div
               {...fadeUp}
               transition={{ duration: 0.6, delay: 0.2 }}
-              className="bg-surface-container-lowest rounded-2xl p-8 shadow-ambient"
+              className="card-lift group bg-surface-container-lowest/95 rounded-2xl border border-outline-variant/25 p-8 shadow-ambient"
             >
               <p className="label-text text-secondary mb-4">
                 Sample Audit Entry
@@ -335,7 +335,7 @@ export default function SafetyPage() {
       </section>
 
       {/* 4. Access Controls */}
-      <section className="py-20 bg-surface">
+      <section className="section-atmosphere py-20 bg-surface">
         <div className="max-w-7xl mx-auto px-6">
           <div className="max-w-3xl mx-auto">
             <motion.div {...fadeUp} className="text-center mb-12">
@@ -373,7 +373,7 @@ export default function SafetyPage() {
                   key={i}
                   {...stagger}
                   transition={{ duration: 0.5, delay: i * 0.1 }}
-                  className="bg-surface-container-lowest rounded-2xl p-6 shadow-ambient-sm text-center"
+                  className="card-lift group bg-surface-container-lowest/95 rounded-2xl border border-outline-variant/25 p-6 shadow-ambient-sm text-center transition-shadow hover:shadow-ambient"
                 >
                   <div className="w-11 h-11 rounded-xl bg-secondary/10 flex items-center justify-center mb-4 mx-auto">
                     <item.icon className="w-5 h-5 text-secondary" />
@@ -392,7 +392,7 @@ export default function SafetyPage() {
       </section>
 
       {/* 5. Secure Handling */}
-      <section className="py-20 bg-surface-container-low">
+      <section className="section-atmosphere py-20 bg-surface-container-low">
         <div className="max-w-7xl mx-auto px-6">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
             <motion.div {...fadeUp}>
@@ -428,7 +428,7 @@ export default function SafetyPage() {
             <motion.div
               {...fadeUp}
               transition={{ duration: 0.6, delay: 0.2 }}
-              className="bg-surface-container-lowest rounded-2xl p-8 shadow-ambient"
+              className="card-lift group bg-surface-container-lowest/95 rounded-2xl border border-outline-variant/25 p-8 shadow-ambient"
             >
               <div className="text-center">
                 <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-primary to-primary-container flex items-center justify-center mx-auto mb-6">
@@ -465,7 +465,7 @@ export default function SafetyPage() {
       </section>
 
       {/* 6. Privacy & Consent */}
-      <section className="py-20 bg-surface">
+      <section className="section-atmosphere py-20 bg-surface">
         <div className="max-w-7xl mx-auto px-6">
           <div className="max-w-3xl mx-auto text-center">
             <motion.div {...fadeUp}>
@@ -501,7 +501,7 @@ export default function SafetyPage() {
                   key={i}
                   {...stagger}
                   transition={{ duration: 0.5, delay: i * 0.1 }}
-                  className="bg-surface-container-lowest rounded-2xl p-6 shadow-ambient-sm"
+                  className="card-lift group bg-surface-container-lowest/95 rounded-2xl border border-outline-variant/25 p-6 shadow-ambient-sm transition-shadow hover:shadow-ambient"
                 >
                   <h3 className="text-base font-bold text-primary mb-2">
                     {item.title}
@@ -517,7 +517,7 @@ export default function SafetyPage() {
       </section>
 
       {/* 7. Human Oversight for Prescriptions */}
-      <section className="py-20 bg-surface-container-low">
+      <section className="section-atmosphere py-20 bg-surface-container-low">
         <div className="max-w-7xl mx-auto px-6">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
             <motion.div {...fadeUp}>
@@ -552,7 +552,7 @@ export default function SafetyPage() {
             <motion.div
               {...fadeUp}
               transition={{ duration: 0.6, delay: 0.2 }}
-              className="bg-surface-container-lowest rounded-2xl p-8 shadow-ambient"
+              className="card-lift group bg-surface-container-lowest/95 rounded-2xl border border-outline-variant/25 p-8 shadow-ambient"
             >
               <div className="space-y-4">
                 <div className="bg-surface-container rounded-xl p-4">
@@ -601,11 +601,11 @@ export default function SafetyPage() {
       </section>
 
       {/* 8. NOT Autonomous — Prominent Section */}
-      <section className="py-20 bg-surface">
+      <section className="section-atmosphere py-20 bg-surface">
         <div className="max-w-4xl mx-auto px-6">
           <motion.div
             {...fadeUp}
-            className="bg-surface-container rounded-2xl p-8 md:p-12 shadow-ambient"
+            className="card-lift group bg-surface-container rounded-2xl border border-outline-variant/25 p-8 shadow-ambient md:p-12"
           >
             <div className="flex items-start gap-5 mb-8">
               <div className="w-14 h-14 rounded-xl bg-primary flex items-center justify-center shrink-0">
@@ -626,11 +626,11 @@ export default function SafetyPage() {
               <p className="text-on-surface-variant leading-relaxed">
                 {BRAND.name} is a{" "}
                 <strong className="text-primary">
-                  clinical documentation assistant
+                  clinical workflow copilot
                 </strong>
-                . It drafts structured notes, referral letters, and follow-up
-                actions based on consultation audio. It does not diagnose, treat,
-                prescribe, or make clinical decisions.
+                . It prepares context, captures consultation content, drafts
+                notes and documents, and surfaces follow-up actions. It does not
+                diagnose, treat, prescribe, or make clinical decisions.
               </p>
               <p className="text-on-surface-variant leading-relaxed">
                 The clinician is always the decision-maker. The system provides
@@ -695,7 +695,7 @@ export default function SafetyPage() {
       </section>
 
       {/* 9. Australia-first Compliance */}
-      <section className="py-20 bg-surface-container-low">
+      <section className="section-atmosphere py-20 bg-surface-container-low">
         <div className="max-w-7xl mx-auto px-6">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
             <motion.div {...fadeUp}>
@@ -760,7 +760,7 @@ export default function SafetyPage() {
       </section>
 
       {/* 11. What the system does not automate + What should never be automated */}
-      <section className="py-20 bg-surface">
+      <section className="section-atmosphere py-20 bg-surface">
         <div className="max-w-7xl mx-auto px-6">
           <motion.div {...fadeUp} className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-bold text-primary tracking-tight mb-4">
@@ -776,7 +776,7 @@ export default function SafetyPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <motion.div
               {...fadeUp}
-              className="bg-surface-container-lowest rounded-2xl p-8 shadow-ambient-sm"
+              className="card-lift group bg-surface-container-lowest/95 rounded-2xl border border-outline-variant/25 p-8 shadow-ambient-sm"
             >
               <div className="flex items-center gap-3 mb-6">
                 <div className="w-11 h-11 rounded-xl bg-primary/10 flex items-center justify-center">
@@ -810,7 +810,7 @@ export default function SafetyPage() {
             <motion.div
               {...fadeUp}
               transition={{ duration: 0.6, delay: 0.15 }}
-              className="bg-surface-container-lowest rounded-2xl p-8 shadow-ambient-sm"
+              className="card-lift group bg-surface-container-lowest/95 rounded-2xl border border-outline-variant/25 p-8 shadow-ambient-sm"
             >
               <div className="flex items-center gap-3 mb-6">
                 <div className="w-11 h-11 rounded-xl bg-error/10 flex items-center justify-center">
@@ -845,15 +845,15 @@ export default function SafetyPage() {
       </section>
 
       {/* CTA */}
-      <section className="py-20 bg-surface-container-low">
+      <section className="section-atmosphere py-20 bg-surface-container-low">
         <div className="max-w-3xl mx-auto px-6 text-center">
           <motion.div {...fadeUp}>
             <h2 className="text-3xl md:text-4xl font-bold text-primary tracking-tight mb-4">
               Have Questions About Safety?
             </h2>
             <p className="text-on-surface-variant mb-8">
-              We welcome scrutiny. Book a demo to discuss our safety
-              architecture, or reach out directly at{" "}
+              We welcome scrutiny. Join the waitlist for launch updates, or
+              reach out directly at{" "}
               <a
                 href={`mailto:${BRAND.supportEmail}`}
                 className="text-secondary hover:underline"
@@ -863,10 +863,10 @@ export default function SafetyPage() {
               .
             </p>
             <Link
-              href="/demo"
+              href="/#waitlist-form"
               className="inline-flex items-center gap-2 px-8 py-3.5 text-sm font-semibold text-on-primary bg-gradient-to-r from-primary to-primary-container rounded-full hover:opacity-90 transition-opacity"
             >
-              Book a Demo
+              Join the Waitlist
               <ArrowRight className="w-4 h-4" />
             </Link>
           </motion.div>

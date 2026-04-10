@@ -5,6 +5,7 @@ import Supabase
 final class SettingsViewModel: ObservableObject {
     @Published var profile: Profile?
     @Published var clinic: Clinic?
+    @Published var accountEmail = ""
     @Published var firstName = ""
     @Published var lastName = ""
     @Published var specialty = ""
@@ -14,6 +15,10 @@ final class SettingsViewModel: ObservableObject {
     private var supabase: SupabaseClient { SupabaseManager.shared.client }
 
     func load() async {
+        if let session = try? await supabase.auth.session {
+            accountEmail = session.user.email ?? ""
+        }
+
         guard let userId = AuthService.shared.currentUserId else { return }
         do {
             let profiles: [Profile] = try await supabase.from("profiles")
@@ -57,6 +62,12 @@ final class SettingsViewModel: ObservableObject {
                 ])
                 .eq("id", value: profileId.uuidString)
                 .execute()
+
+            profile?.firstName = firstName
+            profile?.lastName = lastName
+            profile?.specialty = specialty.isEmpty ? nil : specialty
+            profile?.providerNumber = providerNumber.isEmpty ? nil : providerNumber
+            AuthService.shared.currentProfile = profile
         } catch {
             print("Save profile error: \(error)")
         }

@@ -2,9 +2,10 @@ import { cn } from '@/lib/utils';
 
 interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
   variant?: 'default' | 'elevated' | 'outlined';
+  interactive?: boolean;
 }
 
-export function Card({ className, variant = 'default', children, ...props }: CardProps) {
+export function Card({ className, variant = 'default', interactive = false, children, ...props }: CardProps) {
   return (
     <div
       className={cn(
@@ -12,6 +13,7 @@ export function Card({ className, variant = 'default', children, ...props }: Car
         variant === 'default' && 'bg-surface-container-lowest shadow-ambient-sm',
         variant === 'elevated' && 'bg-surface-container-lowest shadow-ambient',
         variant === 'outlined' && 'bg-surface-container-lowest border border-outline-variant',
+        interactive && 'transition-[transform,box-shadow] duration-200 hover:-translate-y-0.5 hover:shadow-ambient cursor-pointer',
         className
       )}
       {...props}

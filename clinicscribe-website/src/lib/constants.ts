@@ -2,10 +2,11 @@
 // BRAND — Change these to rebrand the entire site
 // ============================================================
 export const BRAND = {
-  name: "ClinicScribe AI",
-  shortName: "ClinicScribe",
-  tagline: "AI-Powered Clinical Documentation",
-  description: "The ambient clinical scribe that drafts structured notes, referrals, and follow-up actions — so clinicians can focus on patients, not paperwork.",
+  name: "Miraa",
+  shortName: "Miraa",
+  expandedName: "Medical Insights, Record, Automation and Assistance",
+  tagline: "Clinical Workflow Copilot",
+  description: "Miraa, short for Medical Insights, Record, Automation and Assistance, is the clinical workflow copilot that prepares the visit, captures the consult, verifies outputs, and closes the loop after care.",
   url: "https://clinicscribe.ai",
   supportEmail: "hello@clinicscribe.ai",
   demoEmail: "demo@clinicscribe.ai",
@@ -22,9 +23,9 @@ export const NAV_ITEMS = [
     label: "Product",
     href: "/product",
     children: [
-      { label: "How It Works", href: "/product", description: "End-to-end clinical documentation workflow" },
+      { label: "Workflow", href: "/product", description: "Prepare, capture, verify, and close the consult" },
       { label: "Integrations", href: "/integrations", description: "Connect with your existing clinical systems" },
-      { label: "Use Cases", href: "/use-cases", description: "Solutions for every practice type" },
+      { label: "Use Cases", href: "/use-cases", description: "Built for GP and specialty workflows" },
     ],
   },
   {
@@ -52,44 +53,44 @@ export const NAV_ITEMS = [
 export const FEATURES = [
   {
     icon: "Mic",
-    title: "Ambient Transcription",
-    description: "Capture patient-clinician conversations in real time or upload recorded audio. Speaker diarisation separates voices with clinical-grade accuracy.",
+    title: "Live Transcription",
+    description: "Capture patient-clinician conversations in real time or upload recorded audio. Speaker separation, interruption recovery, and transcript scoring keep the visit usable.",
     tag: "Core",
   },
   {
     icon: "FileText",
-    title: "Structured Clinical Notes",
-    description: "AI drafts SOAP notes, progress notes, and visit summaries using recognised medical terminology. Every output is structured and ready for clinician review.",
+    title: "Structured Note Workspace",
+    description: "AI drafts SOAP notes, progress notes, and visit summaries using recognised medical terminology, with a structured extraction panel alongside the transcript.",
     tag: "Core",
   },
   {
-    icon: "Send",
-    title: "Referral Draft Generation",
-    description: "Automatically draft referral letters from consultation context. Clinicians review, edit, and approve before sending — nothing leaves without sign-off.",
+    icon: "Sparkles",
+    title: "Template-Based Generation",
+    description: "Template builders, prompt chips, and versioned note patterns keep outputs consistent across clinicians and specialties.",
     tag: "Workflow",
   },
   {
     icon: "Receipt",
-    title: "Billing & Coding Support",
-    description: "Suggest appropriate MBS item numbers and coding based on consultation content. Designed to support — not replace — clinical coding decisions.",
+    title: "Document Generation",
+    description: "Generate letters, patient instructions, forms, and summaries from one consult, then route them for clinician review before export.",
     tag: "Workflow",
   },
   {
     icon: "ListChecks",
-    title: "Follow-up Task Capture",
-    description: "Identify and surface follow-up actions from consultations: pathology requests, specialist referrals, recall reminders, and patient instructions.",
+    title: "Follow-up Closure",
+    description: "Turn plan items into tracked tasks with due dates, statuses, and clear closeout actions instead of leaving them buried in text.",
     tag: "Workflow",
   },
   {
-    icon: "Pill",
-    title: "Prescription Drafting Assist",
-    description: "Pre-populate prescription details from consultation context. The clinician must review, validate, and approve every prescription before it is finalised.",
+    icon: "MessageSquareHeart",
+    title: "Patient Explain Mode",
+    description: "Convert the consult into a plain-English after-visit summary, with language that can be exported, printed, or shared.",
     tag: "Assist",
   },
   {
     icon: "ShieldCheck",
-    title: "Audit Logs & Traceability",
-    description: "Every AI-generated output is logged with timestamps, confidence scores, clinician actions, and edit history. Full traceability for compliance and quality.",
+    title: "Fact Provenance",
+    description: "Every statement can be traced to the transcript, imported chart data, or an inferred flag, so reviewers know what the AI heard and what it guessed.",
     tag: "Safety",
   },
   {
@@ -106,39 +107,39 @@ export const FEATURES = [
 export const WORKFLOW_STEPS = [
   {
     step: 1,
-    title: "Record or Listen",
-    description: "Start ambient listening during a consultation, or upload a recorded session. Multi-speaker detection identifies clinician and patient.",
-    icon: "Mic",
+    title: "Prepare",
+    description: "Brief the consult with prior notes, active problems, medications, recent results, and unresolved follow-up items before the visit starts.",
+    icon: "ClipboardList",
   },
   {
     step: 2,
-    title: "Transcribe",
-    description: "Medical-grade speech recognition transcribes the conversation with clinical terminology awareness and speaker labels.",
-    icon: "FileAudio",
+    title: "Capture",
+    description: "Run live transcription with speaker separation, interruption recovery, and structured extraction while the visit is happening.",
+    icon: "Mic",
   },
   {
     step: 3,
-    title: "Draft Structured Note",
-    description: "AI generates a structured clinical note — SOAP format, progress note, or visit summary — from the transcript content.",
-    icon: "FileText",
+    title: "Verify",
+    description: "Review the note with provenance labels, confidence indicators, and QA checks for contradictions, unsupported facts, and stale content.",
+    icon: "ShieldCheck",
   },
   {
     step: 4,
-    title: "Clinician Review",
-    description: "The clinician reviews, edits, and approves the draft. Confidence indicators highlight areas that may need attention. Nothing is saved without approval.",
-    icon: "UserCheck",
+    title: "Close",
+    description: "Convert approved plan items into tasks, patient summaries, documents, and follow-up actions so the consult actually finishes.",
+    icon: "CheckCircle",
   },
   {
     step: 5,
-    title: "Export to System",
-    description: "Approved notes are exported to your clinical software — Best Practice, MedicalDirector, or via FHIR-compatible formats.",
+    title: "Export",
+    description: "Send approved outputs to clinical systems through integration-ready exports and FHIR-compatible pathways.",
     icon: "Upload",
   },
   {
     step: 6,
-    title: "Trigger Follow-ups",
-    description: "Follow-up tasks, referral drafts, and recall reminders are queued for clinician review. Prescription drafts are pre-populated for validation.",
-    icon: "CheckCircle",
+    title: "Track",
+    description: "Keep reminders, follow-up tasks, and unresolved items visible until the loop is closed.",
+    icon: "ListChecks",
   },
 ] as const;
 
@@ -259,20 +260,20 @@ export const GENIE_INTEGRATION = {
       step: 1,
       title: "Connect Practice",
       description:
-        "Link your Genie Solutions practice to ClinicScribe AI via the Marketplace. OAuth2 credentials are securely exchanged.",
+        "Link your Genie Solutions practice to Miraa via the Marketplace. OAuth2 credentials are securely exchanged.",
     },
     {
       step: 2,
       title: "Pull Patient Context",
       description:
-        "Before each consultation, ClinicScribe pulls demographics, conditions, allergies, and recent observations from Genie.",
+        "Before each consultation, Miraa pulls demographics, conditions, allergies, and recent observations from Genie.",
     },
-    {
-      step: 3,
-      title: "AI-Assisted Documentation",
-      description:
-        "During the consultation, ambient transcription captures the conversation. AI drafts structured notes enriched with patient context from Genie.",
-    },
+      {
+        step: 3,
+        title: "AI-Assisted Documentation",
+        description:
+        "During the consultation, live capture records the conversation. AI drafts structured notes enriched with patient context from Genie.",
+      },
     {
       step: 4,
       title: "Clinician Review",
@@ -299,7 +300,7 @@ export const GENIE_INTEGRATION = {
 // ============================================================
 // PRICING
 // ============================================================
-export const PRICING_DISCLAIMER = "Pricing shown is indicative and subject to change. All plans include a free trial period.";
+export const PRICING_DISCLAIMER = "Pricing is preview-only and subject to change. Checkout is not live yet, and every plan will include a 14-day free trial when Miraa launches.";
 
 export const PRICING_TIERS = [
   {
@@ -315,7 +316,7 @@ export const PRICING_TIERS = [
       "Up to 80 consultations/month",
       "Email support",
     ],
-    cta: "Start Free Trial",
+    cta: "Coming Soon",
     highlighted: false,
   },
   {
@@ -332,7 +333,7 @@ export const PRICING_TIERS = [
       "Priority support",
       "Admin dashboard",
     ],
-    cta: "Start Free Trial",
+    cta: "Coming Soon",
     highlighted: true,
   },
   {
@@ -349,7 +350,7 @@ export const PRICING_TIERS = [
       "API access",
       "Audit log exports",
     ],
-    cta: "Start Free Trial",
+    cta: "Coming Soon",
     highlighted: false,
   },
   {
@@ -366,7 +367,7 @@ export const PRICING_TIERS = [
       "Dedicated account manager",
       "Compliance reporting",
     ],
-    cta: "Contact Sales",
+    cta: "Coming Soon",
     highlighted: false,
   },
 ];
@@ -378,10 +379,10 @@ export const USE_CASES = [
   {
     title: "General Practice",
     icon: "Stethoscope",
-    painPoint: "GPs spend 2+ hours per day on documentation, often completing notes after hours. This contributes to burnout and reduces time available for patient care.",
-    benefit: "Ambient transcription during consultations drafts complete SOAP notes in seconds. Referral letters and follow-up tasks are pre-populated for review.",
-    outputs: ["SOAP notes", "Referral letters", "Follow-up reminders", "MBS billing suggestions"],
-    whyAI: "Repetitive documentation from high-volume, short consultations is ideally suited to AI assistance — freeing GPs to focus on clinical reasoning and patient relationships.",
+    painPoint: "GPs spend time before, during, and after consultations moving between charts, transcripts, and follow-up items. That creates friction and reduces time available for patient care.",
+    benefit: "The workflow copilot briefs the consult, captures the conversation, and turns the plan into reviewed notes, documents, and tasks.",
+    outputs: ["Visit briefs", "SOAP notes", "Referral letters", "Follow-up tasks"],
+    whyAI: "High-volume GP work benefits from structured context and closeout support because the same patterns repeat every day across many consults.",
   },
   {
     title: "Specialist Clinics",
@@ -394,10 +395,10 @@ export const USE_CASES = [
   {
     title: "Telehealth",
     icon: "Video",
-    painPoint: "Telehealth consultations generate the same documentation burden as in-person visits, but clinicians often lack efficient workflows for remote note-taking.",
-    benefit: "Integrates with telehealth platforms to capture audio, transcribe, and draft notes — maintaining documentation quality across in-person and virtual care.",
+    painPoint: "Telehealth consultations still create a full preparation, capture, and follow-up burden, but clinicians often lack a single workflow for remote visits.",
+    benefit: "The same prepare-capture-verify-close flow works for telehealth, keeping documentation and follow-up consistent across in-person and virtual care.",
     outputs: ["Visit summaries", "Telehealth encounter notes", "Patient instructions", "Follow-up scheduling"],
-    whyAI: "As telehealth becomes a permanent fixture of Australian healthcare, documentation tools must work seamlessly across both in-person and virtual consultations.",
+    whyAI: "As telehealth stays embedded in Australian healthcare, the workflow has to work the same way whether the consult is in room or on screen.",
   },
   {
     title: "Allied Health",
@@ -415,11 +416,11 @@ export const USE_CASES = [
 export const FAQS = [
   {
     question: "Does this replace clinical judgment?",
-    answer: "No. ClinicScribe AI is a documentation assistant, not a clinical decision-making tool. It drafts notes, referrals, and follow-up actions based on consultation content. The clinician always reviews, edits, and approves every output before it is finalised or sent.",
+    answer: "No. Miraa is a clinical workflow copilot, not a clinical decision-making tool. It prepares context, drafts notes and documents, and surfaces follow-up actions based on consultation content. The clinician always reviews, edits, and approves every output before it is finalised or sent.",
   },
   {
     question: "Can it prescribe medications automatically?",
-    answer: "No. ClinicScribe AI provides prescription drafting assistance only — it can pre-populate prescription details from consultation context. Every prescription must be reviewed, validated, and approved by the clinician. There is no autonomous prescribing.",
+    answer: "No. Miraa provides prescription drafting assistance only — it can pre-populate prescription details from consultation context. Every prescription must be reviewed, validated, and approved by the clinician. There is no autonomous prescribing.",
   },
   {
     question: "How does clinician review work?",
@@ -439,7 +440,7 @@ export const FAQS = [
   },
   {
     question: "Is this suitable for telehealth?",
-    answer: "Yes. ClinicScribe AI can capture audio from telehealth sessions (with appropriate integrations) and works with uploaded recordings. The same transcription, note generation, and review workflow applies to both in-person and telehealth consultations.",
+    answer: "Yes. Miraa can capture audio from telehealth sessions (with appropriate integrations) and works with uploaded recordings. The same capture, note generation, and review workflow applies to both in-person and telehealth consultations.",
   },
   {
     question: "Can I edit the generated notes?",
@@ -468,7 +469,7 @@ export const FAQS = [
 // ============================================================
 export const TESTIMONIALS = [
   {
-    quote: "The documentation burden in general practice is real. Having a system that drafts my notes during the consultation — and lets me review before saving — has genuinely changed my workflow.",
+    quote: "The workflow burden in general practice is real. Having a system that briefs the visit, drafts the note, and lets me verify before saving has changed my workflow.",
     name: "Dr. Sarah Mitchell",
     role: "General Practitioner",
     clinic: "Pilot Practice, Sydney",
@@ -482,7 +483,7 @@ export const TESTIMONIALS = [
     placeholder: true,
   },
   {
-    quote: "I was spending 90 minutes after every clinic finishing notes. With ClinicScribe, I review and approve during the session. My notes are done before the patient leaves.",
+    quote: "I was spending 90 minutes after every clinic finishing notes. With Miraa, I review and approve during the session. My notes are done before the patient leaves.",
     name: "Dr. Priya Sharma",
     role: "Paediatrician",
     clinic: "Pilot Practice, Brisbane",
@@ -497,7 +498,7 @@ export const ROI_METRICS = [
   {
     metric: "2+ hours",
     label: "Saved per clinician per day",
-    description: "Reduce time spent on clinical documentation, after-hours charting, and administrative follow-up.",
+    description: "Reduce time spent on preparation, documentation, and closeout work across the consult lifecycle.",
     caveat: "Based on pilot estimates. Actual time savings depend on consultation volume and workflow.",
   },
   {
@@ -562,38 +563,79 @@ export const SAFETY_PRINCIPLES = [
 export const ROADMAP = [
   {
     phase: "Phase 1",
-    title: "Clinical Note Drafting",
+    title: "Workflow Foundation",
     status: "current" as const,
     items: [
-      "Ambient transcription and structured SOAP notes",
-      "Referral letter drafting",
-      "Follow-up task capture",
-      "Prescription drafting assistance",
-      "Best Practice and MedicalDirector pilot integrations",
+      "Live transcription and structured note workspace",
+      "Template builders and document generation",
+      "Follow-up tasks and closeout tracking",
+      "GP-first consultation flows",
+      "Integration-ready exports",
     ],
   },
   {
     phase: "Phase 2",
-    title: "Integrations & Workflow Automation",
+    title: "Differentiators",
     status: "next" as const,
     items: [
-      "Expanded EHR/EMR integrations",
-      "FHIR R4 and HL7 v2 standards support",
-      "Telehealth platform integration",
-      "Custom note templates",
-      "Billing workflow automation",
+      "Pre-visit briefing engine",
+      "Longitudinal patient timeline",
+      "Fact provenance and QA checks",
+      "Patient explain summaries",
+      "Expanded EMR context imports",
     ],
   },
   {
     phase: "Phase 3",
-    title: "Advanced Clinical Assistance",
+    title: "Moat",
     status: "future" as const,
     items: [
-      "Multi-encounter patient context",
-      "Clinical decision support references",
-      "Population health insights",
-      "Advanced analytics and practice reporting",
-      "International market expansion",
+      "Chart and transcript reconciliation",
+      "Clinic rule engine",
+      "Specialty workflow packs",
+      "Governance and analytics",
+      "Quality scoring",
     ],
   },
 ];
+
+// ============================================================
+// PRE-LAUNCH / WAITLIST
+// ============================================================
+export const PRELAUNCH = {
+  headline: "Prepare, capture, verify,",
+  rotatingWords: ["brief", "track", "close", "document"],
+  headlineSuffix: "the visit with one workflow.",
+  subheadline: `${BRAND.shortName} is still on the way. Join the waitlist now and we will let you know when the app launches and when your 14-day free trial is ready.`,
+  socialProofCount: 500,
+  socialProofText: "clinicians following the workflow",
+  ctaText: "Join the Waitlist",
+  successTitle: "You're on the waitlist!",
+  successMessage: "We'll email you when Miraa launches and when the 14-day free trial opens.",
+} as const;
+
+export const EARLY_ACCESS_BENEFITS = [
+  {
+    icon: "Sparkles",
+    title: "Launch Updates",
+    description: "Stay close to the release and see what ships in the first version before public sign-up opens.",
+  },
+  {
+    icon: "MessageSquareHeart",
+    title: "First Trial Access",
+    description: "Waitlist members will be first to know when the 14-day free trial is available.",
+  },
+  {
+    icon: "Rocket",
+    title: "Priority Launch Window",
+    description: "Get first notice when Miraa opens so your practice can move early when onboarding begins.",
+  },
+] as const;
+
+export const WAITLIST_ROLES = [
+  { value: "gp", label: "GP" },
+  { value: "specialist", label: "Specialist" },
+  { value: "allied-health", label: "Allied Health" },
+  { value: "practice-manager", label: "Practice Manager" },
+  { value: "other", label: "Other" },
+] as const;

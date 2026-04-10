@@ -20,11 +20,13 @@ import {
   AlertTriangle,
   Clock,
   Layers,
+  ClipboardList,
 } from "lucide-react";
 import Link from "next/link";
-import { BRAND, WORKFLOW_STEPS, FEATURES } from "@/lib/constants";
+import { WORKFLOW_STEPS, FEATURES } from "@/lib/constants";
 
 const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
+  ClipboardList,
   Mic,
   FileAudio,
   FileText,
@@ -50,11 +52,145 @@ const stagger = {
   viewport: { once: true },
 };
 
+const captureHighlights = [
+  {
+    icon: Mic,
+    title: "Ambient Listening",
+    desc: "Real-time capture during consultations with one tap.",
+  },
+  {
+    icon: Upload,
+    title: "Upload Recordings",
+    desc: "Bring telehealth sessions and dictation audio into the same workflow.",
+  },
+  {
+    icon: Activity,
+    title: "Noise & Interruptions",
+    desc: "Recover from interruptions and keep the transcript usable when the room gets messy.",
+  },
+  {
+    icon: FileText,
+    title: "Structured Extraction",
+    desc: "Pull symptoms, medications, and follow-up actions into a usable clinical workspace while the visit is still happening.",
+  },
+];
+
+const prepareHighlights = [
+  {
+    icon: ClipboardList,
+    title: "Pre-Visit Briefing",
+    desc: "Walk into the consult with the last visit, active problems, medications, and unresolved items already summarised.",
+  },
+  {
+    icon: Layers,
+    title: "Longitudinal Context",
+    desc: "See the patient story across prior visits instead of reconstructing it from scattered notes.",
+  },
+  {
+    icon: AlertTriangle,
+    title: "Result & Risk Watchlist",
+    desc: "Surface abnormal results, pending imaging, and unresolved referrals before the room gets busy.",
+  },
+  {
+    icon: Clock,
+    title: "Clarify Today",
+    desc: "Highlight the missing details and likely agenda items that should be closed during the consult.",
+  },
+];
+
+const prepareAgenda = [
+  "Review abdominal pain since antibiotic start",
+  "Check repeat CRP and whether imaging is still required",
+  "Confirm ultrasound booking and follow-up timing",
+];
+
+const prepareWatchlist = [
+  { label: "Ramipril", detail: "Increased 2 weeks ago", tone: "bg-secondary/10 text-secondary" },
+  { label: "CRP", detail: "Mildly elevated on last result", tone: "bg-amber-100 text-amber-700" },
+  { label: "Ultrasound", detail: "Booking still pending", tone: "bg-primary/10 text-primary" },
+];
+
+const prepareClarifications = [
+  "Any vomiting, fever, or bowel changes since last review?",
+  "Has the patient tolerated the antibiotic without side effects?",
+  "Does the current plan still need surgical escalation advice?",
+];
+
+const captureTranscriptFeed = [
+  {
+    speaker: "Clinician",
+    time: "09:41",
+    accent: "bg-secondary/10 text-secondary border-secondary/20",
+    initials: "DR",
+    copy: "Let's review the abdominal pain and the repeat CRP before we decide whether this needs imaging today.",
+  },
+  {
+    speaker: "Patient",
+    time: "09:42",
+    accent: "bg-primary/10 text-primary border-primary/15",
+    initials: "PT",
+    copy: "It is still mostly after meals, but it is less sharp than last week and I have not had any fever.",
+  },
+  {
+    speaker: "Clinician",
+    time: "09:43",
+    accent: "bg-secondary/10 text-secondary border-secondary/20",
+    initials: "DR",
+    copy: "Good. Any vomiting, new bowel changes, or issues after starting the antibiotic?",
+  },
+  {
+    speaker: "Patient",
+    time: "09:43",
+    accent: "bg-primary/10 text-primary border-primary/15",
+    initials: "PT",
+    copy: "No vomiting. Appetite is better. I still need the ultrasound booking sorted out.",
+  },
+];
+
+const captureDetectedActions = [
+  "Repeat CRP and FBC this week",
+  "Follow up abdominal ultrasound booking",
+  "Clarify antibiotic tolerance before final plan",
+];
+
+const captureWorkspaceTabs = ["Transcript", "Extraction", "Actions"];
+
+const captureInsights = [
+  {
+    label: "Symptoms",
+    detail: "Post-prandial abdominal pain improving, no fever, appetite better than last review.",
+  },
+  {
+    label: "Medication context",
+    detail: "Antibiotic recently started. Tolerance still needs confirmation in the room.",
+  },
+  {
+    label: "Clinical risk",
+    detail: "Imaging still unresolved, but the symptom trend sounds reassuring.",
+  },
+  {
+    label: "Likely note direction",
+    detail: "Follow-up review with improving symptoms, repeat bloods pending, imaging decision still open.",
+  },
+];
+
+const captureAgenda = [
+  "Review response to antibiotics",
+  "Decide if imaging is still required",
+  "Confirm follow-up timing and escalation advice",
+];
+
+const captureSignals = [
+  "Noise score stable",
+  "Interruption recovery active",
+  "Medication mentions highlighted",
+];
+
 export default function ProductPage() {
   return (
     <>
       {/* Hero */}
-      <section className="bg-surface-container-low pt-32 pb-16">
+      <section className="section-atmosphere overflow-hidden bg-surface-container-low pt-32 pb-16">
         <div className="max-w-7xl mx-auto px-6 text-center">
           <motion.p {...fadeUp} className="label-text text-secondary mb-4">
             Product
@@ -64,21 +200,21 @@ export default function ProductPage() {
             transition={{ duration: 0.6, delay: 0.1 }}
             className="text-4xl md:text-5xl lg:text-6xl font-bold text-primary tracking-tight mb-6"
           >
-            How ClinicScribe AI Works
+            How Miraa Works
           </motion.h1>
           <motion.p
             {...fadeUp}
             transition={{ duration: 0.6, delay: 0.2 }}
             className="text-lg md:text-xl text-on-surface-variant max-w-2xl mx-auto"
           >
-            From ambient listening to approved clinical notes — a complete
-            workflow designed around clinical responsibility.
+            From consult prep to approved outputs — a complete workflow
+            designed around clinical responsibility.
           </motion.p>
         </div>
       </section>
 
       {/* Workflow Diagram */}
-      <section className="py-20 bg-surface">
+      <section className="section-atmosphere py-20 bg-surface">
         <div className="max-w-7xl mx-auto px-6">
           <motion.div {...fadeUp} className="text-center mb-16">
             <p className="label-text text-secondary mb-3">End-to-End Workflow</p>
@@ -95,7 +231,7 @@ export default function ProductPage() {
                   key={step.step}
                   {...stagger}
                   transition={{ duration: 0.5, delay: i * 0.1 }}
-                  className="relative bg-surface-container-lowest rounded-2xl p-6 shadow-ambient-sm hover:shadow-ambient transition-shadow"
+                  className="card-lift group relative rounded-2xl border border-outline-variant/25 bg-surface-container-lowest/95 p-6 shadow-ambient-sm transition-shadow hover:shadow-ambient"
                 >
                   <div className="flex items-center gap-4 mb-4">
                     <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary to-primary-container flex items-center justify-center shrink-0">
@@ -127,43 +263,20 @@ export default function ProductPage() {
         </div>
       </section>
 
-      {/* Section 1: Live & Recorded */}
-      <section className="py-20 bg-surface-container-low">
+      {/* Section 1: Prepare */}
+      <section className="section-atmosphere py-20 bg-surface">
         <div className="max-w-7xl mx-auto px-6">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
             <motion.div {...fadeUp}>
-              <p className="label-text text-secondary mb-3">Capture</p>
+              <p className="label-text text-secondary mb-3">Prepare</p>
               <h2 className="text-3xl md:text-4xl font-bold text-primary tracking-tight mb-6">
-                Live &amp; Recorded
+                Walk into the consult already briefed
               </h2>
               <p className="text-on-surface-variant leading-relaxed mb-6">
-                Start ambient listening during a consultation, or upload a
-                previously recorded session. ClinicScribe AI captures the
-                conversation with medical-grade speech recognition.
+                Miraa opens the visit with a pre-visit brief instead of a blank screen. The clinician sees what matters today before capture starts.
               </p>
               <ul className="space-y-4">
-                {[
-                  {
-                    icon: Mic,
-                    title: "Ambient Listening",
-                    desc: "Real-time capture during consultations with one tap.",
-                  },
-                  {
-                    icon: Upload,
-                    title: "Upload Recordings",
-                    desc: "Import audio files from telehealth sessions or dictation devices.",
-                  },
-                  {
-                    icon: Activity,
-                    title: "Speaker Diarisation",
-                    desc: "Automatically separate clinician and patient voices in the transcript.",
-                  },
-                  {
-                    icon: FileAudio,
-                    title: "Medical Terminology",
-                    desc: "Clinical-grade vocabulary recognition for medications, conditions, and procedures.",
-                  },
-                ].map((item, i) => (
+                {prepareHighlights.map((item, i) => (
                   <li key={i} className="flex gap-4">
                     <div className="w-10 h-10 rounded-lg bg-secondary/10 flex items-center justify-center shrink-0">
                       <item.icon className="w-5 h-5 text-secondary" />
@@ -184,47 +297,164 @@ export default function ProductPage() {
             <motion.div
               {...fadeUp}
               transition={{ duration: 0.6, delay: 0.2 }}
-              className="bg-surface-container-lowest rounded-2xl p-8 shadow-ambient"
+              className="relative overflow-hidden rounded-[2rem] border border-outline-variant/35 bg-surface-container-lowest p-4 shadow-ambient lg:p-5"
             >
-              <div className="space-y-4">
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="w-3 h-3 rounded-full bg-error animate-pulse-slow" />
-                  <span className="text-sm font-semibold text-primary">
-                    Recording in progress
-                  </span>
-                  <span className="text-xs text-outline ml-auto">12:34</span>
-                </div>
-                <div className="bg-surface-container rounded-xl p-4">
-                  <p className="text-xs label-text text-secondary mb-2">
-                    Clinician
-                  </p>
-                  <p className="text-sm text-on-surface-variant">
-                    &quot;So the pain started about two weeks ago in the right
-                    lower quadrant...&quot;
-                  </p>
-                </div>
-                <div className="bg-surface-container rounded-xl p-4">
-                  <p className="text-xs label-text text-outline mb-2">
-                    Patient
-                  </p>
-                  <p className="text-sm text-on-surface-variant">
-                    &quot;Yes, it gets worse after eating and sometimes wakes me
-                    at night.&quot;
-                  </p>
-                </div>
-                <div className="bg-surface-container rounded-xl p-4">
-                  <p className="text-xs label-text text-secondary mb-2">
-                    Clinician
-                  </p>
-                  <p className="text-sm text-on-surface-variant">
-                    &quot;Any changes in bowel habits or appetite?&quot;
-                  </p>
-                </div>
-                <div className="flex items-center gap-2 pt-2">
-                  <div className="flex-1 h-1 bg-surface-container-high rounded-full overflow-hidden">
-                    <div className="w-2/3 h-full bg-secondary rounded-full" />
+              <div className="pointer-events-none absolute inset-x-0 top-0 h-28 bg-gradient-to-r from-secondary-fixed/35 via-secondary-fixed/10 to-primary/5" />
+
+              <div className="relative rounded-[1.5rem] border border-outline-variant/45 bg-surface p-4 lg:p-5">
+                <div className="flex flex-col gap-4 border-b border-outline-variant/40 pb-4">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="inline-flex items-center gap-2 rounded-full bg-secondary/10 px-3 py-1 text-xs font-semibold text-secondary">
+                      <ClipboardList className="h-3.5 w-3.5" />
+                      Brief ready
+                    </span>
+                    <span className="rounded-full bg-surface-container px-3 py-1 text-xs font-medium text-on-surface-variant">
+                      Follow-up review
+                    </span>
+                    <span className="rounded-full bg-surface-container px-3 py-1 text-xs font-medium text-on-surface-variant">
+                      09:45 appointment
+                    </span>
                   </div>
-                  <span className="text-xs text-outline">Processing</span>
+
+                  <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+                    <div>
+                      <p className="text-xs font-semibold uppercase tracking-[0.22em] text-outline">
+                        Prepare Workspace
+                      </p>
+                      <h3 className="mt-2 text-xl font-bold text-primary md:text-2xl">
+                        CKD follow-up with unresolved imaging and lab review
+                      </h3>
+                      <p className="mt-2 max-w-xl text-sm leading-relaxed text-on-surface-variant">
+                        Last visit noted improving symptoms after treatment adjustment, but the ultrasound and repeat inflammatory markers are still open.
+                      </p>
+                    </div>
+
+                    <div className="grid grid-cols-3 gap-2 sm:gap-3">
+                      {[
+                        { label: "Briefed", value: "2m ago" },
+                        { label: "Flags", value: "2" },
+                        { label: "Actions", value: "3" },
+                      ].map((stat) => (
+                        <div
+                          key={stat.label}
+                          className="rounded-2xl border border-outline-variant/35 bg-surface-container-low px-3 py-2 text-center"
+                        >
+                          <p className="text-[0.65rem] font-semibold uppercase tracking-[0.18em] text-outline">
+                            {stat.label}
+                          </p>
+                          <p className="mt-1 text-sm font-semibold text-primary">
+                            {stat.value}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-4 grid gap-4 xl:grid-cols-[minmax(0,1.45fr)_minmax(320px,0.95fr)]">
+                  <div className="rounded-[1.35rem] border border-outline-variant/35 bg-surface-container-low p-4">
+                    <div className="flex items-center justify-between gap-3">
+                      <div>
+                        <p className="text-sm font-semibold text-primary">
+                          What matters today
+                        </p>
+                        <p className="text-xs text-on-surface-variant">
+                          Pre-visit brief assembled from prior visits and pending work
+                        </p>
+                      </div>
+                      <span className="rounded-full bg-secondary/10 px-2.5 py-1 text-[0.65rem] font-semibold uppercase tracking-[0.18em] text-secondary">
+                        Ready
+                      </span>
+                    </div>
+
+                    <div className="mt-4 rounded-2xl border border-outline-variant/30 bg-surface-container-lowest p-4">
+                      <p className="text-xs font-semibold uppercase tracking-[0.16em] text-secondary">
+                        Likely agenda
+                      </p>
+                      <div className="mt-3 space-y-2">
+                        {prepareAgenda.map((item) => (
+                          <div
+                            key={item}
+                            className="flex items-start gap-2 rounded-xl bg-surface px-3 py-2.5"
+                          >
+                            <span className="mt-1 h-2 w-2 rounded-full bg-secondary" />
+                            <p className="text-sm leading-relaxed text-on-surface-variant">
+                              {item}
+                            </p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                      <div className="rounded-2xl bg-surface-container-lowest p-4">
+                        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-outline">
+                          Last visit
+                        </p>
+                        <p className="mt-2 text-sm leading-relaxed text-on-surface-variant">
+                          Pain improved after antibiotics. Repeat CRP requested. Ultrasound planned if symptoms persisted.
+                        </p>
+                      </div>
+                      <div className="rounded-2xl bg-surface-container-lowest p-4">
+                        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-outline">
+                          Open follow-up
+                        </p>
+                        <p className="mt-2 text-sm leading-relaxed text-on-surface-variant">
+                          Imaging booking unresolved, bloods not yet reviewed, and safety-net advice needs confirmation.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-3">
+                    <div className="rounded-[1.35rem] border border-outline-variant/35 bg-surface-container-low p-4">
+                      <div className="flex items-center gap-2">
+                        <Layers className="h-4 w-4 text-secondary" />
+                        <p className="text-sm font-semibold text-primary">
+                          Watchlist
+                        </p>
+                      </div>
+                      <div className="mt-3 space-y-2">
+                        {prepareWatchlist.map((item) => (
+                          <div
+                            key={item.label}
+                            className="flex items-center justify-between gap-3 rounded-xl bg-surface-container-lowest px-3 py-2.5"
+                          >
+                            <div>
+                              <p className="text-sm font-semibold text-primary">
+                                {item.label}
+                              </p>
+                              <p className="text-xs text-on-surface-variant">
+                                {item.detail}
+                              </p>
+                            </div>
+                            <span className={`rounded-full px-2.5 py-1 text-[0.65rem] font-semibold uppercase tracking-[0.16em] ${item.tone}`}>
+                              Watch
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="rounded-[1.35rem] border border-outline-variant/35 bg-primary/[0.03] p-4">
+                      <div className="flex items-center gap-2">
+                        <AlertTriangle className="h-4 w-4 text-secondary" />
+                        <p className="text-sm font-semibold text-primary">
+                          Clarify in the room
+                        </p>
+                      </div>
+                      <div className="mt-3 space-y-2">
+                        {prepareClarifications.map((item) => (
+                          <div
+                            key={item}
+                            className="rounded-xl bg-surface-container-lowest px-3 py-2.5 text-sm leading-relaxed text-on-surface-variant"
+                          >
+                            {item}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
             </motion.div>
@@ -232,14 +462,282 @@ export default function ProductPage() {
         </div>
       </section>
 
-      {/* Section 2: Intelligent Documentation */}
-      <section className="py-20 bg-surface">
+      {/* Section 2: Live & Recorded */}
+      <section className="section-atmosphere py-20 bg-surface-container-low">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+            <motion.div {...fadeUp}>
+              <p className="label-text text-secondary mb-3">Capture</p>
+              <h2 className="text-3xl md:text-4xl font-bold text-primary tracking-tight mb-6">
+                Live &amp; Recorded
+              </h2>
+              <p className="text-on-surface-variant leading-relaxed mb-6">
+                Start ambient listening during a consultation, or upload a
+                previously recorded session. Miraa captures the
+                conversation with medical-grade speech recognition.
+              </p>
+              <ul className="space-y-4">
+                {captureHighlights.map((item, i) => (
+                  <li key={i} className="flex gap-4">
+                    <div className="w-10 h-10 rounded-lg bg-secondary/10 flex items-center justify-center shrink-0">
+                      <item.icon className="w-5 h-5 text-secondary" />
+                    </div>
+                    <div>
+                      <h4 className="text-sm font-semibold text-primary">
+                        {item.title}
+                      </h4>
+                      <p className="text-sm text-on-surface-variant">
+                        {item.desc}
+                      </p>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </motion.div>
+
+            <motion.div
+              {...fadeUp}
+              transition={{ duration: 0.6, delay: 0.2 }}
+              className="relative overflow-hidden rounded-[2.25rem] border border-white/70 bg-[linear-gradient(180deg,rgba(255,255,255,0.92),rgba(246,243,238,0.96))] p-3 shadow-[0_24px_80px_rgba(0,43,91,0.10)] lg:p-4"
+            >
+              <div className="pointer-events-none absolute inset-x-0 top-0 h-28 bg-gradient-to-r from-secondary-fixed/40 via-secondary-fixed/15 to-primary/5" />
+              <div className="pointer-events-none absolute -top-12 right-[-10%] h-40 w-40 rounded-full bg-secondary-fixed/25 blur-3xl" />
+
+              <div className="relative rounded-[1.7rem] border border-outline-variant/40 bg-surface p-4 lg:p-5">
+                <div className="rounded-[1.25rem] border border-outline-variant/35 bg-surface-container-low px-4 py-3 shadow-ambient-sm">
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-1.5">
+                        <span className="h-2.5 w-2.5 rounded-full bg-[#ffb84d]" />
+                        <span className="h-2.5 w-2.5 rounded-full bg-secondary-fixed-dim" />
+                        <span className="h-2.5 w-2.5 rounded-full bg-primary-light" />
+                      </div>
+                      <div>
+                        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-outline">
+                          Capture Workspace
+                        </p>
+                        <p className="text-xs text-on-surface-variant">
+                          Capture, extraction, and follow-up in one view
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="rounded-full bg-secondary/10 px-3 py-1 text-[0.65rem] font-semibold uppercase tracking-[0.16em] text-secondary">
+                        Active consult
+                      </span>
+                      <span className="rounded-full bg-surface px-3 py-1 text-[0.65rem] font-semibold uppercase tracking-[0.16em] text-outline ring-1 ring-outline-variant/40">
+                        Auto-saving
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-4 flex flex-col gap-4 border-b border-outline-variant/35 pb-4">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="inline-flex items-center gap-2 rounded-full bg-secondary/10 px-3 py-1 text-xs font-semibold text-secondary">
+                      <span className="h-2 w-2 rounded-full bg-secondary animate-pulse-slow" />
+                      Live capture
+                    </span>
+                    <span className="rounded-full bg-surface-container px-3 py-1 text-xs font-medium text-on-surface-variant">
+                      GP follow-up consult
+                    </span>
+                    <span className="rounded-full bg-surface-container px-3 py-1 text-xs font-medium text-on-surface-variant">
+                      Speaker separation on
+                    </span>
+                  </div>
+
+                  <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+                    <div>
+                      <p className="text-xs font-semibold uppercase tracking-[0.22em] text-outline">
+                        Capture Workspace
+                      </p>
+                      <h3 className="mt-2 text-xl font-bold text-primary md:text-2xl">
+                        Review the consult while the transcript is still live
+                      </h3>
+                      <p className="mt-2 max-w-xl text-sm leading-relaxed text-on-surface-variant">
+                        The capture view keeps the transcript, likely agenda, and emerging follow-up work in one place so the clinician stays oriented during the visit.
+                      </p>
+                    </div>
+
+                    <div className="grid grid-cols-3 gap-2 sm:gap-3">
+                      {[
+                        { label: "Elapsed", value: "12:34" },
+                        { label: "Noise", value: "Low" },
+                        { label: "Actions", value: "3" },
+                      ].map((stat) => (
+                        <div
+                          key={stat.label}
+                          className="rounded-2xl border border-outline-variant/35 bg-surface-container-low px-3 py-2 text-center"
+                        >
+                          <p className="text-[0.65rem] font-semibold uppercase tracking-[0.18em] text-outline">
+                            {stat.label}
+                          </p>
+                          <p className="mt-1 text-sm font-semibold text-primary">
+                            {stat.value}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-4 grid gap-4 xl:grid-cols-[minmax(0,1.45fr)_minmax(320px,0.95fr)]">
+                  <div className="rounded-[1.35rem] border border-outline-variant/35 bg-surface-container-low p-4">
+                    <div className="flex flex-wrap items-center justify-between gap-3">
+                      <div>
+                        <p className="text-sm font-semibold text-primary">
+                          Live transcript
+                        </p>
+                        <p className="text-xs text-on-surface-variant">
+                          Medical vocabulary recognised in real time
+                        </p>
+                      </div>
+                      <span className="rounded-full bg-secondary/10 px-2.5 py-1 text-[0.65rem] font-semibold uppercase tracking-[0.18em] text-secondary">
+                        Syncing
+                      </span>
+                    </div>
+
+                    <div className="mt-4 flex flex-wrap gap-2">
+                      {captureWorkspaceTabs.map((tab, index) => (
+                        <span
+                          key={tab}
+                          className={`rounded-full px-3 py-1 text-xs font-semibold ${
+                            index === 0
+                              ? "bg-primary text-on-primary"
+                              : "bg-surface text-on-surface-variant ring-1 ring-outline-variant/40"
+                          }`}
+                        >
+                          {tab}
+                        </span>
+                      ))}
+                    </div>
+
+                    <div className="relative mt-4">
+                      <div className="pointer-events-none absolute top-3 bottom-3 left-5 hidden w-px bg-outline-variant/45 sm:block" />
+
+                      <div className="relative space-y-3 xl:max-h-[24rem] xl:overflow-y-auto xl:pr-1 no-scrollbar">
+                        {captureTranscriptFeed.map((entry) => (
+                          <div
+                            key={`${entry.speaker}-${entry.time}-${entry.copy}`}
+                            className="rounded-[1.4rem] border border-outline-variant/25 bg-surface-container-lowest p-3 shadow-[0_10px_24px_rgba(0,43,91,0.04)]"
+                          >
+                            <div className="flex items-start gap-3">
+                              <div
+                                className={`relative z-10 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border text-[0.65rem] font-bold ${entry.accent}`}
+                              >
+                                {entry.initials}
+                              </div>
+                              <div className="min-w-0 flex-1">
+                                <div className="flex flex-wrap items-center justify-between gap-2">
+                                  <span className="text-xs font-semibold uppercase tracking-[0.16em] text-outline">
+                                    {entry.speaker}
+                                  </span>
+                                  <span className="text-xs text-outline">
+                                    {entry.time}
+                                  </span>
+                                </div>
+                                <p className="mt-1.5 text-sm leading-relaxed text-on-surface-variant">
+                                  {entry.copy}
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="mt-4 flex flex-wrap gap-2">
+                      {captureSignals.map((signal) => (
+                        <span
+                          key={signal}
+                          className="rounded-full bg-surface px-3 py-1 text-xs font-medium text-on-surface-variant ring-1 ring-outline-variant/40"
+                        >
+                          {signal}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="space-y-3">
+                    <div className="rounded-[1.35rem] border border-outline-variant/35 bg-surface-container-low p-4 shadow-ambient-sm">
+                      <div className="flex items-center gap-2">
+                        <FileText className="h-4 w-4 text-secondary" />
+                        <p className="text-sm font-semibold text-primary">
+                          Extracted clinical context
+                        </p>
+                      </div>
+                      <div className="mt-3 space-y-2">
+                        {captureInsights.map((item) => (
+                          <div
+                            key={item.label}
+                            className="rounded-xl bg-surface-container-lowest px-3 py-3"
+                          >
+                            <p className="text-[0.68rem] font-semibold uppercase tracking-[0.16em] text-secondary">
+                              {item.label}
+                            </p>
+                            <p className="mt-1 text-sm leading-relaxed text-on-surface-variant">
+                              {item.detail}
+                            </p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="rounded-[1.35rem] border border-outline-variant/35 bg-[linear-gradient(180deg,rgba(0,104,118,0.04),rgba(255,255,255,0.55))] p-4 shadow-ambient-sm">
+                      <div className="flex items-center gap-2">
+                        <FileAudio className="h-4 w-4 text-secondary" />
+                        <p className="text-sm font-semibold text-primary">
+                          What Miraa is surfacing next
+                        </p>
+                      </div>
+
+                      <div className="mt-3 rounded-xl bg-surface-container-lowest p-3">
+                        <p className="text-[0.68rem] font-semibold uppercase tracking-[0.16em] text-outline">
+                          Likely agenda
+                        </p>
+                        <div className="mt-2 flex flex-wrap gap-2">
+                          {captureAgenda.map((item) => (
+                            <span
+                              key={item}
+                              className="rounded-full bg-surface px-3 py-1 text-xs font-medium text-on-surface-variant ring-1 ring-outline-variant/35"
+                            >
+                              {item}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div className="mt-3 space-y-2">
+                        {captureDetectedActions.map((action) => (
+                          <div
+                            key={action}
+                            className="flex items-start gap-2 rounded-xl bg-surface-container-lowest px-3 py-2.5"
+                          >
+                            <span className="mt-1 h-2 w-2 rounded-full bg-secondary" />
+                            <p className="text-sm leading-relaxed text-on-surface-variant">
+                              {action}
+                            </p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        </div>
+      </section>
+
+      {/* Section 3: Intelligent Documentation */}
+      <section className="section-atmosphere py-20 bg-surface">
         <div className="max-w-7xl mx-auto px-6">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
             <motion.div
               {...fadeUp}
               transition={{ duration: 0.6, delay: 0.2 }}
-              className="order-2 lg:order-1 bg-surface-container-lowest rounded-2xl p-8 shadow-ambient"
+              className="card-lift group order-2 rounded-2xl border border-outline-variant/25 bg-surface-container-lowest/95 p-8 shadow-ambient lg:order-1"
             >
               <div className="space-y-4">
                 <div className="flex items-center gap-3 mb-4">
@@ -285,7 +783,7 @@ export default function ProductPage() {
                 Intelligent Documentation
               </h2>
               <p className="text-on-surface-variant leading-relaxed mb-6">
-                From the transcript, ClinicScribe AI drafts structured clinical
+                From the transcript, Miraa drafts structured clinical
                 notes, referral letters, and follow-up actions — all formatted
                 for your clinical system.
               </p>
@@ -332,8 +830,8 @@ export default function ProductPage() {
         </div>
       </section>
 
-      {/* Section 3: Review & Approve */}
-      <section className="py-20 bg-surface-container-low">
+      {/* Section 4: Review & Approve */}
+      <section className="section-atmosphere py-20 bg-surface-container-low">
         <div className="max-w-7xl mx-auto px-6">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
             <motion.div {...fadeUp}>
@@ -390,7 +888,7 @@ export default function ProductPage() {
             <motion.div
               {...fadeUp}
               transition={{ duration: 0.6, delay: 0.2 }}
-              className="bg-surface-container-lowest rounded-2xl p-8 shadow-ambient"
+              className="card-lift group bg-surface-container-lowest/95 rounded-2xl border border-outline-variant/25 p-8 shadow-ambient"
             >
               <div className="space-y-4">
                 <div className="flex items-center gap-3 mb-4">
@@ -452,8 +950,8 @@ export default function ProductPage() {
         </div>
       </section>
 
-      {/* Section 4: What the Clinician Reviews */}
-      <section className="py-20 bg-surface">
+      {/* Section 5: What the Clinician Reviews */}
+      <section className="section-atmosphere py-20 bg-surface">
         <div className="max-w-7xl mx-auto px-6">
           <motion.div {...fadeUp} className="text-center mb-12">
             <p className="label-text text-secondary mb-3">Safety Gate</p>
@@ -504,7 +1002,7 @@ export default function ProductPage() {
                 key={i}
                 {...stagger}
                 transition={{ duration: 0.5, delay: i * 0.08 }}
-                className="bg-surface-container-lowest rounded-2xl p-6 shadow-ambient-sm"
+                className="card-lift group bg-surface-container-lowest/95 rounded-2xl border border-outline-variant/25 p-6 shadow-ambient-sm transition-shadow hover:shadow-ambient"
               >
                 <div className="w-11 h-11 rounded-xl bg-secondary/10 flex items-center justify-center mb-4">
                   <item.icon className="w-5 h-5 text-secondary" />
@@ -521,14 +1019,14 @@ export default function ProductPage() {
         </div>
       </section>
 
-      {/* Section 5: Export & Integrate */}
-      <section className="py-20 bg-surface-container-low">
+      {/* Section 6: Export & Integrate */}
+      <section className="section-atmosphere py-20 bg-surface-container-low">
         <div className="max-w-7xl mx-auto px-6">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
             <motion.div
               {...fadeUp}
               transition={{ duration: 0.6, delay: 0.2 }}
-              className="bg-surface-container-lowest rounded-2xl p-8 shadow-ambient order-2 lg:order-1"
+              className="card-lift group order-2 rounded-2xl border border-outline-variant/25 bg-surface-container-lowest/95 p-8 shadow-ambient lg:order-1"
             >
               <div className="space-y-4">
                 <div className="flex items-center gap-3 mb-4">
@@ -642,7 +1140,7 @@ export default function ProductPage() {
       </section>
 
       {/* Features Grid */}
-      <section className="py-20 bg-surface">
+      <section className="section-atmosphere py-20 bg-surface">
         <div className="max-w-7xl mx-auto px-6">
           <motion.div {...fadeUp} className="text-center mb-12">
             <p className="label-text text-secondary mb-3">Full Feature Set</p>
@@ -659,7 +1157,7 @@ export default function ProductPage() {
                   key={i}
                   {...stagger}
                   transition={{ duration: 0.5, delay: i * 0.06 }}
-                  className="bg-surface-container-lowest rounded-2xl p-6 shadow-ambient-sm hover:shadow-ambient transition-shadow"
+                  className="card-lift group bg-surface-container-lowest/95 rounded-2xl border border-outline-variant/25 p-6 shadow-ambient-sm transition-shadow hover:shadow-ambient"
                 >
                   <div className="flex items-center gap-3 mb-3">
                     <div className="w-10 h-10 rounded-lg bg-secondary/10 flex items-center justify-center shrink-0">
@@ -683,21 +1181,21 @@ export default function ProductPage() {
       </section>
 
       {/* CTA */}
-      <section className="py-20 bg-surface-container-low">
+      <section className="section-atmosphere py-20 bg-surface-container-low">
         <div className="max-w-3xl mx-auto px-6 text-center">
           <motion.div {...fadeUp}>
             <h2 className="text-3xl md:text-4xl font-bold text-primary tracking-tight mb-4">
               Ready to See It in Action?
             </h2>
             <p className="text-on-surface-variant mb-8">
-              Book a personalised demo to see how {BRAND.name} fits your
-              clinical workflow.
+              Join the waitlist to hear when Miraa launches and when the
+              14-day free trial opens for your workflow.
             </p>
             <Link
-              href="/demo"
+              href="/#waitlist-form"
               className="inline-flex items-center gap-2 px-8 py-3.5 text-sm font-semibold text-on-primary bg-gradient-to-r from-primary to-primary-container rounded-full hover:opacity-90 transition-opacity"
             >
-              Book a Demo
+              Join the Waitlist
               <ArrowRight className="w-4 h-4" />
             </Link>
           </motion.div>

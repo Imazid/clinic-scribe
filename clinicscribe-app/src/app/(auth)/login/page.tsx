@@ -64,7 +64,7 @@ function LoginForm() {
         <div className="w-10 h-10 rounded-xl bg-secondary flex items-center justify-center">
           <Stethoscope className="w-5 h-5 text-on-secondary" />
         </div>
-        <span className="text-xl font-bold text-primary">ClinicScribe AI</span>
+        <span className="text-xl font-bold text-primary">Miraa</span>
       </div>
 
       <h2 className="text-2xl font-bold text-on-surface mb-1">Welcome back</h2>
@@ -121,6 +121,17 @@ function LoginForm() {
         <Link href="/signup" className="text-secondary font-semibold hover:underline">
           Sign up
         </Link>
+      </p>
+
+      <p className="mt-4 text-center text-xs leading-5 text-on-surface-variant">
+        By continuing, you agree to the{' '}
+        <Link href="/terms" className="text-secondary hover:underline">
+          Terms of Service
+        </Link>{' '}
+        and acknowledge the{' '}
+        <Link href="/privacy" className="text-secondary hover:underline">
+          Privacy Policy
+        </Link>.
       </p>
     </div>
   );

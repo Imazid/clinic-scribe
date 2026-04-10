@@ -34,7 +34,7 @@ const statusConfig: Record<
 
 export function Roadmap() {
   return (
-    <section className="bg-surface py-24 lg:py-32">
+    <section className="section-atmosphere bg-surface py-24 lg:py-32">
       <div className="mx-auto max-w-7xl px-6 lg:px-8">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -61,7 +61,8 @@ export function Roadmap() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.5, delay: i * 0.12 }}
-                className={`relative rounded-2xl border-t-4 bg-surface-container-lowest p-8 shadow-ambient-sm ${config.accent}`}
+                whileHover={{ y: -10 }}
+                className={`card-lift relative rounded-2xl border-t-4 bg-surface-container-lowest/95 p-8 shadow-ambient-sm ${config.accent}`}
               >
                 <div className="flex items-center justify-between">
                   <span className="label-text text-on-surface-variant">

@@ -11,8 +11,10 @@ const trustItems = [
 ];
 
 export function TrustBar() {
+  const repeatedItems = [...trustItems, ...trustItems];
+
   return (
-    <section className="bg-surface-container-low">
+    <section className="section-atmosphere bg-surface-container-low">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         whileInView={{ opacity: 1, y: 0 }}
@@ -20,16 +22,19 @@ export function TrustBar() {
         transition={{ duration: 0.5 }}
         className="mx-auto max-w-7xl px-6 py-6 lg:px-8"
       >
-        <div className="flex flex-wrap items-center justify-center gap-x-10 gap-y-4">
-          {trustItems.map((item, i) => (
-            <div key={i} className="flex items-center gap-2.5">
-              <item.icon className="h-4 w-4 text-outline" />
-              <span className="label-text text-outline">{item.label}</span>
-              {i < trustItems.length - 1 && (
-                <span className="ml-10 hidden h-4 w-px bg-outline-variant lg:block" />
-              )}
-            </div>
-          ))}
+        <div className="marquee-fade overflow-hidden rounded-full border border-outline-variant/30 bg-surface-container-lowest/70 px-3 py-3 shadow-ambient-sm backdrop-blur-sm">
+          <div className="marquee-track flex items-center gap-3 pr-3">
+            {repeatedItems.map((item, i) => (
+              <div
+                key={`${item.label}-${i}`}
+                aria-hidden={i >= trustItems.length}
+                className="flex items-center gap-3 whitespace-nowrap rounded-full border border-outline-variant/25 bg-white/70 px-4 py-2"
+              >
+                <item.icon className="h-4 w-4 text-secondary" />
+                <span className="label-text text-outline">{item.label}</span>
+              </div>
+            ))}
+          </div>
         </div>
       </motion.div>
     </section>

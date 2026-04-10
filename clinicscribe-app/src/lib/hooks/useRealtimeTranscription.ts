@@ -98,7 +98,7 @@ export function useRealtimeTranscription() {
       recognition.continuous = true;
       recognition.interimResults = true;
       recognition.lang = 'en-AU';
-      recognition.maxAlternatives = 1;
+      recognition.maxAlternatives = 3;
 
       startTimeRef.current = Date.now();
 
@@ -111,23 +111,37 @@ export function useRealtimeTranscription() {
         let interim = '';
         for (let i = event.resultIndex; i < event.results.length; i++) {
           const result = event.results[i];
-          const text = result[0].transcript.trim();
-          if (!text) continue;
+
+          // Pick the alternative with the highest confidence
+          let bestText = '';
+          let bestConfidence = 0;
+          for (let j = 0; j < result.length; j++) {
+            if (result[j].confidence > bestConfidence) {
+              bestConfidence = result[j].confidence;
+              bestText = result[j].transcript.trim();
+            }
+          }
+          if (!bestText) continue;
 
           if (result.isFinal) {
+            // Skip low-confidence segments (background noise / garbage)
+            if (bestConfidence < 0.4) {
+              console.log('[LiveTranscript] Skipped low-confidence segment:', bestText.slice(0, 40), bestConfidence.toFixed(2));
+              continue;
+            }
             const elapsed = (Date.now() - startTimeRef.current) / 1000;
             const segment: LiveSegment = {
               id: `seg-${segmentIdRef.current++}`,
               speaker: 0,
-              text,
+              text: bestText,
               start: Math.max(0, elapsed - 3),
               end: elapsed,
               isFinal: true,
             };
-            console.log('[LiveTranscript] Final:', text.slice(0, 60));
+            console.log('[LiveTranscript] Final:', bestText.slice(0, 60), `(${(bestConfidence * 100).toFixed(0)}%)`);
             setSegments((prev) => [...prev, segment]);
           } else {
-            interim += text;
+            interim += bestText;
           }
         }
         setInterimText(interim);
@@ -141,7 +155,12 @@ export function useRealtimeTranscription() {
 
       recognition.onend = () => {
         if (!isStoppingRef.current && recognitionRef.current) {
-          try { recognition.start(); } catch { setIsConnected(false); }
+          // Small delay to prevent rapid restart loops
+          setTimeout(() => {
+            if (!isStoppingRef.current && recognitionRef.current) {
+              try { recognition.start(); } catch { setIsConnected(false); }
+            }
+          }, 100);
         } else {
           setIsConnected(false);
         }
@@ -179,7 +198,13 @@ export function useRealtimeTranscription() {
 
       console.log('[LiveTranscript] Requesting microphone...');
       const stream = await navigator.mediaDevices.getUserMedia({
-        audio: { echoCancellation: true, noiseSuppression: true },
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true,
+          sampleRate: 16000,
+          channelCount: 1,
+        },
       });
       streamRef.current = stream;
 
@@ -192,6 +217,10 @@ export function useRealtimeTranscription() {
         interim_results: 'true',
         utterance_end_ms: '1500',
         vad_events: 'true',
+        endpointing: '400',
+        encoding: 'opus',
+        sample_rate: '16000',
+        keywords: 'patient:2,medication:2,diagnosis:2,prescription:2,symptoms:2,allergy:2',
       });
 
       const ws = new WebSocket(`wss://api.deepgram.com/v1/listen?${params}`, ['token', tokenData.key]);
@@ -255,17 +284,33 @@ export function useRealtimeTranscription() {
         }
       };
 
-      ws.onerror = () => setError('Deepgram connection failed. Check API key.');
+      ws.onerror = () => {
+        console.warn('[LiveTranscript] Deepgram failed, falling back to on-device');
+        // Clean up Deepgram resources inline
+        if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+          mediaRecorderRef.current.stop();
+        }
+        mediaRecorderRef.current = null;
+        streamRef.current?.getTracks().forEach((t) => t.stop());
+        streamRef.current = null;
+        wsRef.current = null;
+        setEngine('on-device');
+        connectOnDevice();
+      };
       ws.onclose = (event) => {
         setIsConnected(false);
         if (event.code !== 1000 && event.code !== 1005) {
-          setError(`Deepgram connection closed (code: ${event.code})`);
+          console.warn('[LiveTranscript] Deepgram closed unexpectedly, falling back to on-device');
+          setEngine('on-device');
+          connectOnDevice();
         }
       };
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to start Deepgram transcription');
+      console.warn('[LiveTranscript] Deepgram init failed, falling back to on-device:', err);
+      setEngine('on-device');
+      connectOnDevice();
     }
-  }, []);
+  }, [connectOnDevice]);
 
   const disconnectDeepgram = useCallback(() => {
     if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
@@ -312,7 +357,16 @@ export function useRealtimeTranscription() {
   }, [engine, disconnectDeepgram, disconnectOnDevice]);
 
   const getFullTranscript = useCallback(() => {
-    return segments.map((s) => s.text).join(' ');
+    // Deduplicate consecutive identical segments and clean up
+    const deduped: string[] = [];
+    for (const s of segments) {
+      const text = s.text.trim();
+      if (text && text !== deduped[deduped.length - 1]) {
+        // Capitalize first letter of each segment
+        deduped.push(text.charAt(0).toUpperCase() + text.slice(1));
+      }
+    }
+    return deduped.join(' ').replace(/\s{2,}/g, ' ').trim();
   }, [segments]);
 
   const getSegmentsForStorage = useCallback(() => {

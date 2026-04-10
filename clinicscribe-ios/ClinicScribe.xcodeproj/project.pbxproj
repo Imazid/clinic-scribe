@@ -265,9 +265,10 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = Miraa;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.medical";
-				INFOPLIST_KEY_NSMicrophoneUsageDescription = "ClinicScribe records consultations for transcription";
-				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "ClinicScribe uses speech recognition for live transcription";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Miraa records consultations to support documentation and follow-up workflows";
+				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "Miraa uses speech recognition to turn consultation audio into reviewable clinical drafts";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -298,9 +299,10 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = Miraa;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.medical";
-				INFOPLIST_KEY_NSMicrophoneUsageDescription = "ClinicScribe records consultations for transcription";
-				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "ClinicScribe uses speech recognition for live transcription";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Miraa records consultations to support documentation and follow-up workflows";
+				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "Miraa uses speech recognition to turn consultation audio into reviewable clinical drafts";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;

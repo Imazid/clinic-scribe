@@ -2,8 +2,20 @@ import SwiftUI
 
 struct TranscriptViewer: View {
     let transcript: Transcript
+    var embedded: Bool = false
 
     var body: some View {
+        Group {
+            if embedded {
+                transcriptContent
+            } else {
+                transcriptContent
+                    .cardStyle()
+            }
+        }
+    }
+
+    private var transcriptContent: some View {
         VStack(alignment: .leading, spacing: Theme.spacingMd) {
             Text("Transcript")
                 .font(.headline)
@@ -29,6 +41,5 @@ struct TranscriptViewer: View {
                 }
             }
         }
-        .cardStyle()
     }
 }
