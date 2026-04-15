@@ -161,13 +161,14 @@ export async function sendWelcomeEmail({
     });
 
     if (error) {
-      console.error("[email] Resend error:", error);
+      console.error(`[email] Resend error: ${error.name} - ${error.message}`);
       return { success: false, error: error.message };
     }
 
+    console.log(`[email] Welcome email sent to ${to}`);
     return { success: true };
   } catch (err) {
-    console.error("[email] Failed to send welcome email:", err);
+    console.error(`[email] Failed to send welcome email: ${err instanceof Error ? err.message : String(err)}`);
     return {
       success: false,
       error: err instanceof Error ? err.message : "Unknown error",
@@ -282,13 +283,13 @@ export async function sendContactEmail({
     });
 
     if (error) {
-      console.error("[email] Resend error:", error);
+      console.error(`[email] Resend contact error: ${error.name} - ${error.message}`);
       return { success: false, error: error.message };
     }
 
     return { success: true };
   } catch (err) {
-    console.error("[email] Failed to send contact email:", err);
+    console.error(`[email] Failed to send contact email: ${err instanceof Error ? err.message : String(err)}`);
     return {
       success: false,
       error: err instanceof Error ? err.message : "Unknown error",
