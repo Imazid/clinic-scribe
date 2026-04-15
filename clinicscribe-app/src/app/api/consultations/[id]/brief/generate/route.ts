@@ -1,23 +1,43 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { normalizeVisitBrief } from '@/lib/visit-brief';
 import { buildVisitBriefArtifact } from '@/lib/workflow/artifacts';
-import type { CareTask, ClinicalNote, Consultation } from '@/lib/types';
+import type { CareTask, ClinicalNote, Consultation, VisitBrief } from '@/lib/types';
 
 const missingWorkflowSchemaCodes = new Set(['PGRST200', 'PGRST205']);
 const missingBriefOwnershipCodes = new Set(['42703', 'PGRST204']);
+
+// Briefs older than this are rebuilt even when no underlying record has changed.
+const BRIEF_TTL_MS = 24 * 60 * 60 * 1000;
 
 type ConsultationRow = Consultation & {
   patient: Consultation['patient'];
   clinical_note: ClinicalNote[] | ClinicalNote | null;
 };
 
+type ExistingBriefRow = VisitBrief & { created_by?: string | null };
+
+function withinTtl(generatedAt: string | null | undefined): boolean {
+  if (!generatedAt) return false;
+  const t = new Date(generatedAt).getTime();
+  if (Number.isNaN(t)) return false;
+  return Date.now() - t < BRIEF_TTL_MS;
+}
+
+function isAfter(a: string | null | undefined, b: string | null | undefined): boolean {
+  if (!a || !b) return false;
+  return new Date(a).getTime() > new Date(b).getTime();
+}
+
 export async function POST(
-  _request: Request,
+  request: Request,
   context: { params: Promise<{ id: string }> }
 ) {
   try {
     const { id } = await context.params;
     const supabase = await createClient();
+    const url = new URL(request.url);
+    const force = url.searchParams.get('force') === 'true';
 
     const { data: consultation, error: consultationError } = await supabase
       .from('consultations')
@@ -34,6 +54,55 @@ export async function POST(
       return NextResponse.json({ error: 'Consultation patient context is missing' }, { status: 400 });
     }
 
+    // --- Freshness check: can we return a cached brief? ---
+    if (!force) {
+      const { data: existingBrief } = await supabase
+        .from('visit_briefs')
+        .select('*')
+        .eq('consultation_id', id)
+        .maybeSingle();
+
+      const typedExisting = normalizeVisitBrief(
+        existingBrief as ExistingBriefRow | null
+      ) as ExistingBriefRow | null;
+
+      if (
+        typedExisting &&
+        typedExisting.status === 'ready' &&
+        withinTtl(typedExisting.generated_at)
+      ) {
+        // Check nothing material has changed since generated_at.
+        const patientUpdatedAt = typedConsultation.patient.updated_at ?? null;
+        const briefGeneratedAt = typedExisting.generated_at;
+
+        // Find the newest approved clinical note for this patient — if one
+        // landed after the brief was built, the brief is stale.
+        const { data: newerNotes } = await supabase
+          .from('clinical_notes')
+          .select('updated_at')
+          .eq('patient_id', typedConsultation.patient_id)
+          .eq('is_approved', true)
+          .order('updated_at', { ascending: false })
+          .limit(1);
+
+        const latestApprovedNoteAt = newerNotes?.[0]?.updated_at ?? null;
+
+        const patientNewer = isAfter(patientUpdatedAt, briefGeneratedAt);
+        const noteNewer = isAfter(latestApprovedNoteAt, briefGeneratedAt);
+
+        if (!patientNewer && !noteNewer) {
+          return NextResponse.json({ brief: typedExisting, cached: true });
+        }
+
+        // Mark stale so future reads in the UI can flag it too.
+        await supabase
+          .from('visit_briefs')
+          .update({ status: 'stale', updated_at: new Date().toISOString() })
+          .eq('id', typedExisting.id);
+      }
+    }
+
+    // --- Regenerate path ---
     const {
       data: { user },
     } = await supabase.auth.getUser();
@@ -122,7 +191,10 @@ export async function POST(
 
     if (saveError) {
       if (missingWorkflowSchemaCodes.has(saveError.code)) {
-        return NextResponse.json(payload);
+        return NextResponse.json({
+          brief: normalizeVisitBrief(payload as unknown as VisitBrief) ?? (payload as unknown as VisitBrief),
+          cached: false,
+        });
       }
       throw saveError;
     }
@@ -133,7 +205,10 @@ export async function POST(
       .eq('id', id)
       .in('status', ['scheduled', 'brief_ready']);
 
-    return NextResponse.json(savedBrief);
+    return NextResponse.json({
+      brief: normalizeVisitBrief(savedBrief as VisitBrief | null | undefined) ?? (savedBrief as VisitBrief),
+      cached: false,
+    });
   } catch (error) {
     console.error('Brief generation error:', error);
     const message = error instanceof Error ? error.message : 'Failed to generate brief';

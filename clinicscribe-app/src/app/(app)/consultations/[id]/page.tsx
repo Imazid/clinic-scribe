@@ -1,16 +1,20 @@
 'use client';
 
+import { useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/Button';
 import { Skeleton } from '@/components/ui/Skeleton';
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { ConsultationStatusBadge } from '@/components/consultations/ConsultationStatusBadge';
 import { TranscriptViewer } from '@/components/consultations/TranscriptViewer';
 import { Badge } from '@/components/ui/Badge';
 import { Avatar } from '@/components/ui/Avatar';
 import { Card, CardTitle } from '@/components/ui/Card';
 import { useConsultation } from '@/lib/hooks/useConsultation';
+import { useUIStore } from '@/lib/stores/ui-store';
+import { deleteConsultation } from '@/lib/api/consultations';
 import { formatDateTime, formatDurationLong } from '@/lib/utils';
-import { FileText } from 'lucide-react';
+import { FileText, Trash2 } from 'lucide-react';
 import { WorkflowProgress } from '@/components/workflow/WorkflowProgress';
 import { ScribeWorkspaceShell } from '@/components/scribe/ScribeWorkspaceShell';
 import { SessionRail } from '@/components/scribe/SessionRail';
@@ -21,6 +25,22 @@ export default function ConsultationDetailPage() {
   const router = useRouter();
   const { consultation, loading } = useConsultation(id);
   const { resolveByKey } = useWorkspaceTemplates();
+  const addToast = useUIStore((s) => s.addToast);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+
+  async function handleDelete() {
+    if (!id) return;
+    setDeleting(true);
+    try {
+      await deleteConsultation(id);
+      addToast('Session deleted', 'success');
+      router.push('/capture');
+    } catch (err) {
+      addToast(err instanceof Error ? err.message : 'Failed to delete session', 'error');
+      setDeleting(false);
+    }
+  }
 
   if (loading) {
     return (
@@ -50,6 +70,7 @@ export default function ConsultationDetailPage() {
     !!consultation.clinical_note;
 
   return (
+    <>
     <ScribeWorkspaceShell
       title="Capture"
       description="Stay inside the session transcript and move into verification when ready."
@@ -91,6 +112,16 @@ export default function ConsultationDetailPage() {
                   Open verify
                 </Button>
               )}
+              <Button
+                variant="ghost"
+                size="sm"
+                aria-label="Delete session"
+                onClick={() => setDeleteOpen(true)}
+                className="text-on-surface-variant hover:text-error"
+              >
+                <Trash2 className="h-4 w-4" />
+                Delete
+              </Button>
             </div>
           </div>
 
@@ -170,6 +201,17 @@ export default function ConsultationDetailPage() {
         </div>
       }
     />
+    <ConfirmDialog
+      open={deleteOpen}
+      title="Delete session?"
+      description="This permanently removes the session, including its audio, transcript and any generated note."
+      confirmLabel="Delete session"
+      confirmVariant="danger"
+      isLoading={deleting}
+      onConfirm={handleDelete}
+      onCancel={() => setDeleteOpen(false)}
+    />
+    </>
   );
 }
 

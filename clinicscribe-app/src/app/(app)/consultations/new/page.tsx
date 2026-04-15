@@ -7,6 +7,8 @@ import { Badge } from '@/components/ui/Badge';
 import { Toggle } from '@/components/ui/Toggle';
 import { ProgressBar } from '@/components/ui/ProgressBar';
 import { LiveTranscript } from '@/components/consultations/LiveTranscript';
+import { RecordingMeter } from '@/components/consultations/RecordingMeter';
+import { PatientContextCard } from '@/components/consultations/PatientContextCard';
 import { AudioUploader } from '@/components/consultations/AudioUploader';
 import { ConsultationTypeSelect } from '@/components/consultations/ConsultationTypeSelect';
 import { TemplatePickerDialog } from '@/components/templates/TemplatePickerDialog';
@@ -34,9 +36,6 @@ import {
   Sparkles,
   Upload,
   Loader2,
-  Square,
-  Pause,
-  Play,
   RotateCcw,
   CheckCircle2,
   FileAudio,
@@ -199,10 +198,17 @@ export default function NewConsultationPage() {
     }
   }
 
+  const heroTitle = selectedPatient
+    ? `Capture • ${selectedPatient.first_name} ${selectedPatient.last_name}`
+    : 'Capture';
+  const heroDescription = selectedPatient
+    ? 'Session ready. Start recording or upload audio for this patient.'
+    : 'Record, transcribe, and hand off to review.';
+
   return (
     <ScribeWorkspaceShell
-      title="Capture"
-      description="Record, transcribe, and hand off to review."
+      title={heroTitle}
+      description={heroDescription}
       rail={<SessionRail />}
       metaBar={
         <div className="flex items-center gap-3 px-5 py-3 flex-wrap">
@@ -283,42 +289,17 @@ export default function NewConsultationPage() {
             </div>
           )}
 
-          {/* Recording indicator (when recording) */}
+          {/* Recording indicator (when recording) — compact timer in meta bar;
+              full meter is rendered in the workspace below */}
           {recorder.isRecording && (
             <div className="flex items-center gap-2">
               <span className="relative flex h-2 w-2">
                 <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-error opacity-75" />
                 <span className="relative inline-flex h-2 w-2 rounded-full bg-error" />
               </span>
-              <span className="font-mono text-sm font-semibold text-error">
+              <span className="font-mono text-sm font-semibold text-error tabular-nums">
                 {formatDuration(recorder.duration)}
               </span>
-
-              {/* Waveform mini */}
-              <div className="flex items-center gap-[2px] h-5">
-                {recorder.waveformData.slice(0, 16).map((v, i) => (
-                  <div
-                    key={i}
-                    className={cn('w-[2px] rounded-full', recorder.isPaused ? 'bg-on-surface-variant/20' : 'bg-error/60')}
-                    style={{ height: Math.max(3, Math.abs(v) * 20) }}
-                  />
-                ))}
-              </div>
-
-              <div className="flex items-center gap-1.5 ml-1">
-                <button
-                  onClick={handlePauseResume}
-                  className="w-7 h-7 rounded-full border border-outline-variant/30 bg-surface-container-lowest flex items-center justify-center hover:bg-surface-container-low transition-colors"
-                >
-                  {recorder.isPaused ? <Play className="w-3 h-3 text-on-surface ml-px" /> : <Pause className="w-3 h-3 text-on-surface" />}
-                </button>
-                <button
-                  onClick={handleStopRecording}
-                  className="w-7 h-7 rounded-full bg-error text-white flex items-center justify-center hover:bg-error/90 transition-colors"
-                >
-                  <Square className="w-3 h-3" />
-                </button>
-              </div>
             </div>
           )}
 
@@ -360,6 +341,27 @@ export default function NewConsultationPage() {
       }
       workspace={
         <div className="relative flex flex-col min-h-[560px]">
+          {/* Patient context — visible whenever a patient is chosen */}
+          <AnimatePresence initial={false}>
+            {selectedPatient && (
+              <motion.div
+                key="patient-context"
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                transition={{ duration: 0.3, ease: 'easeOut' }}
+                style={{ overflow: 'hidden' }}
+              >
+                <div className="px-5 pt-5">
+                  <PatientContextCard
+                    patient={selectedPatient}
+                    clinicId={profile?.clinic_id}
+                  />
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
           {/* Mode toggle for upload */}
           {!recorder.isRecording && !hasLiveTranscript && !audioBlob && (
             <div className="flex items-center gap-1 px-5 pt-4">
@@ -450,8 +452,19 @@ export default function NewConsultationPage() {
                   initial={{ opacity: 0, y: 12 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -12 }}
-                  className="flex-1 p-5"
+                  className="flex-1 p-5 space-y-4"
                 >
+                  {recorder.isRecording && (
+                    <RecordingMeter
+                      isRecording={recorder.isRecording}
+                      isPaused={recorder.isPaused}
+                      duration={recorder.duration}
+                      waveformData={recorder.waveformData}
+                      inputLevel={recorder.inputLevel}
+                      onPauseResume={handlePauseResume}
+                      onStop={handleStopRecording}
+                    />
+                  )}
                   <LiveTranscript
                     segments={realtime.segments}
                     interimText={realtime.interimText}

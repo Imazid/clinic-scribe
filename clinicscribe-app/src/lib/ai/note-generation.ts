@@ -1,12 +1,8 @@
-import OpenAI from 'openai';
 import { CLINICAL_NOTE_SYSTEM_PROMPT, buildNoteGenerationPrompt } from '@/lib/prompts';
 import { AI_CONFIG } from '@/lib/constants';
+import { getAnthropic, extractText } from '@/lib/anthropic';
 import type { TemplateCatalogItem } from '@/lib/types';
 import { getTemplateByKey } from '@/lib/templates/catalog';
-
-function getOpenAI() {
-  return new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-}
 
 export async function generateClinicalNoteArtifact(params: {
   transcript: string;
@@ -15,7 +11,7 @@ export async function generateClinicalNoteArtifact(params: {
   templateKey?: string | null;
   template?: TemplateCatalogItem | null;
 }) {
-  const openai = getOpenAI();
+  const client = getAnthropic();
   const resolvedTemplate = params.template ?? getTemplateByKey(params.templateKey);
   const userPrompt = buildNoteGenerationPrompt(
     params.transcript,
@@ -23,27 +19,26 @@ export async function generateClinicalNoteArtifact(params: {
     resolvedTemplate
   );
 
-  const completion = await openai.chat.completions.create({
+  const response = await client.messages.create({
     model: AI_CONFIG.noteModel,
-    max_tokens: 4096,
-    temperature: 0.3,
-    response_format: { type: 'json_object' },
-    messages: [
-      { role: 'system', content: CLINICAL_NOTE_SYSTEM_PROMPT },
-      { role: 'user', content: userPrompt },
-    ],
+    max_tokens: AI_CONFIG.noteMaxTokens,
+    temperature: 0.2,
+    system: CLINICAL_NOTE_SYSTEM_PROMPT,
+    messages: [{ role: 'user', content: userPrompt }],
   });
 
-  const text = completion.choices[0]?.message?.content;
+  const text = extractText(response);
   if (!text) {
     throw new Error('No response from AI');
   }
 
-  let jsonStr = text;
+  // Claude occasionally wraps JSON in markdown fences despite instructions;
+  // strip them before parsing. Same pattern the OpenAI path used.
+  let jsonStr = text.trim();
   const jsonMatch = jsonStr.match(/```(?:json)?\s*([\s\S]*?)```/);
-  if (jsonMatch) jsonStr = jsonMatch[1];
+  if (jsonMatch) jsonStr = jsonMatch[1].trim();
 
-  const noteData = JSON.parse(jsonStr.trim());
+  const noteData = JSON.parse(jsonStr);
 
   return {
     ...noteData,

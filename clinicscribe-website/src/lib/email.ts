@@ -1,15 +1,34 @@
 import { Resend } from "resend";
+import { BRAND } from "@/lib/constants";
 
 const resend = process.env.RESEND_API_KEY
   ? new Resend(process.env.RESEND_API_KEY)
   : null;
 
 const FROM_ADDRESS =
-  process.env.RESEND_FROM_ADDRESS || "Miraa <hello@clinicscribe.ai>";
+  process.env.RESEND_FROM_ADDRESS || "Miraa <onboarding@miraahealth.com>";
 
 interface WelcomeEmailParams {
   to: string;
   name: string;
+}
+
+interface ContactEmailParams {
+  name: string;
+  email: string;
+  clinic?: string;
+  topic?: string;
+  message: string;
+  source?: string;
+}
+
+function escapeHtml(value: string): string {
+  return value
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#39;");
 }
 
 function buildWelcomeHtml(name: string): string {
@@ -83,7 +102,7 @@ function buildWelcomeHtml(name: string): string {
               <table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 auto;">
                 <tr>
                   <td style="background:linear-gradient(135deg,#001736,#002B5B);border-radius:50px;text-align:center;">
-                    <a href="https://clinicscribe.ai/product" target="_blank" style="display:inline-block;padding:14px 32px;font-size:14px;font-weight:600;color:#ffffff;text-decoration:none;">
+                    <a href="https://miraahealth.com/product" target="_blank" style="display:inline-block;padding:14px 32px;font-size:14px;font-weight:600;color:#ffffff;text-decoration:none;">
                       See How It Works &rarr;
                     </a>
                   </td>
@@ -108,7 +127,7 @@ function buildWelcomeHtml(name: string): string {
               </p>
               <p style="margin:0;font-size:12px;color:#747780;">
                 You received this because you joined the waitlist at
-                <a href="https://clinicscribe.ai" style="color:#006876;text-decoration:none;">clinicscribe.ai</a>.
+                <a href="https://miraahealth.com" style="color:#006876;text-decoration:none;">miraahealth.com</a>.
               </p>
             </td>
           </tr>
@@ -149,6 +168,127 @@ export async function sendWelcomeEmail({
     return { success: true };
   } catch (err) {
     console.error("[email] Failed to send welcome email:", err);
+    return {
+      success: false,
+      error: err instanceof Error ? err.message : "Unknown error",
+    };
+  }
+}
+
+function buildContactHtml({
+  name,
+  email,
+  clinic,
+  topic,
+  message,
+  source,
+}: ContactEmailParams): string {
+  const safeMessage = escapeHtml(message).replaceAll("\n", "<br />");
+
+  return `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>New Miraa Contact Form Submission</title>
+</head>
+<body style="margin:0;padding:24px;background-color:#fcf9f4;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;color:#1c1c19;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+    <tr>
+      <td align="center">
+        <table role="presentation" width="640" cellpadding="0" cellspacing="0" style="max-width:640px;background-color:#ffffff;border-radius:16px;overflow:hidden;">
+          <tr>
+            <td style="background:linear-gradient(135deg,#001736 0%,#002B5B 100%);padding:28px 32px;">
+              <p style="margin:0 0 6px;font-size:12px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#a1efff;">
+                New contact enquiry
+              </p>
+              <h1 style="margin:0;font-size:24px;font-weight:700;color:#ffffff;">
+                ${BRAND.name} website form
+              </h1>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:32px;">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:24px;">
+                <tr>
+                  <td style="padding:8px 0;font-size:14px;color:#747780;width:160px;">Name</td>
+                  <td style="padding:8px 0;font-size:14px;color:#1c1c19;font-weight:600;">${escapeHtml(name)}</td>
+                </tr>
+                <tr>
+                  <td style="padding:8px 0;font-size:14px;color:#747780;">Email</td>
+                  <td style="padding:8px 0;font-size:14px;color:#1c1c19;font-weight:600;">${escapeHtml(email)}</td>
+                </tr>
+                <tr>
+                  <td style="padding:8px 0;font-size:14px;color:#747780;">Clinic / Practice</td>
+                  <td style="padding:8px 0;font-size:14px;color:#1c1c19;font-weight:600;">${escapeHtml(clinic || "Not provided")}</td>
+                </tr>
+                <tr>
+                  <td style="padding:8px 0;font-size:14px;color:#747780;">Topic</td>
+                  <td style="padding:8px 0;font-size:14px;color:#1c1c19;font-weight:600;">${escapeHtml(topic || "General enquiry")}</td>
+                </tr>
+                <tr>
+                  <td style="padding:8px 0;font-size:14px;color:#747780;">Source</td>
+                  <td style="padding:8px 0;font-size:14px;color:#1c1c19;font-weight:600;">${escapeHtml(source || "website")}</td>
+                </tr>
+              </table>
+
+              <div style="background-color:#f6f3ee;border-radius:12px;padding:24px;">
+                <p style="margin:0 0 12px;font-size:14px;font-weight:700;color:#001736;">Message</p>
+                <p style="margin:0;font-size:15px;line-height:1.7;color:#43474f;">${safeMessage}</p>
+              </div>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`;
+}
+
+export async function sendContactEmail({
+  name,
+  email,
+  clinic,
+  topic,
+  message,
+  source,
+}: ContactEmailParams): Promise<{ success: boolean; error?: string }> {
+  if (!resend) {
+    console.warn(
+      "[email] RESEND_API_KEY not set — skipping contact email notification for",
+      email
+    );
+    return { success: false, error: "Email service not configured." };
+  }
+
+  try {
+    const { error } = await resend.emails.send({
+      from: FROM_ADDRESS,
+      to: BRAND.supportEmail,
+      replyTo: email,
+      subject: topic
+        ? `New Miraa contact form enquiry: ${topic}`
+        : "New Miraa contact form enquiry",
+      html: buildContactHtml({
+        name,
+        email,
+        clinic,
+        topic,
+        message,
+        source,
+      }),
+    });
+
+    if (error) {
+      console.error("[email] Resend error:", error);
+      return { success: false, error: error.message };
+    }
+
+    return { success: true };
+  } catch (err) {
+    console.error("[email] Failed to send contact email:", err);
     return {
       success: false,
       error: err instanceof Error ? err.message : "Unknown error",

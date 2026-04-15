@@ -81,6 +81,43 @@ export type EvidenceQueryScope =
   | 'follow_up'
   | 'patient_instructions';
 
+export type PrescriptionStatus =
+  | 'draft'
+  | 'approved'
+  | 'printed'
+  | 'dispensed'
+  | 'void';
+
+export interface PrescriptionItem {
+  name: string;
+  strength: string | null;
+  form: string | null;
+  dose: string;
+  frequency: string;
+  duration: string | null;
+  quantity: number | null;
+  repeats: number | null;
+  instructions: string | null;
+}
+
+export interface Prescription {
+  id: string;
+  clinic_id: string;
+  patient_id: string;
+  consultation_id: string | null;
+  clinical_note_id: string | null;
+  status: PrescriptionStatus;
+  items: PrescriptionItem[];
+  notes: string | null;
+  drafted_by: string | null;
+  approved_by: string | null;
+  approved_at: string | null;
+  created_at: string;
+  updated_at: string;
+  patient?: Patient;
+  consultation?: Consultation;
+}
+
 export interface Clinic {
   id: string;
   name: string;
@@ -129,6 +166,10 @@ export interface Patient {
   consent_status: ConsentStatus;
   consent_date: string | null;
   notes: string | null;
+  height_cm: number | null;
+  provider_name: string | null;
+  location: string | null;
+  last_appointment_at: string | null;
   created_at: string;
   updated_at: string;
 }

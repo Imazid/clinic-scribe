@@ -8,7 +8,8 @@ import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
 import { useAuthStore } from '@/lib/stores/auth-store';
 import { createClient } from '@/lib/supabase/client';
-import { Building, CircleUserRound, CreditCard, Mail, Shield } from 'lucide-react';
+import { Badge } from '@/components/ui/Badge';
+import { Building, CircleUserRound, CreditCard, KeyRound, Mail, Shield } from 'lucide-react';
 
 function formatRole(role?: string | null) {
   if (!role) return 'Not set';
@@ -28,15 +29,21 @@ export default function SettingsPage() {
   const profile = useAuthStore((state) => state.profile);
   const clinic = useAuthStore((state) => state.clinic);
   const [email, setEmail] = useState('');
+  const [mfaEnabled, setMfaEnabled] = useState<boolean | null>(null);
 
   useEffect(() => {
-    async function loadUserEmail() {
+    async function loadUserData() {
       const supabase = createClient();
-      const { data } = await supabase.auth.getUser();
-      setEmail(data.user?.email || '');
+      const [{ data: userData }, { data: mfaData }] = await Promise.all([
+        supabase.auth.getUser(),
+        supabase.auth.mfa.listFactors(),
+      ]);
+      setEmail(userData.user?.email || '');
+      const verified = (mfaData?.totp || []).filter((f) => f.status === 'verified');
+      setMfaEnabled(verified.length > 0);
     }
 
-    loadUserEmail();
+    loadUserData();
   }, []);
 
   const initials = useMemo(() => {
@@ -166,16 +173,31 @@ export default function SettingsPage() {
               <CardTitle className="text-base">Security status</CardTitle>
             </div>
             <div className="space-y-3 px-6 py-6">
-              <div className="flex items-start gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-surface-container text-on-surface-variant">
-                  <Shield className="h-5 w-5" />
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex items-start gap-3">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-secondary/10 text-secondary">
+                    <KeyRound className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-on-surface">Multi-factor authentication</p>
+                    <div className="mt-1 flex items-center gap-2">
+                      {mfaEnabled === null ? (
+                        <span className="text-sm text-on-surface-variant">Loading...</span>
+                      ) : mfaEnabled ? (
+                        <Badge variant="success">Enabled</Badge>
+                      ) : (
+                        <Badge variant="default">Not enabled</Badge>
+                      )}
+                    </div>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-sm font-semibold text-on-surface">Authentication</p>
-                  <p className="mt-1 text-sm text-on-surface-variant">
-                    Multi-factor authentication and additional session controls can be added in a later pass.
-                  </p>
-                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => router.push('/settings/security')}
+                >
+                  Manage
+                </Button>
               </div>
               <div className="flex items-start gap-3">
                 <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-surface-container text-on-surface-variant">

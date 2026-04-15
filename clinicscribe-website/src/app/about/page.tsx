@@ -12,6 +12,7 @@ import {
   Users,
 } from "lucide-react";
 import Link from "next/link";
+import { ContactForm } from "@/components/sections/ContactForm";
 import { BRAND } from "@/lib/constants";
 
 const fadeUp = {
@@ -56,19 +57,9 @@ const values = [
 
 const team = [
   {
-    name: "Dr. Alex Chen",
-    role: "Co-Founder & Medical Director",
-    bio: "Former GP with 12 years of clinical experience. Understands documentation burden firsthand. Ensures clinical relevance in every feature.",
-  },
-  {
-    name: "Sarah Mitchell",
-    role: "Co-Founder & CEO",
-    bio: "Background in health technology and regulatory compliance. Focused on building responsible AI products for the Australian healthcare market.",
-  },
-  {
-    name: "James Park",
-    role: "CTO",
-    bio: "AI and NLP engineer with experience in speech recognition and clinical language processing. Leads the technical architecture and safety framework.",
+    name: "Ihtisham Mazid",
+    role: "Founder & CEO",
+    bio: "Ihtisham Mazid is the founder and CEO of Miraa. He has a background in mechatronics engineering and built the company with a close view of healthcare through family working in the medical field.",
   },
 ];
 
@@ -186,6 +177,13 @@ export default function AboutPage() {
                 impressive demos.
               </p>
               <p>
+                {BRAND.name} was founded by Ihtisham Mazid, a mechatronics
+                engineer with close family ties to the medical field. That mix
+                of engineering discipline and lived exposure to clinical work
+                shaped the company from the start: build practical systems,
+                reduce documentation burden, and respect the realities of care.
+              </p>
+              <p>
                 {BRAND.name} is built in Australia, for Australian healthcare.
                 We understand the regulatory landscape, the clinical software
                 ecosystem, and the expectations of the clinicians we serve.
@@ -270,43 +268,52 @@ export default function AboutPage() {
               </motion.div>
             ))}
           </div>
-
-          <motion.p
-            {...fadeUp}
-            className="text-center text-xs text-outline mt-8"
-          >
-            Team profiles shown are representative placeholders. Updated team
-            details coming soon.
-          </motion.p>
         </div>
       </section>
 
       {/* CTA */}
-      <section className="section-atmosphere py-20 bg-surface">
-        <div className="max-w-3xl mx-auto px-6 text-center">
-          <motion.div {...fadeUp}>
-            <h2 className="text-3xl md:text-4xl font-bold text-primary tracking-tight mb-4">
-              Want to Learn More?
+      <section id="contact" className="section-atmosphere py-20 bg-surface">
+        <div className="mx-auto grid max-w-6xl gap-10 px-6 lg:grid-cols-[0.9fr,1.1fr] lg:items-start">
+          <motion.div {...fadeUp} className="lg:pt-8">
+            <p className="label-text mb-3 text-secondary">Contact Us</p>
+            <h2 className="mb-4 text-3xl font-bold tracking-tight text-primary md:text-4xl">
+              Talk to the Miraa team
             </h2>
-            <p className="text-on-surface-variant mb-8">
-              Join the waitlist to hear when Miraa launches, or reach out to our
-              team directly if you want to talk through your practice needs.
+            <p className="mb-6 text-on-surface-variant">
+              Reach out if you want to discuss a pilot, book a demo, explore an
+              integration, or pressure-test whether Miraa fits your workflow.
             </p>
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+            <p className="mb-8 text-sm leading-relaxed text-on-surface-variant">
+              Messages go directly to the company inbox, and you can still use{" "}
+              <a
+                href={`mailto:${BRAND.supportEmail}`}
+                className="font-semibold text-primary underline-offset-4 hover:underline"
+              >
+                {BRAND.supportEmail}
+              </a>{" "}
+              if you prefer email.
+            </p>
+            <div className="flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-center">
               <Link
                 href="/#waitlist-form"
-                className="inline-flex items-center gap-2 px-8 py-3.5 text-sm font-semibold text-on-primary bg-gradient-to-r from-primary to-primary-container rounded-full hover:opacity-90 transition-opacity"
+                className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-primary to-primary-container px-8 py-3.5 text-sm font-semibold text-on-primary transition-opacity hover:opacity-90"
               >
                 Join the Waitlist
                 <ArrowRight className="w-4 h-4" />
               </Link>
               <a
-                href={`mailto:${BRAND.supportEmail}`}
+                href={`mailto:${BRAND.supportEmail}?subject=Miraa%20Enquiry`}
                 className="inline-flex items-center gap-2 rounded-full border border-outline-variant/25 bg-surface-container-lowest px-8 py-3.5 text-sm font-semibold text-primary shadow-ambient-sm transition-colors hover:bg-surface-container"
               >
-                Contact Us
+                Email the team
               </a>
             </div>
+          </motion.div>
+          <motion.div
+            {...fadeUp}
+            transition={{ duration: 0.6, delay: 0.1 }}
+          >
+            <ContactForm source="about-contact-section" />
           </motion.div>
         </div>
       </section>

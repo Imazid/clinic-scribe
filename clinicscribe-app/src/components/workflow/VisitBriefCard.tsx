@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { formatDate } from '@/lib/utils';
 import type { Consultation, VisitBrief } from '@/lib/types';
+import { normalizeVisitBrief } from '@/lib/visit-brief';
 import { getWorkflowPackByTemplateKey } from '@/lib/workflow/packs';
 import {
   AlertTriangle,
@@ -30,6 +31,8 @@ interface VisitBriefCardProps {
   brief?: VisitBrief | null;
   onGenerate?: () => void;
   isGenerating?: boolean;
+  /** True when the most recent generate call returned a cached row. */
+  cached?: boolean;
 }
 
 function getContextList(brief: VisitBrief | null | undefined, key: string) {
@@ -42,6 +45,7 @@ function getContextList(brief: VisitBrief | null | undefined, key: string) {
 function getBriefFreshness(brief: VisitBrief | null | undefined): { label: string; variant: 'info' | 'warning' | 'default' } {
   if (!brief) return { label: 'Brief Needed', variant: 'default' };
   const createdAt = new Date(brief.created_at);
+  if (Number.isNaN(createdAt.getTime())) return { label: 'Stale — Regenerate', variant: 'warning' };
   const hoursAgo = (Date.now() - createdAt.getTime()) / (1000 * 60 * 60);
   if (hoursAgo < 24) return { label: 'Fresh', variant: 'info' };
   return { label: 'Stale — Regenerate', variant: 'warning' };
@@ -158,25 +162,33 @@ export function VisitBriefCard({
   brief,
   onGenerate,
   isGenerating,
+  cached,
 }: VisitBriefCardProps) {
+  const normalizedBrief = normalizeVisitBrief(brief);
   const patientName = consultation.patient
     ? `${consultation.patient.first_name} ${consultation.patient.last_name}`
     : 'Unknown patient';
   const scheduledFor = consultation.scheduled_for
     ? formatDate(consultation.scheduled_for)
     : null;
-  const lastVisitSummary = getContextList(brief, 'last_visit_summary');
-  const activeMedications = getContextList(brief, 'active_medications');
-  const unresolvedReferrals = getContextList(brief, 'unresolved_referrals');
-  const chartDeltas = getContextList(brief, 'chart_deltas');
-  const dataGaps = getContextList(brief, 'data_gaps');
+  const lastVisitSummary = getContextList(normalizedBrief, 'last_visit_summary');
+  const activeMedications = getContextList(normalizedBrief, 'active_medications');
+  const unresolvedReferrals = getContextList(normalizedBrief, 'unresolved_referrals');
+  const chartDeltas = getContextList(normalizedBrief, 'chart_deltas');
+  const dataGaps = getContextList(normalizedBrief, 'data_gaps');
   const workflowPack = getWorkflowPackByTemplateKey(consultation.template_key);
-  const freshness = getBriefFreshness(brief);
-  const timeSinceLastVisit = getTimeSinceLastVisit(brief);
+  const freshness = getBriefFreshness(normalizedBrief);
+  const timeSinceLastVisit = getTimeSinceLastVisit(normalizedBrief);
+  const abnormalResults = normalizedBrief?.abnormal_results ?? [];
+  const likelyAgenda = normalizedBrief?.likely_agenda ?? [];
+  const unresolvedItems = normalizedBrief?.unresolved_items ?? [];
+  const activeProblems = normalizedBrief?.active_problems ?? [];
+  const medicationChanges = normalizedBrief?.medication_changes ?? [];
+  const clarificationQuestions = normalizedBrief?.clarification_questions ?? [];
 
   const urgentItemCount =
-    (brief?.abnormal_results?.length ?? 0) +
-    (brief?.unresolved_items?.length ?? 0) +
+    abnormalResults.length +
+    unresolvedItems.length +
     chartDeltas.length;
 
   return (
@@ -206,9 +218,14 @@ export function VisitBriefCard({
           </div>
         </div>
         <div className="flex items-center gap-2 shrink-0">
-          {urgentItemCount > 0 && brief && (
+          {urgentItemCount > 0 && normalizedBrief && (
             <span className="flex items-center gap-1 text-xs font-medium text-error bg-error/10 px-2 py-1 rounded-full">
               <AlertTriangle className="w-3 h-3" /> {urgentItemCount} attention
+            </span>
+          )}
+          {cached && normalizedBrief && (
+            <span className="flex items-center gap-1 rounded-full bg-secondary/10 px-2 py-1 text-xs font-medium text-secondary">
+              <Sparkles className="w-3 h-3" /> Cached
             </span>
           )}
           <Badge variant={freshness.variant}>{freshness.label}</Badge>
@@ -226,11 +243,11 @@ export function VisitBriefCard({
         </div>
       )}
 
-      {brief ? (
+      {normalizedBrief ? (
         <>
           {/* Summary block */}
           <div className="rounded-xl bg-secondary/5 px-4 py-3 text-sm text-on-surface">
-            {brief.summary}
+            {normalizedBrief.summary}
           </div>
 
           {/* Quick context cards */}
@@ -266,15 +283,15 @@ export function VisitBriefCard({
             </div>
             <div className={cn(
               'rounded-xl px-4 py-3',
-              (brief.abnormal_results?.length ?? 0) > 0 ? 'bg-error/5 ring-1 ring-error/20' : 'bg-surface-container-low'
+              abnormalResults.length > 0 ? 'bg-error/5 ring-1 ring-error/20' : 'bg-surface-container-low'
             )}>
               <div className="flex items-center gap-2 mb-2">
-                <FlaskConical className={cn('w-4 h-4', (brief.abnormal_results?.length ?? 0) > 0 ? 'text-error' : 'text-secondary')} />
+                <FlaskConical className={cn('w-4 h-4', abnormalResults.length > 0 ? 'text-error' : 'text-secondary')} />
                 <p className="text-sm font-semibold text-on-surface">Results</p>
               </div>
-              {(brief.abnormal_results?.length ?? 0) > 0 ? (
+              {abnormalResults.length > 0 ? (
                 <div className="space-y-1">
-                  {brief.abnormal_results.slice(0, 3).map((r) => (
+                  {abnormalResults.slice(0, 3).map((r) => (
                     <p key={r} className="text-sm text-error">{r}</p>
                   ))}
                 </div>
@@ -285,15 +302,15 @@ export function VisitBriefCard({
           </div>
 
           {/* Agenda checklist */}
-          <AgendaChecklist items={brief.likely_agenda} />
+          <AgendaChecklist items={likelyAgenda} />
 
           {/* Collapsible sections */}
           <div className="space-y-2">
-            <BriefSection icon={FileWarning} title="Unresolved Items" items={brief.unresolved_items} urgency="warning" defaultExpanded={brief.unresolved_items.length <= 3} />
-            <BriefSection icon={Stethoscope} title="Active Problems" items={brief.active_problems} defaultExpanded={brief.active_problems.length <= 4} />
-            <BriefSection icon={Pill} title="Medication Changes" items={brief.medication_changes} urgency={brief.medication_changes.length > 0 ? 'warning' : 'default'} />
+            <BriefSection icon={FileWarning} title="Unresolved Items" items={unresolvedItems} urgency="warning" defaultExpanded={unresolvedItems.length <= 3} />
+            <BriefSection icon={Stethoscope} title="Active Problems" items={activeProblems} defaultExpanded={activeProblems.length <= 4} />
+            <BriefSection icon={Pill} title="Medication Changes" items={medicationChanges} urgency={medicationChanges.length > 0 ? 'warning' : 'default'} />
             <BriefSection icon={AlertTriangle} title="Chart Deltas" items={chartDeltas} urgency={chartDeltas.length > 0 ? 'error' : 'default'} />
-            <BriefSection icon={HelpCircle} title="Clarify Today" items={brief.clarification_questions} />
+            <BriefSection icon={HelpCircle} title="Clarify Today" items={clarificationQuestions} />
             <BriefSection icon={FileWarning} title="Data Gaps" items={dataGaps} urgency={dataGaps.length > 0 ? 'warning' : 'default'} />
           </div>
         </>
@@ -308,7 +325,7 @@ export function VisitBriefCard({
       {onGenerate && (
         <div className="flex justify-end">
           <Button variant="outline" onClick={onGenerate} isLoading={isGenerating}>
-            <Sparkles className="w-4 h-4" /> {brief ? 'Refresh Brief' : 'Generate Brief'}
+            <Sparkles className="w-4 h-4" /> {normalizedBrief ? 'Refresh Brief' : 'Generate Brief'}
           </Button>
         </div>
       )}

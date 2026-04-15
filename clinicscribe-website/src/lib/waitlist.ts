@@ -91,7 +91,15 @@ async function addToLocalWaitlist(entry: WaitlistInput): Promise<WaitlistResult>
     ...entry,
     timestamp: new Date().toISOString(),
   });
-  await writeEntries(entries);
+
+  try {
+    await writeEntries(entries);
+  } catch {
+    throw new WaitlistError(
+      "Waitlist storage is not configured. Please contact the site administrator.",
+      503
+    );
+  }
 
   return { success: true, message: "You're on the list!" };
 }

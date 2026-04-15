@@ -64,7 +64,7 @@ const SETTINGS_GROUPS: Array<{ label: string; items: SettingsNavItem[] }> = [
         label: 'Security',
         description: 'Sessions and sign-in controls',
         icon: Shield,
-        disabled: true,
+        href: '/settings/security',
       },
     ],
   },

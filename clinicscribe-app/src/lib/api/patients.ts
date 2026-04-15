@@ -54,6 +54,28 @@ export async function updatePatient(id: string, input: Partial<PatientInput>) {
   return data as Patient;
 }
 
+/**
+ * Best-effort denormalisation: stamp `patients.last_appointment_at` when a
+ * consultation is created or actually begins. Never throws — a failure to
+ * update the column should never block consultation flow.
+ */
+export async function touchPatientLastAppointment(
+  patientId: string,
+  timestamp: string = new Date().toISOString()
+) {
+  try {
+    const { error } = await supabase()
+      .from('patients')
+      .update({ last_appointment_at: timestamp, updated_at: new Date().toISOString() })
+      .eq('id', patientId);
+    if (error) {
+      console.warn('touchPatientLastAppointment failed:', error.message);
+    }
+  } catch (err) {
+    console.warn('touchPatientLastAppointment threw:', err);
+  }
+}
+
 export async function getPatientConsultations(patientId: string) {
   const { data, error } = await supabase()
     .from('consultations')

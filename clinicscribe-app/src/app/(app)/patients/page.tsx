@@ -12,7 +12,16 @@ import { Plus, Users } from 'lucide-react';
 
 export default function PatientsPage() {
   const router = useRouter();
-  const { patients, loading, search, setSearch, consentFilter, setConsentFilter } = usePatients();
+  const {
+    patients,
+    loading,
+    search,
+    setSearch,
+    consentFilter,
+    setConsentFilter,
+    sort,
+    setSort,
+  } = usePatients();
 
   return (
     <div>
@@ -31,6 +40,8 @@ export default function PatientsPage() {
         onSearchChange={setSearch}
         consentFilter={consentFilter}
         onConsentFilterChange={setConsentFilter}
+        sort={sort}
+        onSortChange={setSort}
       />
 
       {loading ? (

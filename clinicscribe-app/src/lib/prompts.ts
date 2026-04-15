@@ -21,7 +21,10 @@ Generate a structured clinical note from a consultation transcript.
 - Even when the template is letter- or meeting-oriented, return reviewable clinical content in the requested JSON schema
 
 ## Output Format
-Return valid JSON matching this structure:
+Return a single valid JSON object matching this structure. Do NOT wrap the
+JSON in markdown code fences, do NOT include any prose before or after the
+JSON, and escape all newlines inside string values as \\n so the response
+parses cleanly.
 {
   "content": {
     "subjective": "Patient's reported symptoms, history...",

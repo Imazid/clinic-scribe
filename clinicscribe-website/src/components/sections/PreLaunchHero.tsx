@@ -203,6 +203,7 @@ export function PreLaunchHero() {
                     <input
                       type="text"
                       placeholder="Your name"
+                      aria-label="Your name"
                       value={name}
                       onChange={(e) => setName(e.target.value)}
                       className={inputClass}
@@ -210,6 +211,7 @@ export function PreLaunchHero() {
                     <input
                       type="email"
                       placeholder="your@email.com"
+                      aria-label="Email address"
                       value={email}
                       onChange={(e) => {
                         setEmail(e.target.value);
@@ -221,6 +223,7 @@ export function PreLaunchHero() {
                     <select
                       value={role}
                       onChange={(e) => setRole(e.target.value)}
+                      aria-label="Your role"
                       className={selectClass}
                     >
                       <option value="">Your role</option>

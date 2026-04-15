@@ -32,6 +32,7 @@ export default function PreparePage() {
   const [tasks, setTasks] = useState<CareTask[]>([]);
   const [loading, setLoading] = useState(true);
   const [generatingId, setGeneratingId] = useState<string | null>(null);
+  const [cachedBriefIds, setCachedBriefIds] = useState<Set<string>>(new Set());
 
   const load = useCallback(async () => {
     if (!clinicId) return;
@@ -55,10 +56,10 @@ export default function PreparePage() {
     load();
   }, [load]);
 
-  async function handleGenerateBrief(consultationId: string) {
+  async function handleGenerateBrief(consultationId: string, force = false) {
     setGeneratingId(consultationId);
     try {
-      const brief = await generateVisitBrief(consultationId);
+      const { brief, cached } = await generateVisitBrief(consultationId, { force });
       setQueue((current) =>
         current.map((consultation) =>
           consultation.id === consultationId
@@ -70,7 +71,16 @@ export default function PreparePage() {
             : consultation
         )
       );
-      addToast('Visit brief generated', 'success');
+      setCachedBriefIds((prev) => {
+        const next = new Set(prev);
+        if (cached) next.add(consultationId);
+        else next.delete(consultationId);
+        return next;
+      });
+      addToast(
+        cached ? 'Loaded cached visit brief' : 'Visit brief generated',
+        'success'
+      );
     } catch (error) {
       addToast(error instanceof Error ? error.message : 'Failed to generate brief', 'error');
     } finally {
@@ -218,8 +228,9 @@ export default function PreparePage() {
                 key={consultation.id}
                 consultation={consultation}
                 brief={consultation.visit_brief}
-                onGenerate={() => handleGenerateBrief(consultation.id)}
+                onGenerate={() => handleGenerateBrief(consultation.id, Boolean(consultation.visit_brief))}
                 isGenerating={generatingId === consultation.id}
+                cached={cachedBriefIds.has(consultation.id)}
               />
             ))}
           </div>

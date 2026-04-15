@@ -19,6 +19,9 @@ import { updateConsultationStatus } from '@/lib/api/consultations';
 import { createAuditLog } from '@/lib/api/audit';
 import { createClient } from '@/lib/supabase/client';
 import { generateProvenance, generateQAFindings, materializeCloseout } from '@/lib/api/workflow';
+import { exportNotePDF } from '@/lib/api/exports';
+import { getPrescriptionsForConsultation } from '@/lib/api/prescriptions';
+import { PrescriptionDraftSheet } from '@/components/notes/PrescriptionDraftSheet';
 import type {
   SOAPNote,
   ConfidenceScores,
@@ -26,11 +29,13 @@ import type {
   FollowUpTask,
   ClinicalNote,
   NoteProvenanceItem,
+  Prescription,
   QAFinding,
 } from '@/lib/types';
 import { ProgressBar } from '@/components/ui/ProgressBar';
 import { Card } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
+import { Button } from '@/components/ui/Button';
 import {
   DiscrepancySummary,
   ProvenanceSummary,
@@ -44,7 +49,7 @@ import { WorkflowPackSummaryCard } from '@/components/workflow/WorkflowPackSumma
 import { getWorkflowPackByTemplateKey } from '@/lib/workflow/packs';
 import { useWorkspaceTemplates } from '@/lib/hooks/useWorkspaceTemplates';
 import { WorkflowProgress } from '@/components/workflow/WorkflowProgress';
-import { Waypoints, ShieldCheck, ArrowLeftRight, BookOpen, FileText, Sparkles } from 'lucide-react';
+import { Waypoints, ShieldCheck, ArrowLeftRight, BookOpen, FileText, Pill, Sparkles } from 'lucide-react';
 
 export default function ReviewPage() {
   const { id } = useParams<{ id: string }>();
@@ -70,6 +75,8 @@ export default function ReviewPage() {
   const [editingSection, setEditingSection] = useState<keyof SOAPNote | null>(null);
   const [contentEdited, setContentEdited] = useState(false);
   const [isRechecking, setIsRechecking] = useState(false);
+  const [prescriptionSheetOpen, setPrescriptionSheetOpen] = useState(false);
+  const [existingPrescription, setExistingPrescription] = useState<Prescription | null>(null);
 
   const activeTemplateKey = searchParams.get('template') ?? consultation?.template_key ?? null;
   const selectedTemplate = resolveByKey(activeTemplateKey);
@@ -150,6 +157,25 @@ export default function ReviewPage() {
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [consultation?.id, templateResolved]);
+
+  // Load any existing draft/approved prescription for this consultation so the
+  // review page can reopen it instead of starting from scratch.
+  useEffect(() => {
+    if (!consultation?.id) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const rows = await getPrescriptionsForConsultation(consultation.id);
+        if (cancelled) return;
+        setExistingPrescription(rows[0] ?? null);
+      } catch (error) {
+        console.error('Load prescriptions failed:', error);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [consultation?.id]);
 
   const handleGenerate = useCallback(async () => {
     if (!consultation?.transcript) return;
@@ -360,36 +386,27 @@ export default function ReviewPage() {
   async function handleExportPDF() {
     if (!consultation) return;
     try {
-      const res = await fetch('/api/export-pdf', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          content,
-          patientName: consultation.patient
-            ? `${consultation.patient.first_name} ${consultation.patient.last_name}`
-            : 'Unknown Patient',
-          consultationDate: new Date(consultation.created_at).toLocaleDateString('en-AU', {
-            day: 'numeric', month: 'long', year: 'numeric',
-          }),
-          clinicianName: profile
-            ? `Dr. ${profile.first_name} ${profile.last_name}`
-            : 'Clinician',
-          medications,
-          followUpTasks,
-          referrals,
+      await exportNotePDF({
+        content,
+        patientName: consultation.patient
+          ? `${consultation.patient.first_name} ${consultation.patient.last_name}`
+          : 'Unknown Patient',
+        consultationDate: new Date(consultation.created_at).toLocaleDateString('en-AU', {
+          day: 'numeric', month: 'long', year: 'numeric',
         }),
+        clinicianName: profile
+          ? `Dr. ${profile.first_name} ${profile.last_name}`
+          : 'Clinician',
+        medications,
+        followUpTasks,
+        referrals,
+        consultationId: consultation.id,
+        noteId: noteId ?? undefined,
       });
-      if (!res.ok) throw new Error('Export failed');
-      const blob = await res.blob();
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `clinical-note-${consultation.patient?.last_name || 'note'}-${new Date().toISOString().split('T')[0]}.html`;
-      a.click();
-      URL.revokeObjectURL(url);
       addToast('Note exported successfully', 'success');
-    } catch {
-      addToast('Failed to export note', 'error');
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to export note';
+      addToast(message, 'error');
     }
   }
 
@@ -664,7 +681,18 @@ export default function ReviewPage() {
               />
 
               {/* Medications, follow-up, referrals below editor */}
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mt-6">
+              <div className="mt-6 flex items-center justify-end">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setPrescriptionSheetOpen(true)}
+                  disabled={medications.length === 0 && !existingPrescription}
+                >
+                  <Pill className="w-4 h-4" />
+                  {existingPrescription ? 'Open prescription draft' : 'Draft prescription'}
+                </Button>
+              </div>
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mt-3">
                 <MedicationDraftSection medications={medications} onVerify={handleVerifyMed} />
                 <FollowUpTasksSection tasks={followUpTasks} onToggle={handleToggleTask} />
                 <ReferralDraftSection referrals={referrals} />
@@ -785,6 +813,21 @@ export default function ReviewPage() {
             )}
           </Card>
         </motion.div>
+      )}
+
+      {consultation && profile && (
+        <PrescriptionDraftSheet
+          open={prescriptionSheetOpen}
+          onClose={() => setPrescriptionSheetOpen(false)}
+          clinicId={profile.clinic_id}
+          patientId={consultation.patient_id}
+          consultationId={consultation.id}
+          clinicalNoteId={noteId}
+          profileId={profile.id}
+          medications={medications}
+          existing={existingPrescription}
+          onSaved={(prescription) => setExistingPrescription(prescription)}
+        />
       )}
     </div>
   );

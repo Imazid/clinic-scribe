@@ -7,5 +7,7 @@
 		<key>NSAllowsLocalNetworking</key>
 		<true/>
 	</dict>
+	<key>NSContactsUsageDescription</key>
+	<string>ClinicScribe uses your selected contacts to manage the allowlist for assisted phone-call notes.</string>
 </dict>
 </plist>

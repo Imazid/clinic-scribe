@@ -24,6 +24,20 @@ struct SettingsView: View {
 
                 SettingsSection(title: "Privacy & Security") {
                     SettingsGroup {
+                        NavigationLink {
+                            CallNotesSettingsView()
+                        } label: {
+                            SettingsNavigationRow(
+                                icon: "phone.badge.waveform.fill",
+                                tint: Theme.secondary,
+                                title: "Call Notes",
+                                subtitle: "Allow selected contacts and configure the assisted native-call note workflow."
+                            )
+                        }
+                        .buttonStyle(.plain)
+
+                        SettingsRowDivider()
+
                         SettingsActionRow(
                             icon: "mic.fill",
                             tint: Theme.secondary,
@@ -353,7 +367,7 @@ private struct SettingsPill: View {
     }
 }
 
-private struct SettingsSection<Content: View>: View {
+struct SettingsSection<Content: View>: View {
     let title: String
     let content: Content
 
@@ -374,7 +388,7 @@ private struct SettingsSection<Content: View>: View {
     }
 }
 
-private struct SettingsGroup<Content: View>: View {
+struct SettingsGroup<Content: View>: View {
     let content: Content
 
     init(@ViewBuilder content: () -> Content) {
@@ -507,7 +521,7 @@ private struct SettingsValueRow: View {
     }
 }
 
-private struct SettingsIcon: View {
+struct SettingsIcon: View {
     let icon: String
     let tint: Color
 
@@ -521,7 +535,7 @@ private struct SettingsIcon: View {
     }
 }
 
-private struct SettingsRowDivider: View {
+struct SettingsRowDivider: View {
     var body: some View {
         Divider()
             .padding(.leading, 68)

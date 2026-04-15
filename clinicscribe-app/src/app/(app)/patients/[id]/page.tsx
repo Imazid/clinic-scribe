@@ -21,6 +21,7 @@ import { cn } from '@/lib/utils';
 import type { Patient, Consultation, ConsentStatus, TimelineEvent, CareTask, GeneratedDocument } from '@/lib/types';
 import {
   Edit,
+  Mic,
   Phone,
   Mail,
   Calendar,
@@ -32,6 +33,10 @@ import {
   FileText,
   CalendarClock,
   AlertTriangle,
+  MapPin,
+  Ruler,
+  Stethoscope,
+  CalendarCheck,
 } from 'lucide-react';
 
 const consentVariant: Record<ConsentStatus, 'success' | 'error' | 'warning'> = {
@@ -106,9 +111,14 @@ export default function PatientDetailPage() {
         title={`${patient.first_name} ${patient.last_name}`}
         className="mt-4"
         actions={
-          <Button variant="outline" onClick={() => router.push(`/patients/${id}/edit`)}>
-            <Edit className="w-4 h-4" /> Edit
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button onClick={() => router.push(`/consultations/new?patient_id=${id}`)}>
+              <Mic className="w-4 h-4" /> Start consultation
+            </Button>
+            <Button variant="outline" onClick={() => router.push(`/patients/${id}/edit`)}>
+              <Edit className="w-4 h-4" /> Edit
+            </Button>
+          </div>
         }
       />
 
@@ -132,6 +142,37 @@ export default function PatientDetailPage() {
               {patient.mrn && <div className="flex items-center gap-2 text-on-surface-variant"><Shield className="w-4 h-4" /> MRN: {patient.mrn}</div>}
             </div>
           </Card>
+
+          {(patient.provider_name ||
+            patient.location ||
+            patient.height_cm != null ||
+            patient.last_appointment_at) && (
+            <Card>
+              <p className="label-text text-on-surface-variant mb-3">Care Context</p>
+              <div className="space-y-2 text-sm">
+                {patient.provider_name && (
+                  <div className="flex items-center gap-2 text-on-surface-variant">
+                    <Stethoscope className="w-4 h-4" /> {patient.provider_name}
+                  </div>
+                )}
+                {patient.location && (
+                  <div className="flex items-center gap-2 text-on-surface-variant">
+                    <MapPin className="w-4 h-4" /> {patient.location}
+                  </div>
+                )}
+                {patient.height_cm != null && (
+                  <div className="flex items-center gap-2 text-on-surface-variant">
+                    <Ruler className="w-4 h-4" /> {patient.height_cm} cm
+                  </div>
+                )}
+                {patient.last_appointment_at && (
+                  <div className="flex items-center gap-2 text-on-surface-variant">
+                    <CalendarCheck className="w-4 h-4" /> Last visit: {formatDate(patient.last_appointment_at)}
+                  </div>
+                )}
+              </div>
+            </Card>
+          )}
 
           {(patient.allergies.length > 0 || patient.conditions.length > 0) && (
             <Card>
@@ -198,7 +239,7 @@ export default function PatientDetailPage() {
           {activeTab === 'overview' && (
             <div className="space-y-6">
               <Card>
-                <PatientStorySummary consultations={consultations} events={timelineEvents} />
+                <PatientStorySummary patient={patient} consultations={consultations} events={timelineEvents} />
               </Card>
               <Card>
                 <PatientStoryFeed events={timelineEvents} />

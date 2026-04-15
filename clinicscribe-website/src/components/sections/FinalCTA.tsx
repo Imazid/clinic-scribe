@@ -32,7 +32,7 @@ export function FinalCTA() {
               <ArrowRight className="h-4 w-4" />
             </Link>
             <Link
-              href="/demo"
+              href="/#waitlist-form"
               className="inline-flex items-center gap-2 rounded-full border-2 border-on-primary/30 px-8 py-4 font-semibold text-on-primary transition-colors hover:border-on-primary/60"
             >
               Join the Waitlist

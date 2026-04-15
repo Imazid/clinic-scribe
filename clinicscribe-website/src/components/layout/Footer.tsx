@@ -12,7 +12,7 @@ const footerLinks = {
     { label: "About", href: "/about" },
     { label: "Blog", href: "/blog" },
     { label: "FAQ", href: "/faq" },
-    { label: "Contact", href: "/#waitlist-form" },
+    { label: "Contact", href: "/about#contact" },
   ],
   Safety: [
     { label: "Safety & Compliance", href: "/safety" },

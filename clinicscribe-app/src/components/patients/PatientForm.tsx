@@ -29,6 +29,9 @@ export function PatientForm({ initialData, onSubmit, submitLabel = 'Save Patient
     conditions: initialData?.conditions || [],
     consent_status: initialData?.consent_status || 'pending',
     notes: initialData?.notes || null,
+    height_cm: initialData?.height_cm ?? null,
+    provider_name: initialData?.provider_name ?? null,
+    location: initialData?.location ?? null,
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
@@ -90,6 +93,40 @@ export function PatientForm({ initialData, onSubmit, submitLabel = 'Save Patient
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <Input id="email" label="Email" type="email" value={form.email || ''} onChange={(e) => update('email', e.target.value || null)} />
           <Input id="phone" label="Phone" value={form.phone || ''} onChange={(e) => update('phone', e.target.value || null)} />
+        </div>
+      </div>
+
+      <div className="space-y-4">
+        <h3 className="text-sm font-semibold text-on-surface-variant uppercase tracking-wider">Care Context</h3>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <Input
+            id="provider_name"
+            label="Preferred Provider"
+            value={form.provider_name || ''}
+            onChange={(e) => update('provider_name', e.target.value || null)}
+            placeholder="Dr. Jane Smith"
+          />
+          <Input
+            id="location"
+            label="Primary Location"
+            value={form.location || ''}
+            onChange={(e) => update('location', e.target.value || null)}
+            placeholder="Main Clinic"
+          />
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <Input
+            id="height_cm"
+            label="Height (cm)"
+            type="number"
+            step="0.1"
+            value={form.height_cm ?? ''}
+            onChange={(e) =>
+              update('height_cm', e.target.value === '' ? null : Number(e.target.value))
+            }
+            error={errors.height_cm}
+            placeholder="e.g. 172.5"
+          />
         </div>
       </div>
 

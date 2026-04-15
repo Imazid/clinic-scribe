@@ -7,6 +7,7 @@ import { formatDate } from '@/lib/utils';
 import type {
   ClinicalNote,
   Consultation,
+  Patient,
   TimelineEvent,
 } from '@/lib/types';
 import {
@@ -67,9 +68,11 @@ function formatMedication(medication: ClinicalNote['medications'][number]) {
 }
 
 export function PatientStorySummary({
+  patient,
   consultations,
   events,
 }: {
+  patient?: Patient;
   consultations: Consultation[];
   events: TimelineEvent[];
 }) {
@@ -200,11 +203,16 @@ export function PatientStorySummary({
       };
     });
 
+    // Phase 3: prefer the denormalised patients.last_appointment_at column,
+    // fall back to the derived value for rows that haven't been stamped yet.
+    const derivedLastVisit = orderedConsultations[0]
+      ? getConsultationDate(orderedConsultations[0])
+      : null;
+    const lastVisitSource = patient?.last_appointment_at ?? derivedLastVisit;
+
     return {
       visitCount: orderedConsultations.length,
-      lastVisitDate: orderedConsultations[0]
-        ? formatDate(getConsultationDate(orderedConsultations[0]))
-        : 'Not yet recorded',
+      lastVisitDate: lastVisitSource ? formatDate(lastVisitSource) : 'Not yet recorded',
       openLoopCount: openTaskEvents.length,
       draftDocumentCount: draftDocuments.length,
       latestPlan:
@@ -218,7 +226,7 @@ export function PatientStorySummary({
       careThemes,
       recentTrajectory,
     };
-  }, [consultations, events]);
+  }, [consultations, events, patient?.last_appointment_at]);
 
   return (
     <div>

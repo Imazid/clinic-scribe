@@ -25,6 +25,7 @@ import {
   type WorkspaceTemplateTab,
 } from '@/lib/templates/runtime';
 import { TemplateEditorDialog, type TemplateEditorValues } from '@/components/templates/TemplateEditorDialog';
+import { CommunityTemplatesDialog } from '@/components/templates/CommunityTemplatesDialog';
 import { formatDate } from '@/lib/utils';
 
 const FAVORITES_STORAGE_KEY = 'clinicscribe.favorite-template-keys';
@@ -79,6 +80,7 @@ export default function TemplatesPage() {
   });
   const [editorOpen, setEditorOpen] = useState(false);
   const [editingTemplate, setEditingTemplate] = useState<WorkspaceTemplate | null>(null);
+  const [communityOpen, setCommunityOpen] = useState(false);
 
   function persistFavorites(nextFavorites: string[]) {
     setFavorites(nextFavorites);
@@ -222,7 +224,7 @@ export default function TemplatesPage() {
             <Button
               type="button"
               variant="outline"
-              onClick={() => addToast('Community templates are not available yet.', 'info')}
+              onClick={() => setCommunityOpen(true)}
             >
               Browse community
             </Button>
@@ -447,6 +449,16 @@ export default function TemplatesPage() {
           setEditingTemplate(null);
         }}
         onSave={handleSaveTemplate}
+      />
+
+      <CommunityTemplatesDialog
+        open={communityOpen}
+        onClose={() => setCommunityOpen(false)}
+        templates={templates}
+        onUseTemplate={async (template) => {
+          await handleDuplicateTemplate(template);
+          setCommunityOpen(false);
+        }}
       />
     </div>
   );

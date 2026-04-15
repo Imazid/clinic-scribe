@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Plus_Jakarta_Sans } from "next/font/google";
+import { Analytics } from "@vercel/analytics/next";
 import "./globals.css";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
@@ -12,6 +13,7 @@ const plusJakarta = Plus_Jakarta_Sans({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(BRAND.url),
   title: {
     default: `${BRAND.name} — ${BRAND.expandedName}`,
     template: `%s | ${BRAND.name}`,
@@ -39,6 +41,20 @@ export const metadata: Metadata = {
   },
 };
 
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  name: BRAND.name,
+  url: BRAND.url,
+  description: BRAND.description,
+  foundingDate: BRAND.founded,
+  address: {
+    "@type": "PostalAddress",
+    addressLocality: "Sydney",
+    addressCountry: "AU",
+  },
+};
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -47,9 +63,14 @@ export default function RootLayout({
   return (
     <html lang="en" className="scroll-smooth">
       <body className={`${plusJakarta.variable} font-sans antialiased bg-surface text-on-surface`}>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        />
         <Navbar />
         <main>{children}</main>
         <Footer />
+        <Analytics />
       </body>
     </html>
   );

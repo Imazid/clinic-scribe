@@ -10,12 +10,13 @@ interface AudioRecorderState {
   audioBlob: Blob | null;
   audioUrl: string | null;
   waveformData: number[];
+  inputLevel: number;
   activeStream: MediaStream | null;
 }
 
 export function useAudioRecorder() {
   const [state, setState] = useState<AudioRecorderState>({
-    isRecording: false, isPaused: false, duration: 0, audioBlob: null, audioUrl: null, waveformData: [], activeStream: null,
+    isRecording: false, isPaused: false, duration: 0, audioBlob: null, audioUrl: null, waveformData: [], inputLevel: 0, activeStream: null,
   });
 
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
@@ -30,7 +31,16 @@ export function useAudioRecorder() {
     const data = new Uint8Array(analyserRef.current.frequencyBinCount);
     analyserRef.current.getByteTimeDomainData(data);
     const samples = Array.from(data.slice(0, 64)).map((v) => (v - 128) / 128);
-    setState((s) => ({ ...s, waveformData: samples }));
+    // Root-mean-square over the full buffer → smooth 0..1 input level
+    let sumSquares = 0;
+    for (let i = 0; i < data.length; i += 1) {
+      const centered = (data[i] - 128) / 128;
+      sumSquares += centered * centered;
+    }
+    const rms = Math.sqrt(sumSquares / data.length);
+    // Boost perceptual range: raw RMS rarely exceeds ~0.5 in speech
+    const level = Math.min(1, rms * 2.4);
+    setState((s) => ({ ...s, waveformData: samples, inputLevel: level }));
     animFrameRef.current = requestAnimationFrame(drawWaveform);
   }, []);
 
@@ -101,7 +111,7 @@ export function useAudioRecorder() {
 
   const reset = useCallback(() => {
     if (state.audioUrl) URL.revokeObjectURL(state.audioUrl);
-    setState({ isRecording: false, isPaused: false, duration: 0, audioBlob: null, audioUrl: null, waveformData: [], activeStream: null });
+    setState({ isRecording: false, isPaused: false, duration: 0, audioBlob: null, audioUrl: null, waveformData: [], inputLevel: 0, activeStream: null });
   }, [state.audioUrl]);
 
   return { ...state, start, stop, pause, resume, reset };

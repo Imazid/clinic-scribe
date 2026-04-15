@@ -1,9 +1,11 @@
 # ClinicScribe AI — Project Guide
 
 ## Brand
-- **Name**: ClinicScribe AI (placeholder — swap in `src/lib/constants.ts`)
-- **Tagline**: "AI-Powered Clinical Documentation for Modern Clinics"
+- **Name**: Miraa (Medical Insights, Record, Automation and Assistance)
+- **Domain**: `miraahealth.com` (live website domain)
+- **Tagline**: "Clinical Workflow Copilot"
 - **Positioning**: AI clinical documentation copilot / ambient clinical scribe
+- **Resend**: Domain `miraahealth.com` is verified — from address `onboarding@miraahealth.com`
 
 ## Architecture
 

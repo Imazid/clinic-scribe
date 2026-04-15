@@ -36,10 +36,9 @@ export const WORKFLOW_NAV = [
 ] as const;
 
 export const SECONDARY_NAV = [
-  { label: 'Tasks', href: '/tasks', icon: 'ListTodo' },
   { label: 'My Templates', href: '/templates', icon: 'LayoutTemplate' },
   { label: 'Patients', href: '/patients', icon: 'Users' },
-  { label: 'Prescriptions', href: '/prescriptions', icon: 'Pill', badge: 'Soon' },
+  { label: 'Prescriptions', href: '/prescriptions', icon: 'Pill' },
   { label: 'Analytics', href: '/analytics', icon: 'BarChart3' },
   { label: 'Integrations', href: '/integrations', icon: 'Plug' },
   { label: 'Audit Log', href: '/audit', icon: 'FileClock' },
@@ -85,9 +84,12 @@ export const AUDIO_CONSTRAINTS = {
 } as const;
 
 export const AI_CONFIG = {
-  whisperModel: 'whisper-1',
-  noteModel: 'gpt-4o',
-  promptVersion: '1.1.0',
+  transcriptionModel: 'gpt-4o-transcribe',
+  noteModel: 'claude-opus-4-6',
+  evidenceModel: 'claude-sonnet-4-6',
+  noteMaxTokens: 4096,
+  evidenceMaxTokens: 1500,
+  promptVersion: '2.0.0-phase2',
 } as const;
 
 export const CONFIDENCE_THRESHOLDS = {

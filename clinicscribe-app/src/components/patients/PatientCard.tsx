@@ -25,8 +25,14 @@ export function PatientCard({ patient }: { patient: Patient }) {
         </p>
         <p className="text-xs text-on-surface-variant">
           DOB: {formatDate(patient.date_of_birth)}
-          {patient.mrn && ` | MRN: ${patient.mrn}`}
+          {patient.mrn && ` · MRN: ${patient.mrn}`}
         </p>
+        {patient.last_appointment_at && (
+          <p className="text-xs text-on-surface-variant truncate">
+            Last visit: {formatDate(patient.last_appointment_at)}
+            {patient.provider_name && ` · ${patient.provider_name}`}
+          </p>
+        )}
       </div>
       <Badge variant={consentVariant[patient.consent_status]}>
         {patient.consent_status}

@@ -12,6 +12,7 @@ import type {
   PatientSummary,
   SOAPNote,
 } from '@/lib/types';
+import { normalizeVisitBrief } from '@/lib/visit-brief';
 
 const supabase = () => createClient();
 const missingWorkflowSchemaCodes = new Set(['PGRST200', 'PGRST205']);
@@ -39,6 +40,7 @@ export async function getPreparationQueue(clinicId: string) {
   return (data || []).map((consultation) => {
     const raw = consultation as Record<string, unknown>;
     if (Array.isArray(raw.visit_brief)) raw.visit_brief = raw.visit_brief[0] ?? null;
+    raw.visit_brief = normalizeVisitBrief(raw.visit_brief as VisitBrief | null | undefined);
     return raw as unknown as Consultation;
   });
 }
@@ -54,11 +56,18 @@ export async function getVisitBriefs(clinicId: string) {
     return [];
   }
   if (error) throw error;
-  return data as VisitBrief[];
+  return (data || []).flatMap((brief) => {
+    const normalized = normalizeVisitBrief(brief as VisitBrief | null | undefined);
+    return normalized ? [normalized] : [];
+  });
 }
 
-export async function generateVisitBrief(consultationId: string) {
-  const res = await fetch(`/api/consultations/${consultationId}/brief/generate`, {
+export async function generateVisitBrief(
+  consultationId: string,
+  options: { force?: boolean } = {}
+): Promise<{ brief: VisitBrief; cached: boolean }> {
+  const qs = options.force ? '?force=true' : '';
+  const res = await fetch(`/api/consultations/${consultationId}/brief/generate${qs}`, {
     method: 'POST',
   });
 
@@ -67,7 +76,18 @@ export async function generateVisitBrief(consultationId: string) {
     throw new Error(error.error || 'Failed to generate visit brief');
   }
 
-  return (await res.json()) as VisitBrief;
+  const json = (await res.json()) as { brief?: VisitBrief; cached?: boolean } | VisitBrief;
+  // Back-compat: older responses returned the bare VisitBrief.
+  if (json && typeof json === 'object' && 'brief' in json && json.brief) {
+    return {
+      brief: normalizeVisitBrief(json.brief) ?? json.brief,
+      cached: Boolean(json.cached),
+    };
+  }
+  return {
+    brief: normalizeVisitBrief(json as VisitBrief) ?? (json as VisitBrief),
+    cached: false,
+  };
 }
 
 export async function getVerificationQueue(clinicId: string) {

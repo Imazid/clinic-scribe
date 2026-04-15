@@ -1,4 +1,3 @@
-import OpenAI from 'openai';
 import type {
   EvidenceCitation,
   EvidenceQueryScope,
@@ -7,10 +6,10 @@ import type {
   SOAPNote,
 } from '@/lib/types';
 import { AI_CONFIG } from '@/lib/constants';
+import { getAnthropic, extractText } from '@/lib/anthropic';
 
-function getOpenAI() {
-  return new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-}
+const EVIDENCE_SYSTEM_PROMPT =
+  'You are Miraa evidence assist. You provide short, citation-backed workflow guidance using only the supplied sources. Respond with a single JSON object and no surrounding prose. Escape newlines inside string values as \\n.';
 
 function buildEvidencePrompt(params: {
   question: string;
@@ -64,19 +63,14 @@ export async function generateEvidenceAnswer(params: {
   patient?: Patient | null;
   finding?: QAFinding | null;
 }) {
-  const openai = getOpenAI();
+  const client = getAnthropic();
 
-  const completion = await openai.chat.completions.create({
-    model: AI_CONFIG.noteModel,
-    max_tokens: 900,
+  const response = await client.messages.create({
+    model: AI_CONFIG.evidenceModel,
+    max_tokens: AI_CONFIG.evidenceMaxTokens,
     temperature: 0.2,
-    response_format: { type: 'json_object' },
+    system: EVIDENCE_SYSTEM_PROMPT,
     messages: [
-      {
-        role: 'system',
-        content:
-          'You are Miraa evidence assist. You provide short, citation-backed workflow guidance using only the supplied sources.',
-      },
       {
         role: 'user',
         content: buildEvidencePrompt(params),
@@ -84,12 +78,16 @@ export async function generateEvidenceAnswer(params: {
     ],
   });
 
-  const text = completion.choices[0]?.message?.content;
+  const text = extractText(response);
   if (!text) {
     throw new Error('No evidence response from AI');
   }
 
-  const json = JSON.parse(text.trim()) as {
+  let jsonStr = text.trim();
+  const jsonMatch = jsonStr.match(/```(?:json)?\s*([\s\S]*?)```/);
+  if (jsonMatch) jsonStr = jsonMatch[1].trim();
+
+  const json = JSON.parse(jsonStr) as {
     answer?: string;
     key_points?: string[];
     citation_ids?: string[];

@@ -1,122 +1,106 @@
+import React from 'react';
 import { NextResponse } from 'next/server';
+import { renderToBuffer, type DocumentProps } from '@react-pdf/renderer';
+import { ClinicalNoteDocument } from '@/lib/pdf/ClinicalNoteDocument';
+import { createClient } from '@/lib/supabase/server';
+import type { FollowUpTask, MedicationDraft, SOAPNote } from '@/lib/types';
+
+interface ExportPdfPayload {
+  content: SOAPNote;
+  patientName: string;
+  consultationDate: string;
+  clinicianName: string;
+  clinicName?: string;
+  medications?: MedicationDraft[];
+  followUpTasks?: FollowUpTask[];
+  referrals?: string[];
+  consultationId?: string;
+  noteId?: string;
+}
+
+function sanitizeFilename(input: string): string {
+  return input
+    .normalize('NFKD')
+    .replace(/[^\w\-]+/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '')
+    .toLowerCase();
+}
 
 export async function POST(request: Request) {
   try {
-    const { content, patientName, consultationDate, clinicianName, medications, followUpTasks, referrals } = await request.json();
+    const body = (await request.json()) as ExportPdfPayload;
 
-    const medicationsHtml = medications?.length
-      ? `<div class="section">
-          <div class="section-title">Medications (Draft — Requires Clinician Verification)</div>
-          <div class="section-content">
-            <table style="width:100%;border-collapse:collapse;font-size:12px;">
-              <tr style="border-bottom:1px solid #c4c6d0;">
-                <th style="text-align:left;padding:6px 8px;">Medication</th>
-                <th style="text-align:left;padding:6px 8px;">Dosage</th>
-                <th style="text-align:left;padding:6px 8px;">Frequency</th>
-                <th style="text-align:left;padding:6px 8px;">Verified</th>
-              </tr>
-              ${medications.map((m: { name: string; dosage: string; frequency: string; verified: boolean }) =>
-                `<tr style="border-bottom:1px solid #e8e8e8;">
-                  <td style="padding:6px 8px;">${m.name}</td>
-                  <td style="padding:6px 8px;">${m.dosage}</td>
-                  <td style="padding:6px 8px;">${m.frequency}</td>
-                  <td style="padding:6px 8px;">${m.verified ? '✓' : '—'}</td>
-                </tr>`
-              ).join('')}
-            </table>
-          </div>
-        </div>`
-      : '';
+    if (!body?.content || !body.patientName) {
+      return NextResponse.json(
+        { error: 'content and patientName are required' },
+        { status: 400 }
+      );
+    }
 
-    const followUpsHtml = followUpTasks?.length
-      ? `<div class="section">
-          <div class="section-title">Follow-Up Tasks</div>
-          <div class="section-content">
-            <ul style="margin:0;padding-left:20px;">
-              ${followUpTasks.map((t: { description: string; completed: boolean }) =>
-                `<li style="margin-bottom:4px;">${t.completed ? '✓' : '○'} ${t.description}</li>`
-              ).join('')}
-            </ul>
-          </div>
-        </div>`
-      : '';
+    const documentElement = React.createElement(ClinicalNoteDocument, {
+      content: body.content,
+      patientName: body.patientName,
+      consultationDate: body.consultationDate,
+      clinicianName: body.clinicianName,
+      clinicName: body.clinicName,
+      medications: body.medications ?? [],
+      followUpTasks: body.followUpTasks ?? [],
+      referrals: body.referrals ?? [],
+    }) as unknown as React.ReactElement<DocumentProps>;
+    const buffer = await renderToBuffer(documentElement);
 
-    const referralsHtml = referrals?.length
-      ? `<div class="section">
-          <div class="section-title">Referrals</div>
-          <div class="section-content">
-            <ul style="margin:0;padding-left:20px;">
-              ${referrals.map((r: string) => `<li style="margin-bottom:4px;">${r}</li>`).join('')}
-            </ul>
-          </div>
-        </div>`
-      : '';
+    // Best-effort audit log — never fail the download on logging errors.
+    if (body.consultationId && body.noteId) {
+      try {
+        const supabase = await createClient();
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
 
-    const html = `<!DOCTYPE html>
-<html>
-<head>
-<meta charset="utf-8">
-<style>
-  body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; padding: 40px; color: #1c1c19; max-width: 800px; margin: 0 auto; }
-  h1 { color: #001736; font-size: 20px; margin-bottom: 4px; }
-  .meta { color: #43474f; font-size: 12px; margin-bottom: 24px; }
-  .section { margin-bottom: 20px; }
-  .section-title { font-size: 13px; font-weight: 700; color: #001736; text-transform: uppercase;
-    letter-spacing: 0.1em; margin-bottom: 8px; padding-bottom: 4px; border-bottom: 1px solid #c4c6d0; }
-  .section-content { font-size: 13px; line-height: 1.6; color: #43474f; white-space: pre-wrap; }
-  .footer { margin-top: 40px; padding-top: 16px; border-top: 1px solid #c4c6d0;
-    font-size: 11px; color: #747780; }
-  .disclaimer { background: #fff3cd; border: 1px solid #ffc107; border-radius: 4px; padding: 8px 12px;
-    font-size: 11px; color: #856404; margin-bottom: 20px; }
-</style>
-</head>
-<body>
-  <h1>Clinical Note — ${escapeHtml(patientName)}</h1>
-  <div class="meta">${escapeHtml(consultationDate)} | ${escapeHtml(clinicianName)} | Miraa</div>
-  <div class="disclaimer">This note was generated with AI assistance. All content has been reviewed and approved by the treating clinician before finalisation.</div>
-  <div class="section">
-    <div class="section-title">Subjective</div>
-    <div class="section-content">${escapeHtml(content.subjective)}</div>
-  </div>
-  <div class="section">
-    <div class="section-title">Objective</div>
-    <div class="section-content">${escapeHtml(content.objective)}</div>
-  </div>
-  <div class="section">
-    <div class="section-title">Assessment</div>
-    <div class="section-content">${escapeHtml(content.assessment)}</div>
-  </div>
-  <div class="section">
-    <div class="section-title">Plan</div>
-    <div class="section-content">${escapeHtml(content.plan)}</div>
-  </div>
-  ${medicationsHtml}
-  ${followUpsHtml}
-  ${referralsHtml}
-  <div class="footer">
-    Clinical note approved by ${escapeHtml(clinicianName)} on ${escapeHtml(consultationDate)}.<br>
-    Generated by Miraa. All AI-generated content reviewed by the treating clinician before finalisation.
-  </div>
-</body>
-</html>`;
+        let profileId: string | null = null;
+        if (user?.id) {
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('id')
+            .eq('user_id', user.id)
+            .maybeSingle();
+          profileId = profile?.id ?? null;
+        }
 
-    return new NextResponse(html, {
+        if (profileId) {
+          const { error: insertError } = await supabase
+            .from('export_records')
+            .insert({
+              consultation_id: body.consultationId,
+              note_id: body.noteId,
+              format: 'pdf',
+              file_path: null,
+              exported_by: profileId,
+            });
+          if (insertError) {
+            console.warn('export_records insert failed:', insertError.message);
+          }
+        }
+      } catch (logError) {
+        console.warn('export_records audit log skipped:', logError);
+      }
+    }
+
+    const slug = sanitizeFilename(body.patientName || 'clinical-note');
+    const dateSlug = new Date().toISOString().split('T')[0];
+    const filename = `clinical-note-${slug}-${dateSlug}.pdf`;
+
+    return new NextResponse(buffer as unknown as BodyInit, {
       headers: {
-        'Content-Type': 'text/html',
-        'Content-Disposition': `attachment; filename="clinical-note-${Date.now()}.html"`,
+        'Content-Type': 'application/pdf',
+        'Content-Disposition': `attachment; filename="${filename}"`,
+        'Cache-Control': 'no-store',
       },
     });
   } catch (error) {
-    console.error('Export error:', error);
-    return NextResponse.json({ error: 'Export failed' }, { status: 500 });
+    console.error('PDF export error:', error);
+    const message = error instanceof Error ? error.message : 'Export failed';
+    return NextResponse.json({ error: message }, { status: 500 });
   }
-}
-
-function escapeHtml(str: string): string {
-  if (!str) return '';
-  return str
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;');
 }

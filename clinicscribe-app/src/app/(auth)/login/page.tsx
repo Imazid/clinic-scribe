@@ -3,11 +3,12 @@
 import { useState, Suspense } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { motion } from 'framer-motion';
+import { Eye, EyeOff, Stethoscope } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { loginSchema, type LoginInput } from '@/lib/validators';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
-import { Stethoscope } from 'lucide-react';
 
 function LoginForm() {
   const router = useRouter();
@@ -17,6 +18,7 @@ function LoginForm() {
   const [errors, setErrors] = useState<Partial<Record<keyof LoginInput, string>>>({});
   const [serverError, setServerError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -59,7 +61,12 @@ function LoginForm() {
   }
 
   return (
-    <div>
+    <motion.div
+      className="rounded-2xl border border-outline-variant/40 bg-surface-container-low/40 p-6 shadow-sm backdrop-blur lg:p-8"
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4, ease: 'easeOut' }}
+    >
       <div className="flex items-center gap-3 mb-8 lg:hidden">
         <div className="w-10 h-10 rounded-xl bg-secondary flex items-center justify-center">
           <Stethoscope className="w-5 h-5 text-on-secondary" />
@@ -87,11 +94,21 @@ function LoginForm() {
         <Input
           id="password"
           label="Password"
-          type="password"
+          type={showPassword ? 'text' : 'password'}
           placeholder="Enter your password"
           value={form.password}
           onChange={(e) => setForm({ ...form, password: e.target.value })}
           error={errors.password}
+          suffix={
+            <button
+              type="button"
+              onClick={() => setShowPassword((v) => !v)}
+              aria-label={showPassword ? 'Hide password' : 'Show password'}
+              className="rounded p-1 text-on-surface-variant hover:text-on-surface"
+            >
+              {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+            </button>
+          }
         />
 
         <div className="flex justify-end">
@@ -133,7 +150,7 @@ function LoginForm() {
           Privacy Policy
         </Link>.
       </p>
-    </div>
+    </motion.div>
   );
 }
 
