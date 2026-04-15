@@ -43,16 +43,18 @@ export async function POST(request: Request) {
       source,
     });
 
-    sendContactEmail({
+    const emailResult = await sendContactEmail({
       name,
       email,
       clinic,
       topic,
       message,
       source,
-    }).catch((error) =>
-      console.error("[contact] Contact email notification failed:", error)
-    );
+    });
+
+    if (!emailResult.success) {
+      console.warn("[contact] Contact email notification failed:", emailResult.error);
+    }
 
     return NextResponse.json(result, { status: 201 });
   } catch (error) {

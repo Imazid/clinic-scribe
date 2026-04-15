@@ -25,11 +25,15 @@ export async function POST(request: Request) {
       return NextResponse.json(result, { status: 409 });
     }
 
-    // Fire-and-forget: send welcome email without blocking the response
-    sendWelcomeEmail({
+    // Await the email so it completes before the serverless function freezes
+    const emailResult = await sendWelcomeEmail({
       to: email.trim().toLowerCase(),
       name: name?.trim() || "",
-    }).catch((err) => console.error("[waitlist] Welcome email failed:", err));
+    });
+
+    if (!emailResult.success) {
+      console.warn("[waitlist] Welcome email failed:", emailResult.error);
+    }
 
     return NextResponse.json(result, { status: 201 });
   } catch (error) {
