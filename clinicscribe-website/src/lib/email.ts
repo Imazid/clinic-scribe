@@ -161,7 +161,10 @@ export async function sendWelcomeEmail({
     });
 
     if (error) {
-      console.error(`[email] Resend error: ${JSON.stringify(error)}`);
+      const e = error as Record<string, unknown>;
+      console.error(`[email] status=${e.statusCode}`);
+      console.error(`[email] name=${e.name}`);
+      console.error(`[email] msg=${e.message}`);
       return { success: false, error: error.message };
     }
 
