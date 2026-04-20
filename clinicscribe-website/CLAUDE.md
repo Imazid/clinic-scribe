@@ -31,34 +31,55 @@ clinicscribe-ios/         ← SwiftUI iOS app (shared Supabase backend)
 - MVVM architecture
 - Shared Supabase backend with web app
 
-## Design System — "The Curated Sanctuary"
+## Design System — Miraa (Warm Clinical Confidence)
+
+### Palette Philosophy
+Warm cream surfaces, deep espresso ink for trust, slate blue + turquoise accents. Not cold-tech blue.
 
 ### Colors
-- Primary (Deep Navy): `#001736`
-- Primary Container: `#002B5B`
-- Secondary (Medical Teal): `#006876`
-- Secondary Container: `#58e6ff`
-- Surface (Warm Cream): `#fcf9f4`
-- Surface Container Low: `#f6f3ee`
-- Surface Container: `#f0ede8`
-- Surface Container High: `#ebe8e3`
-- On Surface: `#1c1c19`
-- On Surface Variant: `#43474f`
-- Error: `#ba1a1a`
+- Primary (Espresso Ink): `#1F1A14` — headlines, primary buttons, logo
+- Primary Container: `#3A2E22` — hover states, gradients
+- Secondary (Slate Blue): `#2F5A7A` — links, focus rings, active nav, accents
+- Secondary Container: `#C8DCEA` — soft fills, info chips
+- Secondary Fixed: `#E4EEF5` — hover backgrounds, chips
+- Tertiary (Turquoise): `#2E9A93` — highlights, badges, editorial accents
+- Surface (Warm Cream): `#FCF9F4` — page background
+- Surface Container Low: `#F6F1E8`
+- Surface Container: `#F0EADD`
+- Surface Container High: `#EBE3D2`
+- On Surface: `#1F1A14`
+- On Surface Variant: `#5C5247` — secondary text
+- Outline: `#8B7F70` — muted text, disabled icons
+- Outline Variant: `#D8CFBE` — hairline rules, borders
+- Success (Sage): `#4F7A3A`
+- Warning (Honey): `#C98600`
+- Error (Warm Red): `#B83A26`
 
 ### Typography
-- Font: Plus Jakarta Sans (all weights)
-- Labels: UPPERCASE, 0.1em letter-spacing
-- Headlines: primary color, tight tracking
-- Body: on-surface-variant for readability
+- **Plus Jakarta Sans** (200–800): UI, headings, body (95% of system)
+- **Fraunces** (italic, 500): editorial accent inside hero headlines only
+- Labels: UPPERCASE, 0.1em letter-spacing, 11px, font-weight 700
+- Headlines: primary color, tight tracking (`-0.02em`)
+- Body: 15px, on-surface-variant for readability
+- **Sentence case** everywhere except eyebrow `.label-text`
+
+### Shadows (Warm — espresso-tinted)
+- `shadow-ambient-sm`: `0 8px 20px rgba(58, 46, 34, 0.04)`
+- `shadow-ambient`: `0 20px 40px rgba(58, 46, 34, 0.06)`
+- `shadow-ambient-lg`: `0 30px 60px rgba(58, 46, 34, 0.08)`
 
 ### Rules
 - NO 1px solid borders for sectioning — use background color shifts
-- NO pure black (#000) — use on-surface (#1c1c19)
+- NO pure black (#000) — use on-surface (`#1F1A14`)
 - NO sharp 90-degree corners — minimum 0.5rem radius
-- NO drop shadows on buttons — use tonal contrast
-- Rounded cards with ambient tinted shadows
+- NO drop shadows on buttons — use tonal contrast + `hover:-translate-y-px`
+- Rounded cards with ambient espresso-tinted shadows
 - Tonal layering for depth, not structural shadows
+- NO emoji in product UI, marketing copy, or notifications
+- Lucide icons exclusively (lucide-react)
+- Cards: white surface (`#FFF`), radius-lg (24), shadow-ambient-sm resting
+- Buttons: hover lifts 1px, no scale-down (too playful for clinical)
+- Glass nav: `rgba(255,255,255,0.78)` + `blur(20px)` when scrolled
 
 ## Content Constraints (Healthcare)
 - AI-generated notes MUST be described as "clinician-reviewed before finalisation"

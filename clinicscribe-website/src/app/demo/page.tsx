@@ -148,7 +148,7 @@ export default function DemoPage() {
                 className="mt-10 flex flex-wrap items-center gap-4"
               >
                 <Link
-                  href="/#waitlist-form"
+                  href="/waitlist"
                   className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-primary to-primary-container px-8 py-4 font-semibold text-on-primary transition-shadow hover:shadow-ambient-lg"
                 >
                   Join the Waitlist
@@ -453,7 +453,7 @@ export default function DemoPage() {
 
             <div className="mt-10 flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
               <Link
-                href="/#waitlist-form"
+                href="/waitlist"
                 className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-primary to-primary-container px-8 py-4 font-semibold text-on-primary transition-shadow hover:shadow-ambient-lg"
               >
                 Join the Waitlist

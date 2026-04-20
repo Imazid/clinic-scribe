@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { motion } from "framer-motion";
 import { Rocket, Headphones, MessageSquareHeart, ArrowRight } from "lucide-react";
 
@@ -76,17 +77,13 @@ export function PilotProgram() {
           transition={{ duration: 0.5, delay: 0.4 }}
           className="mt-12 text-center"
         >
-          <button
-            onClick={() =>
-              document
-                .getElementById("waitlist-form")
-                ?.scrollIntoView({ behavior: "smooth" })
-            }
-            className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-primary to-primary-container px-8 py-4 font-semibold text-on-primary transition-shadow hover:shadow-ambient-lg"
+          <Link
+            href="/waitlist"
+            className="inline-flex items-center gap-2 rounded-full bg-primary px-8 py-4 font-semibold text-on-primary transition-all hover:-translate-y-px hover:shadow-ambient-sm"
           >
             Join the Waitlist
             <ArrowRight className="h-4 w-4" />
-          </button>
+          </Link>
         </motion.div>
       </div>
     </section>

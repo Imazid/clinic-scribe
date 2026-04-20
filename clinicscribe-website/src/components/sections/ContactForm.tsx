@@ -112,8 +112,8 @@ export function ContactForm({ source = "about-page" }: ContactFormProps) {
           exit={{ opacity: 0, y: -16 }}
           className="glass-card rounded-3xl border border-outline-variant/20 p-8 shadow-ambient"
         >
-          <div className="mb-5 flex h-14 w-14 items-center justify-center rounded-2xl bg-green-100">
-            <CheckCircle className="h-7 w-7 text-green-600" />
+          <div className="mb-5 flex h-14 w-14 items-center justify-center rounded-2xl bg-success-container">
+            <CheckCircle className="h-7 w-7 text-success" />
           </div>
           <h3 className="text-2xl font-bold text-primary">Message received</h3>
           <p className="mt-3 max-w-xl text-sm leading-relaxed text-on-surface-variant">

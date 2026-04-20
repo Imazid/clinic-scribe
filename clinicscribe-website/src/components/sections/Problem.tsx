@@ -69,8 +69,8 @@ export function Problem() {
               whileHover={{ y: -10, scale: 1.01 }}
               className="card-lift group rounded-2xl border border-outline-variant/25 bg-surface-container-lowest/95 p-6 shadow-ambient-sm transition-shadow hover:shadow-ambient"
             >
-              <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,218,214,0.6),transparent_38%)] opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
-              <div className="relative flex h-11 w-11 items-center justify-center rounded-lg bg-error-container/40 transition-transform duration-300 group-hover:scale-110 group-hover:-rotate-6">
+              <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(251,216,207,0.5),transparent_38%)] opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
+              <div className="relative flex h-11 w-11 items-center justify-center rounded-lg bg-error-container/50 transition-transform duration-300 group-hover:scale-110 group-hover:-rotate-6">
                 <point.icon className="h-5 w-5 text-error" />
               </div>
               <h3 className="relative mt-5 text-lg font-semibold text-primary">

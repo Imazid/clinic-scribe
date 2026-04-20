@@ -498,7 +498,7 @@ export default function ProductPage() {
             <motion.div
               {...fadeUp}
               transition={{ duration: 0.6, delay: 0.2 }}
-              className="relative overflow-hidden rounded-[2.25rem] border border-white/70 bg-[linear-gradient(180deg,rgba(255,255,255,0.92),rgba(246,243,238,0.96))] p-3 shadow-[0_24px_80px_rgba(0,43,91,0.10)] lg:p-4"
+              className="relative overflow-hidden rounded-[2.25rem] border border-white/70 bg-[linear-gradient(180deg,rgba(255,255,255,0.92),rgba(246,243,238,0.96))] p-3 shadow-[0_24px_80px_rgba(58,46,34,0.10)] lg:p-4"
             >
               <div className="pointer-events-none absolute inset-x-0 top-0 h-28 bg-gradient-to-r from-secondary-fixed/40 via-secondary-fixed/15 to-primary/5" />
               <div className="pointer-events-none absolute -top-12 right-[-10%] h-40 w-40 rounded-full bg-secondary-fixed/25 blur-3xl" />
@@ -620,7 +620,7 @@ export default function ProductPage() {
                         {captureTranscriptFeed.map((entry) => (
                           <div
                             key={`${entry.speaker}-${entry.time}-${entry.copy}`}
-                            className="rounded-[1.4rem] border border-outline-variant/25 bg-surface-container-lowest p-3 shadow-[0_10px_24px_rgba(0,43,91,0.04)]"
+                            className="rounded-[1.4rem] border border-outline-variant/25 bg-surface-container-lowest p-3 shadow-[0_10px_24px_rgba(58,46,34,0.04)]"
                           >
                             <div className="flex items-start gap-3">
                               <div
@@ -684,7 +684,7 @@ export default function ProductPage() {
                       </div>
                     </div>
 
-                    <div className="rounded-[1.35rem] border border-outline-variant/35 bg-[linear-gradient(180deg,rgba(0,104,118,0.04),rgba(255,255,255,0.55))] p-4 shadow-ambient-sm">
+                    <div className="rounded-[1.35rem] border border-outline-variant/35 bg-[linear-gradient(180deg,rgba(47,90,122,0.04),rgba(255,255,255,0.55))] p-4 shadow-ambient-sm">
                       <div className="flex items-center gap-2">
                         <FileAudio className="h-4 w-4 text-secondary" />
                         <p className="text-sm font-semibold text-primary">
@@ -902,7 +902,7 @@ export default function ProductPage() {
                     <p className="text-xs label-text text-secondary">
                       Assessment
                     </p>
-                    <span className="px-2 py-0.5 text-xs font-medium bg-green-100 text-green-700 rounded-full">
+                    <span className="px-2 py-0.5 text-xs font-medium bg-success-container text-success rounded-full">
                       High Confidence
                     </span>
                   </div>
@@ -928,7 +928,7 @@ export default function ProductPage() {
                     <p className="text-xs label-text text-secondary">
                       Referral Draft
                     </p>
-                    <span className="px-2 py-0.5 text-xs font-medium bg-green-100 text-green-700 rounded-full">
+                    <span className="px-2 py-0.5 text-xs font-medium bg-success-container text-success rounded-full">
                       High Confidence
                     </span>
                   </div>
@@ -1059,7 +1059,7 @@ export default function ProductPage() {
                   {
                     name: "PDF / Printable Export",
                     status: "Available",
-                    color: "bg-green-100 text-green-700",
+                    color: "bg-success-container text-success",
                   },
                 ].map((item, i) => (
                   <div
@@ -1192,7 +1192,7 @@ export default function ProductPage() {
               14-day free trial opens for your workflow.
             </p>
             <Link
-              href="/#waitlist-form"
+              href="/waitlist"
               className="inline-flex items-center gap-2 px-8 py-3.5 text-sm font-semibold text-on-primary bg-gradient-to-r from-primary to-primary-container rounded-full hover:opacity-90 transition-opacity"
             >
               Join the Waitlist

@@ -18,7 +18,7 @@ const heroElements = [
   { Icon: FileText, x: "90%", y: "45%", size: 20, opacity: 0.03, duration: 6.5, delay: 1.5 },
   { Icon: ShieldCheck, x: "40%", y: "8%", size: 18, opacity: 0.04, duration: 7.5, delay: 0.8 },
   { Icon: null, x: "50%", y: "30%", size: 60, opacity: 0.03, duration: 9, delay: 0, color: "var(--color-secondary-fixed)" },
-  { Icon: null, x: "75%", y: "60%", size: 40, opacity: 0.04, duration: 7, delay: 2, color: "var(--color-primary)" },
+  { Icon: null, x: "75%", y: "60%", size: 40, opacity: 0.04, duration: 7, delay: 2, color: "var(--color-tertiary-container)" },
   { Icon: null, x: "20%", y: "50%", size: 50, opacity: 0.03, duration: 8, delay: 1, color: "var(--color-secondary-container)" },
 ];
 

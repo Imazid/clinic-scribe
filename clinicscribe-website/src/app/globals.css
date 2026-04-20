@@ -1,38 +1,58 @@
 @import "tailwindcss";
 
 @theme inline {
-  --color-primary: #001736;
-  --color-primary-container: #002B5B;
-  --color-primary-light: #405f91;
-  --color-secondary: #006876;
-  --color-secondary-container: #58e6ff;
-  --color-secondary-fixed: #a1efff;
-  --color-secondary-fixed-dim: #44d8f1;
-  --color-surface: #fcf9f4;
-  --color-surface-dim: #dcdad5;
-  --color-surface-container-lowest: #ffffff;
-  --color-surface-container-low: #f6f3ee;
-  --color-surface-container: #f0ede8;
-  --color-surface-container-high: #ebe8e3;
-  --color-surface-container-highest: #e5e2dd;
-  --color-on-surface: #1c1c19;
-  --color-on-surface-variant: #43474f;
-  --color-on-primary: #ffffff;
-  --color-on-secondary: #ffffff;
-  --color-outline: #747780;
-  --color-outline-variant: #c4c6d0;
-  --color-error: #ba1a1a;
-  --color-error-container: #ffdad6;
-  --color-inverse-surface: #31302d;
-  --color-inverse-on-surface: #f3f0eb;
-  --color-tertiary: #011a24;
-  --color-tertiary-container: #172f39;
+  /* ── Primary (deep ink — clinical trust) ── */
+  --color-primary: #1F1A14;
+  --color-primary-container: #3A2E22;
+  --color-primary-light: #6B5848;
+
+  /* ── Secondary (slate blue — modern clinical signature) ── */
+  --color-secondary: #2F5A7A;
+  --color-secondary-container: #C8DCEA;
+  --color-secondary-fixed: #E4EEF5;
+  --color-secondary-fixed-dim: #6FA1C2;
+
+  /* ── Tertiary (turquoise — editorial accent) ── */
+  --color-tertiary: #2E9A93;
+  --color-tertiary-container: #C5E6E3;
+
+  /* ── Surface family (warm cream) ── */
+  --color-surface: #FCF9F4;
+  --color-surface-dim: #E8E2D6;
+  --color-surface-container-lowest: #FFFFFF;
+  --color-surface-container-low: #F6F1E8;
+  --color-surface-container: #F0EADD;
+  --color-surface-container-high: #EBE3D2;
+  --color-surface-container-highest: #E5DCC7;
+
+  /* ── On-surface / outline / inverse ── */
+  --color-on-surface: #1F1A14;
+  --color-on-surface-variant: #5C5247;
+  --color-on-primary: #FCF9F4;
+  --color-on-secondary: #FFFFFF;
+  --color-outline: #8B7F70;
+  --color-outline-variant: #D8CFBE;
+  --color-inverse-surface: #2D2620;
+  --color-inverse-on-surface: #F3EEE3;
+
+  /* ── Semantic ── */
+  --color-error: #B83A26;
+  --color-error-container: #FBD8CF;
+  --color-success: #4F7A3A;
+  --color-success-container: #DCEAC6;
+  --color-warning: #C98600;
+  --color-warning-container: #FFEDB3;
+
+  /* ── Aliases ── */
   --color-background: var(--color-surface);
   --color-foreground: var(--color-on-surface);
 
+  /* ── Typography ── */
   --font-sans: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif;
   --font-heading: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif;
+  --font-display: 'Fraunces', 'Plus Jakarta Sans', ui-serif, Georgia, serif;
 
+  /* ── Radii ── */
   --radius-xs: 0.375rem;
   --radius-sm: 0.5rem;
   --radius-md: 1rem;
@@ -40,6 +60,7 @@
   --radius-xl: 2rem;
   --radius-2xl: 3rem;
 
+  /* ── Animations ── */
   --animate-fade-in: fade-in 0.6s ease-out forwards;
   --animate-fade-in-up: fade-in-up 0.6s ease-out forwards;
   --animate-fade-in-down: fade-in-down 0.5s ease-out forwards;
@@ -82,6 +103,11 @@
   0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
   50% { transform: translate3d(0, -10px, 0) scale(1.04); }
 }
+@keyframes mira-pulse {
+  0% { opacity: 0.6; transform: scale(1); }
+  70% { opacity: 0; transform: scale(1.7); }
+  100% { opacity: 0; transform: scale(1.7); }
+}
 
 /* Global Styles */
 html {
@@ -92,13 +118,16 @@ body {
   background: var(--color-surface);
   color: var(--color-on-surface);
   font-family: var(--font-sans);
+  font-size: 0.9375rem;
+  line-height: 1.55;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Scrollbar */
+/* Scrollbar (warm) */
 ::-webkit-scrollbar {
   width: 6px;
+  height: 6px;
 }
 ::-webkit-scrollbar-track {
   background: var(--color-surface-container-low);
@@ -117,43 +146,51 @@ body {
   color: var(--color-primary);
 }
 
-/* Label utility */
+/* Label utility — uppercase eyebrow */
 .label-text {
-  font-size: 0.75rem;
-  font-weight: 600;
+  font-size: 0.6875rem;
+  font-weight: 700;
   letter-spacing: 0.1em;
   text-transform: uppercase;
 }
 
-/* Gradient text */
+/* Gradient text — ink → blue → turquoise */
 .gradient-text {
-  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-container) 50%, var(--color-secondary) 100%);
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-secondary) 55%, var(--color-tertiary) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
 
+/* Editorial accent — italic Fraunces inside headlines */
+.accent-serif {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-weight: 500;
+  color: var(--color-secondary);
+}
+
 /* Glass effect */
 .glass {
-  background: rgba(255, 255, 255, 0.8);
+  background: rgba(255, 255, 255, 0.78);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
 }
 
-/* Ambient shadow */
+/* Ambient shadows (warm — tinted with espresso) */
 .shadow-ambient {
-  box-shadow: 0px 20px 40px rgba(0, 43, 91, 0.06);
+  box-shadow: 0px 20px 40px rgba(58, 46, 34, 0.06);
 }
 .shadow-ambient-sm {
-  box-shadow: 0px 8px 20px rgba(0, 43, 91, 0.04);
+  box-shadow: 0px 8px 20px rgba(58, 46, 34, 0.04);
 }
 .shadow-ambient-lg {
-  box-shadow: 0px 30px 60px rgba(0, 43, 91, 0.08);
+  box-shadow: 0px 30px 60px rgba(58, 46, 34, 0.08);
 }
 
 /* Hero gradient */
 .hero-gradient {
-  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-container) 100%);
+  background: linear-gradient(160deg, #1F1A14 0%, #3A2E22 100%);
 }
 
 /* Glass card */
@@ -161,7 +198,7 @@ body {
   background: rgba(255, 255, 255, 0.6);
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
-  border: 1px solid rgba(255, 255, 255, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.4);
 }
 
 /* Gradient shift for mesh background */
@@ -183,7 +220,7 @@ body {
   scrollbar-width: none;
 }
 
-/* Section atmosphere */
+/* Section atmosphere — warm palette blobs + grid */
 .section-atmosphere {
   position: relative;
   isolation: isolate;
@@ -197,8 +234,8 @@ body {
   pointer-events: none;
   z-index: -2;
   background:
-    radial-gradient(circle at 14% 18%, rgba(88, 230, 255, 0.12), transparent 28%),
-    radial-gradient(circle at 82% 24%, rgba(0, 43, 91, 0.08), transparent 32%),
+    radial-gradient(circle at 14% 18%, rgba(47, 90, 122, 0.08), transparent 28%),
+    radial-gradient(circle at 82% 24%, rgba(46, 154, 147, 0.06), transparent 32%),
     linear-gradient(180deg, rgba(255, 255, 255, 0.08), transparent 38%);
 }
 
@@ -208,14 +245,15 @@ body {
   inset: 0;
   pointer-events: none;
   z-index: -1;
-  opacity: 0.45;
+  opacity: 0.22;
   background-image:
-    linear-gradient(rgba(196, 198, 208, 0.22) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(196, 198, 208, 0.22) 1px, transparent 1px);
+    linear-gradient(rgba(216, 207, 190, 0.4) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(216, 207, 190, 0.4) 1px, transparent 1px);
   background-size: 48px 48px;
   mask-image: linear-gradient(to bottom, transparent 0%, black 18%, black 82%, transparent 100%);
 }
 
+/* Card hover lift effect */
 .card-lift {
   position: relative;
   overflow: hidden;
@@ -228,7 +266,7 @@ body {
   inset: -1px;
   background:
     linear-gradient(125deg, transparent 0%, rgba(255, 255, 255, 0.55) 18%, transparent 36%),
-    radial-gradient(circle at top right, rgba(161, 239, 255, 0.18), transparent 38%);
+    radial-gradient(circle at top right, rgba(228, 238, 245, 0.3), transparent 38%);
   opacity: 0;
   transform: translateX(-22%);
   transition: opacity 260ms ease, transform 420ms ease;
@@ -246,7 +284,7 @@ body {
   inset: auto 18% -38% 18%;
   height: 72px;
   border-radius: 999px;
-  background: radial-gradient(circle, rgba(0, 104, 118, 0.18) 0%, transparent 72%);
+  background: radial-gradient(circle, rgba(47, 90, 122, 0.12) 0%, transparent 72%);
   opacity: 0;
   filter: blur(18px);
   transition: opacity 260ms ease;
@@ -257,6 +295,7 @@ body {
   opacity: 1;
 }
 
+/* Marquee */
 .marquee-fade {
   mask-image: linear-gradient(to right, transparent 0%, black 8%, black 92%, transparent 100%);
 }
@@ -270,7 +309,8 @@ body {
   animation-play-state: paused;
 }
 
+/* Workflow beam */
 .workflow-beam {
-  background: linear-gradient(90deg, transparent, rgba(88, 230, 255, 0.95), transparent);
+  background: linear-gradient(90deg, transparent, rgba(47, 90, 122, 0.7), transparent);
   filter: blur(1px);
 }

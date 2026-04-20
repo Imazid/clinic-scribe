@@ -295,7 +295,7 @@ export default function AboutPage() {
             </p>
             <div className="flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-center">
               <Link
-                href="/#waitlist-form"
+                href="/waitlist"
                 className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-primary to-primary-container px-8 py-3.5 text-sm font-semibold text-on-primary transition-opacity hover:opacity-90"
               >
                 Join the Waitlist

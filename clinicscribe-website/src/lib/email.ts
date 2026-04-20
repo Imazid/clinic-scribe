@@ -50,11 +50,11 @@ function buildWelcomeHtml(name: string): string {
 
           <!-- Header -->
           <tr>
-            <td style="background:linear-gradient(135deg,#001736 0%,#002B5B 100%);padding:32px 40px;text-align:center;">
+            <td style="background:linear-gradient(135deg,#1F1A14 0%,#3A2E22 100%);padding:32px 40px;text-align:center;">
               <h1 style="margin:0;font-size:22px;font-weight:700;color:#ffffff;letter-spacing:-0.02em;">
                 Miraa
               </h1>
-              <p style="margin:8px 0 0;font-size:12px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:#a1efff;">
+              <p style="margin:8px 0 0;font-size:12px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:#C8DCEA;">
                 Medical Insights, Record, Automation and Assistance
               </p>
             </td>
@@ -73,20 +73,20 @@ function buildWelcomeHtml(name: string): string {
               <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:24px 0;background-color:#f6f3ee;border-radius:12px;">
                 <tr>
                   <td style="padding:24px;">
-                    <p style="margin:0 0 12px;font-size:14px;font-weight:700;color:#001736;">
+                    <p style="margin:0 0 12px;font-size:14px;font-weight:700;color:#1F1A14;">
                       What happens next:
                     </p>
                     <table role="presentation" cellpadding="0" cellspacing="0">
                       <tr>
-                        <td style="padding:4px 12px 4px 0;vertical-align:top;font-size:14px;color:#006876;font-weight:700;">1.</td>
+                        <td style="padding:4px 12px 4px 0;vertical-align:top;font-size:14px;color:#2F5A7A;font-weight:700;">1.</td>
                         <td style="padding:4px 0;font-size:14px;line-height:1.5;color:#43474f;">We'll send you product updates as we get closer to launch.</td>
                       </tr>
                       <tr>
-                        <td style="padding:4px 12px 4px 0;vertical-align:top;font-size:14px;color:#006876;font-weight:700;">2.</td>
+                        <td style="padding:4px 12px 4px 0;vertical-align:top;font-size:14px;color:#2F5A7A;font-weight:700;">2.</td>
                         <td style="padding:4px 0;font-size:14px;line-height:1.5;color:#43474f;">When Miraa launches, waitlist members will hear first.</td>
                       </tr>
                       <tr>
-                        <td style="padding:4px 12px 4px 0;vertical-align:top;font-size:14px;color:#006876;font-weight:700;">3.</td>
+                        <td style="padding:4px 12px 4px 0;vertical-align:top;font-size:14px;color:#2F5A7A;font-weight:700;">3.</td>
                         <td style="padding:4px 0;font-size:14px;line-height:1.5;color:#43474f;">Every plan will include a 14-day free trial once sign-up opens.</td>
                       </tr>
                     </table>
@@ -101,7 +101,7 @@ function buildWelcomeHtml(name: string): string {
               <!-- CTA button -->
               <table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 auto;">
                 <tr>
-                  <td style="background:linear-gradient(135deg,#001736,#002B5B);border-radius:50px;text-align:center;">
+                  <td style="background:linear-gradient(135deg,#1F1A14,#3A2E22);border-radius:50px;text-align:center;">
                     <a href="https://miraahealth.com/product" target="_blank" style="display:inline-block;padding:14px 32px;font-size:14px;font-weight:600;color:#ffffff;text-decoration:none;">
                       See How It Works &rarr;
                     </a>
@@ -127,7 +127,7 @@ function buildWelcomeHtml(name: string): string {
               </p>
               <p style="margin:0;font-size:12px;color:#747780;">
                 You received this because you joined the waitlist at
-                <a href="https://miraahealth.com" style="color:#006876;text-decoration:none;">miraahealth.com</a>.
+                <a href="https://miraahealth.com" style="color:#2F5A7A;text-decoration:none;">miraahealth.com</a>.
               </p>
             </td>
           </tr>
@@ -203,8 +203,8 @@ function buildContactHtml({
       <td align="center">
         <table role="presentation" width="640" cellpadding="0" cellspacing="0" style="max-width:640px;background-color:#ffffff;border-radius:16px;overflow:hidden;">
           <tr>
-            <td style="background:linear-gradient(135deg,#001736 0%,#002B5B 100%);padding:28px 32px;">
-              <p style="margin:0 0 6px;font-size:12px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#a1efff;">
+            <td style="background:linear-gradient(135deg,#1F1A14 0%,#3A2E22 100%);padding:28px 32px;">
+              <p style="margin:0 0 6px;font-size:12px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#C8DCEA;">
                 New contact enquiry
               </p>
               <h1 style="margin:0;font-size:24px;font-weight:700;color:#ffffff;">
@@ -238,7 +238,7 @@ function buildContactHtml({
               </table>
 
               <div style="background-color:#f6f3ee;border-radius:12px;padding:24px;">
-                <p style="margin:0 0 12px;font-size:14px;font-weight:700;color:#001736;">Message</p>
+                <p style="margin:0 0 12px;font-size:14px;font-weight:700;color:#1F1A14;">Message</p>
                 <p style="margin:0;font-size:15px;line-height:1.7;color:#43474f;">${safeMessage}</p>
               </div>
             </td>

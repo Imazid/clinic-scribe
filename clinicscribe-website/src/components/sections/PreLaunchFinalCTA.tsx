@@ -77,7 +77,7 @@ export function PreLaunchFinalCTA() {
               animate={{ opacity: 1, scale: 1 }}
               className="mt-8 inline-flex items-center gap-2 rounded-full bg-surface-container-lowest px-6 py-3"
             >
-              <CheckCircle className="w-5 h-5 text-green-600" />
+              <CheckCircle className="w-5 h-5 text-success" />
               <span className="font-semibold text-primary">
                 {PRELAUNCH.successTitle}
               </span>

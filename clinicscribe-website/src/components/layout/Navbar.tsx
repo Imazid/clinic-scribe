@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { Menu, X, ChevronDown } from "lucide-react";
@@ -40,16 +41,18 @@ export function Navbar() {
       <nav className="max-w-7xl mx-auto px-6 flex items-center justify-between">
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2.5 group">
-          <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-primary to-primary-container flex items-center justify-center transition-transform group-hover:scale-105">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z" fill="white"/>
-            </svg>
-          </div>
-          <span className="text-lg font-bold text-primary tracking-tight">{BRAND.shortName}</span>
+          <Image
+            src="/monogram.svg"
+            alt="Miraa"
+            width={30}
+            height={30}
+            className="rounded-lg transition-transform group-hover:scale-105"
+          />
+          <span className="text-[17px] font-bold text-primary tracking-tight">{BRAND.shortName}</span>
         </Link>
 
         {/* Desktop Nav */}
-        <div className="hidden lg:flex items-center gap-1">
+        <div className="hidden lg:flex items-center gap-1 ml-14">
           {NAV_ITEMS.map((item) => (
             <div
               key={item.label}
@@ -61,8 +64,8 @@ export function Navbar() {
                 href={item.href}
                 className={`px-4 py-2 text-sm font-medium rounded-full transition-colors flex items-center gap-1 ${
                   pathname === item.href || pathname.startsWith(item.href + "/")
-                    ? "text-primary bg-surface-container-low"
-                    : "text-on-surface-variant hover:text-primary hover:bg-surface-container-low"
+                    ? "text-secondary bg-secondary-fixed/20"
+                    : "text-on-surface-variant hover:text-primary hover:bg-surface-container-high"
                 }`}
               >
                 {item.label}
@@ -103,19 +106,25 @@ export function Navbar() {
         </div>
 
         {/* Desktop CTAs */}
-        <div className="hidden lg:flex items-center gap-3">
+        <div className="hidden lg:flex items-center gap-3 ml-auto">
           <Link
-            href="/#waitlist-form"
-            className="px-5 py-2.5 text-sm font-semibold text-on-primary bg-gradient-to-r from-primary to-primary-container rounded-full hover:opacity-90 transition-opacity"
+            href="/demo"
+            className="text-sm font-medium text-primary hover:opacity-78 transition-opacity"
           >
-            Join the Waitlist
+            Sign in
+          </Link>
+          <Link
+            href="/waitlist"
+            className="px-5 py-2.5 text-[13px] font-semibold text-on-primary bg-primary rounded-full hover:-translate-y-px hover:shadow-ambient-sm transition-all"
+          >
+            Join the waitlist
           </Link>
         </div>
 
         {/* Mobile Menu Button */}
         <button
           onClick={() => setMobileOpen(!mobileOpen)}
-          className="lg:hidden p-2 rounded-lg hover:bg-surface-container-low transition-colors"
+          className="lg:hidden p-2 rounded-lg hover:bg-surface-container-high transition-colors"
           aria-label="Toggle menu"
         >
           {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
@@ -137,7 +146,7 @@ export function Navbar() {
                 <div key={item.label}>
                   <Link
                     href={item.href}
-                    className="block px-4 py-3 text-sm font-medium text-on-surface rounded-lg hover:bg-surface-container-low transition-colors"
+                    className="block px-4 py-3 text-sm font-medium text-on-surface rounded-lg hover:bg-surface-container-high transition-colors"
                   >
                     {item.label}
                   </Link>
@@ -154,10 +163,10 @@ export function Navbar() {
               ))}
               <div className="pt-4 space-y-2">
                 <Link
-                  href="/#waitlist-form"
-                  className="block w-full text-center px-5 py-3 text-sm font-semibold text-on-primary bg-gradient-to-r from-primary to-primary-container rounded-full"
+                  href="/waitlist"
+                  className="block w-full text-center px-5 py-3 text-sm font-semibold text-on-primary bg-primary rounded-full"
                 >
-                  Join the Waitlist
+                  Join the waitlist
                 </Link>
               </div>
             </div>

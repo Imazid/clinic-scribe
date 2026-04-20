@@ -44,7 +44,7 @@ const categoryIcons: Record<string, React.ComponentType<{ className?: string }>>
 };
 
 const statusStyles: Record<IntegrationStatus, { bg: string; text: string; label: string }> = {
-  available: { bg: "bg-green-100", text: "text-green-700", label: "Available" },
+  available: { bg: "bg-success-container", text: "text-success", label: "Available" },
   pilot: { bg: "bg-secondary/10", text: "text-secondary", label: "Pilot" },
   planned: { bg: "bg-surface-container-high", text: "text-outline", label: "Planned" },
 };
@@ -484,7 +484,7 @@ export default function IntegrationsPage() {
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <Link
-                href="/#waitlist-form"
+                href="/waitlist"
                 className="inline-flex items-center gap-2 px-8 py-3.5 text-sm font-semibold text-on-primary bg-gradient-to-r from-primary to-primary-container rounded-full hover:opacity-90 transition-opacity"
               >
                 Request an Integration

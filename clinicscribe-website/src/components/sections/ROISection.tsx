@@ -53,7 +53,7 @@ export function ROISection() {
               whileHover={{ y: -10, scale: 1.01 }}
               className="card-lift group rounded-2xl border border-outline-variant/25 bg-surface-container-lowest/95 p-6 shadow-ambient-sm transition-shadow hover:shadow-ambient"
             >
-              <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(161,239,255,0.24),transparent_42%)] opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
+              <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(228,238,245,0.4),transparent_42%)] opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
               <p className="relative">
                 <MetricDisplay metric={item.metric} />
               </p>

@@ -16,7 +16,7 @@ export default function OgImage() {
           flexDirection: "column",
           alignItems: "center",
           justifyContent: "center",
-          background: "linear-gradient(135deg, #001736 0%, #002B5B 100%)",
+          background: "linear-gradient(160deg, #1F1A14 0%, #3A2E22 100%)",
           fontFamily: "sans-serif",
         }}
       >
@@ -33,7 +33,7 @@ export default function OgImage() {
               width: "64px",
               height: "64px",
               borderRadius: "16px",
-              background: "rgba(255,255,255,0.15)",
+              background: "#E4EEF5",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
@@ -42,21 +42,34 @@ export default function OgImage() {
             <svg
               width="36"
               height="36"
-              viewBox="0 0 24 24"
+              viewBox="0 0 56 56"
               fill="none"
               xmlns="http://www.w3.org/2000/svg"
             >
               <path
-                d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"
-                fill="white"
+                d="M19 14v9a7 7 0 0 0 14 0v-9"
+                stroke="#2F5A7A"
+                strokeWidth="2.5"
+                strokeLinecap="round"
               />
+              <path
+                d="M26 30v4a8 8 0 0 0 8 8h0a6 6 0 0 0 6-6v-2.5"
+                stroke="#1F1A14"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                fill="none"
+              />
+              <circle cx="40" cy="33.5" r="3.5" fill="#1F1A14" />
+              <circle cx="19" cy="14" r="1.8" fill="#2F5A7A" />
+              <circle cx="33" cy="14" r="1.8" fill="#2F5A7A" />
             </svg>
           </div>
           <span
             style={{
               fontSize: "48px",
               fontWeight: 700,
-              color: "white",
+              color: "#FCF9F4",
               letterSpacing: "-0.02em",
             }}
           >
@@ -70,7 +83,7 @@ export default function OgImage() {
             fontWeight: 600,
             letterSpacing: "0.12em",
             textTransform: "uppercase" as const,
-            color: "#a1efff",
+            color: "#6FA1C2",
             marginBottom: "24px",
           }}
         >
@@ -81,7 +94,7 @@ export default function OgImage() {
           style={{
             fontSize: "28px",
             fontWeight: 600,
-            color: "rgba(255,255,255,0.85)",
+            color: "rgba(252,249,244,0.85)",
             textAlign: "center" as const,
             maxWidth: "800px",
             lineHeight: 1.4,
@@ -96,7 +109,7 @@ export default function OgImage() {
             position: "absolute",
             bottom: "40px",
             fontSize: "16px",
-            color: "rgba(255,255,255,0.5)",
+            color: "rgba(252,249,244,0.5)",
           }}
         >
           miraahealth.com

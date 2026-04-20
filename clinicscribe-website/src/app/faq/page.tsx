@@ -176,7 +176,7 @@ export default function FaqPage() {
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <Link
-                href="/#waitlist-form"
+                href="/waitlist"
                 className="inline-flex items-center gap-2 px-8 py-3.5 text-sm font-semibold text-on-primary bg-gradient-to-r from-primary to-primary-container rounded-full hover:opacity-90 transition-opacity"
               >
                 Join the Waitlist

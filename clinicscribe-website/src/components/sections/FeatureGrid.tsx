@@ -26,10 +26,10 @@ const iconMap: Record<string, LucideIcon> = {
 };
 
 const tagColors: Record<string, { bg: string; text: string }> = {
-  Core: { bg: "bg-secondary-fixed/30", text: "text-secondary" },
+  Core: { bg: "bg-secondary-fixed/40", text: "text-secondary" },
   Workflow: { bg: "bg-primary/10", text: "text-primary" },
-  Assist: { bg: "bg-[#f5c542]/20", text: "text-[#8a6d00]" },
-  Safety: { bg: "bg-error-container/40", text: "text-error" },
+  Assist: { bg: "bg-warning-container/50", text: "text-[#8a6d00]" },
+  Safety: { bg: "bg-error-container/50", text: "text-error" },
 };
 
 export function FeatureGrid() {
@@ -65,7 +65,7 @@ export function FeatureGrid() {
               whileTap={{ scale: 0.98 }}
               className="card-lift group cursor-default rounded-2xl border border-outline-variant/25 bg-surface-container-lowest/95 p-6 shadow-ambient-sm transition-shadow hover:shadow-ambient"
             >
-              <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(135deg,rgba(161,239,255,0.22),transparent_34%,rgba(0,23,54,0.03)_90%)] opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
+              <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(135deg,rgba(228,238,245,0.4),transparent_34%,rgba(58,46,34,0.02)_90%)] opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
               <div className="relative flex items-start justify-between">
                 <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-secondary-fixed/20 transition-transform duration-300 group-hover:scale-110 group-hover:rotate-3">
                   <Icon className="h-5 w-5 text-secondary" />

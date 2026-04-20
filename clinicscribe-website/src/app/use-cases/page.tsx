@@ -193,7 +193,7 @@ export default function UseCasesPage() {
               and when the 14-day free trial opens.
             </p>
             <Link
-              href="/#waitlist-form"
+              href="/waitlist"
               className="inline-flex items-center gap-2 px-8 py-3.5 text-sm font-semibold text-on-primary bg-gradient-to-r from-primary to-primary-container rounded-full hover:opacity-90 transition-opacity"
             >
               Join the Waitlist

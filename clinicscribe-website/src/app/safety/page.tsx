@@ -161,7 +161,7 @@ export default function SafetyPage() {
                           ? "bg-secondary/10 text-secondary"
                           : item.status === "Automated"
                           ? "bg-surface-container-high text-outline"
-                          : "bg-green-100 text-green-700"
+                          : "bg-success-container text-success"
                       }`}
                     >
                       {item.status}
@@ -451,7 +451,7 @@ export default function SafetyPage() {
                         <span className="text-sm text-on-surface-variant">
                           {layer}
                         </span>
-                        <span className="px-2 py-0.5 text-xs font-medium bg-green-100 text-green-700 rounded-full">
+                        <span className="px-2 py-0.5 text-xs font-medium bg-success-container text-success rounded-full">
                           Encrypted
                         </span>
                       </div>
@@ -863,7 +863,7 @@ export default function SafetyPage() {
               .
             </p>
             <Link
-              href="/#waitlist-form"
+              href="/waitlist"
               className="inline-flex items-center gap-2 px-8 py-3.5 text-sm font-semibold text-on-primary bg-gradient-to-r from-primary to-primary-container rounded-full hover:opacity-90 transition-opacity"
             >
               Join the Waitlist

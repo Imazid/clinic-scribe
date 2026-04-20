@@ -35,7 +35,7 @@ export function Testimonials() {
               whileHover={{ y: -10, scale: 1.01 }}
               className="card-lift group relative rounded-2xl border border-outline-variant/25 bg-surface-container-lowest/95 p-8 shadow-ambient-sm transition-shadow hover:shadow-ambient"
             >
-              <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(161,239,255,0.24),transparent_36%)] opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
+              <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(228,238,245,0.4),transparent_36%)] opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
               <Quote className="relative mb-4 h-8 w-8 text-secondary-fixed transition-transform duration-300 group-hover:-rotate-6 group-hover:scale-110" />
               <blockquote className="relative text-sm leading-relaxed text-on-surface-variant">
                 &ldquo;{testimonial.quote}&rdquo;
