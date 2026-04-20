@@ -1,8 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { getStripe } from '@/lib/stripe';
+import { APP_URL, checkOrigin, forbidden, logError } from '@/lib/apiSecurity';
 
 export async function POST(request: NextRequest) {
+  if (!checkOrigin(request)) return forbidden('Invalid origin');
+
   try {
     const supabase = await createClient();
     const { data: { user }, error: authError } = await supabase.auth.getUser();
@@ -35,16 +38,15 @@ export async function POST(request: NextRequest) {
     }
 
     const stripe = getStripe();
-    const origin = request.headers.get('origin') || 'http://localhost:3000';
 
     const portalSession = await stripe.billingPortal.sessions.create({
       customer: clinic.stripe_customer_id,
-      return_url: `${origin}/settings/billing`,
+      return_url: `${APP_URL}/settings/billing`,
     });
 
     return NextResponse.json({ portalUrl: portalSession.url });
   } catch (error) {
-    console.error('Stripe portal error:', error);
+    logError('stripe-portal', error);
     return NextResponse.json(
       { error: 'Failed to create billing portal session' },
       { status: 500 }

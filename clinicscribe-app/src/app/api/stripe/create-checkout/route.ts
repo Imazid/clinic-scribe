@@ -1,8 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { getStripe, PRICE_IDS, SEAT_RANGES } from '@/lib/stripe';
+import { APP_URL, checkOrigin, forbidden, logError } from '@/lib/apiSecurity';
 
 export async function POST(request: NextRequest) {
+  if (!checkOrigin(request)) return forbidden('Invalid origin');
+
   try {
     const supabase = await createClient();
     const { data: { user }, error: authError } = await supabase.auth.getUser();
@@ -81,9 +84,8 @@ export async function POST(request: NextRequest) {
         .eq('id', clinic.id);
     }
 
-    // Create Checkout Session
-    const origin = request.headers.get('origin') || 'http://localhost:3000';
-
+    // Create Checkout Session — redirect URLs must be server-controlled to
+    // prevent open-redirect via forged Origin header.
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
       mode: 'subscription',
@@ -105,13 +107,13 @@ export async function POST(request: NextRequest) {
         user_id: user.id,
         plan,
       },
-      success_url: `${origin}/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${origin}/checkout?plan=${plan}&canceled=true`,
+      success_url: `${APP_URL}/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${APP_URL}/checkout?plan=${plan}&canceled=true`,
     });
 
     return NextResponse.json({ sessionUrl: session.url });
   } catch (error) {
-    console.error('Stripe checkout error:', error);
+    logError('stripe-checkout', error);
     return NextResponse.json(
       { error: 'Failed to create checkout session' },
       { status: 500 }

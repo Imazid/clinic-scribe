@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { generateEvidenceAnswer } from '@/lib/ai/evidence';
 import { selectEvidenceSources } from '@/lib/evidence/library';
+import { checkOrigin, forbidden, rateLimit, requireUser, tooMany } from '@/lib/apiSecurity';
 import type {
   EvidenceAnswer,
   EvidenceQueryScope,
@@ -61,6 +62,11 @@ export async function POST(
   request: Request,
   context: { params: Promise<{ id: string }> }
 ) {
+  if (!checkOrigin(request)) return forbidden('Invalid origin');
+  const { user, response } = await requireUser();
+  if (response) return response;
+  if (!rateLimit(`evidence-query:${user.id}`, 20, 60_000)) return tooMany();
+
   try {
     const { id } = await context.params;
     const body = (await request.json()) as EvidenceQueryBody;
@@ -148,6 +154,7 @@ export async function POST(
 }
 
 export async function PATCH(request: Request) {
+  if (!checkOrigin(request)) return forbidden('Invalid origin');
   try {
     const body = (await request.json()) as EvidenceStatusBody;
     const supabase = await createClient();

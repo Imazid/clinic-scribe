@@ -15,7 +15,6 @@ const textAreaClass =
 
 const contactTopics = [
   "General enquiry",
-  "Book a demo",
   "Pilot program",
   "Integrations",
   "Partnerships",
@@ -32,6 +31,7 @@ export function ContactForm({ source = "about-page" }: ContactFormProps) {
   const [clinic, setClinic] = useState("");
   const [topic, setTopic] = useState<string>(contactTopics[0]);
   const [message, setMessage] = useState("");
+  const [honeypot, setHoneypot] = useState("");
   const [formState, setFormState] = useState<FormState>("idle");
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
@@ -42,6 +42,7 @@ export function ContactForm({ source = "about-page" }: ContactFormProps) {
     setClinic("");
     setTopic(contactTopics[0]);
     setMessage("");
+    setHoneypot("");
   };
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
@@ -80,6 +81,7 @@ export function ContactForm({ source = "about-page" }: ContactFormProps) {
           topic,
           message: message.trim(),
           source,
+          website: honeypot,
         }),
       });
 
@@ -139,6 +141,27 @@ export function ContactForm({ source = "about-page" }: ContactFormProps) {
           onSubmit={handleSubmit}
           className="glass-card rounded-3xl border border-outline-variant/20 p-6 shadow-ambient md:p-8"
         >
+          <div
+            aria-hidden="true"
+            style={{
+              position: "absolute",
+              left: "-9999px",
+              width: 1,
+              height: 1,
+              overflow: "hidden",
+            }}
+          >
+            <label htmlFor="cf-website">Leave this field empty</label>
+            <input
+              id="cf-website"
+              name="website"
+              type="text"
+              tabIndex={-1}
+              autoComplete="off"
+              value={honeypot}
+              onChange={(e) => setHoneypot(e.target.value)}
+            />
+          </div>
           <div className="grid gap-4 md:grid-cols-2">
             <div>
               <label className="mb-2 block text-sm font-medium text-primary">

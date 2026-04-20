@@ -108,12 +108,6 @@ export function Navbar() {
         {/* Desktop CTAs */}
         <div className="hidden lg:flex items-center gap-3 ml-auto">
           <Link
-            href="/demo"
-            className="text-sm font-medium text-primary hover:opacity-78 transition-opacity"
-          >
-            Sign in
-          </Link>
-          <Link
             href="/waitlist"
             className="px-5 py-2.5 text-[13px] font-semibold text-on-primary bg-primary rounded-full hover:-translate-y-px hover:shadow-ambient-sm transition-all"
           >

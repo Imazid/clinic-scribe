@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { normalizeVisitBrief } from '@/lib/visit-brief';
 import { buildVisitBriefArtifact } from '@/lib/workflow/artifacts';
+import { checkOrigin, forbidden, rateLimit, requireUser, tooMany } from '@/lib/apiSecurity';
 import type { CareTask, ClinicalNote, Consultation, VisitBrief } from '@/lib/types';
 
 const missingWorkflowSchemaCodes = new Set(['PGRST200', 'PGRST205']);
@@ -33,6 +34,11 @@ export async function POST(
   request: Request,
   context: { params: Promise<{ id: string }> }
 ) {
+  if (!checkOrigin(request)) return forbidden('Invalid origin');
+  const { user, response } = await requireUser();
+  if (response) return response;
+  if (!rateLimit(`brief-generate:${user.id}`, 10, 60_000)) return tooMany();
+
   try {
     const { id } = await context.params;
     const supabase = await createClient();

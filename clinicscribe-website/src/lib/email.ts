@@ -32,7 +32,7 @@ function escapeHtml(value: string): string {
 }
 
 function buildWelcomeHtml(name: string): string {
-  const greeting = name ? `Hi ${name},` : "Hi there,";
+  const greeting = name ? `Hi ${escapeHtml(name)},` : "Hi there,";
 
   return `
 <!DOCTYPE html>

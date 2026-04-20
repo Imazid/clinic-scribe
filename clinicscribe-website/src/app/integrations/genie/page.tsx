@@ -68,10 +68,10 @@ export default function GenieIntegrationPage() {
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <Link
-                href="/demo"
-                className="inline-flex items-center gap-2 px-8 py-3.5 text-sm font-semibold text-on-primary bg-gradient-to-r from-primary to-primary-container rounded-full hover:opacity-90 transition-opacity"
+                href="/waitlist"
+                className="inline-flex items-center gap-2 px-8 py-3.5 text-sm font-semibold text-on-primary bg-primary rounded-full hover:-translate-y-px hover:shadow-ambient-sm transition-all"
               >
-                Request Access
+                Join the waitlist
                 <ArrowRight className="w-4 h-4" />
               </Link>
               <a
@@ -485,10 +485,10 @@ export default function GenieIntegrationPage() {
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <Link
-                href="/demo"
-                className="inline-flex items-center gap-2 px-8 py-3.5 text-sm font-semibold text-on-primary bg-gradient-to-r from-primary to-primary-container rounded-full hover:opacity-90 transition-opacity"
+                href="/waitlist"
+                className="inline-flex items-center gap-2 px-8 py-3.5 text-sm font-semibold text-on-primary bg-primary rounded-full hover:-translate-y-px hover:shadow-ambient-sm transition-all"
               >
-                Request Pilot Access
+                Join the waitlist
                 <ArrowRight className="w-4 h-4" />
               </Link>
               <a

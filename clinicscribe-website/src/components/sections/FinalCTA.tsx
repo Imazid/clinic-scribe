@@ -20,22 +20,16 @@ export function FinalCTA() {
           </h2>
           <p className="mt-6 text-lg leading-relaxed text-on-primary/70">
             Join pilot clinics across Australia who are reclaiming hours every
-            week. Book a demo to see how AI-assisted documentation fits your
-            workflow.
+            week. Get on the waitlist to hear when launch and your 14-day free
+            trial open.
           </p>
           <div className="mt-10 flex flex-wrap items-center justify-center gap-4">
             <Link
-              href="/demo"
+              href="/waitlist"
               className="inline-flex items-center gap-2 rounded-full bg-surface-container-lowest px-8 py-4 font-semibold text-primary transition-shadow hover:shadow-ambient-lg"
             >
-              Book a Demo
+              Join the waitlist
               <ArrowRight className="h-4 w-4" />
-            </Link>
-            <Link
-              href="/waitlist"
-              className="inline-flex items-center gap-2 rounded-full border-2 border-on-primary/30 px-8 py-4 font-semibold text-on-primary transition-colors hover:border-on-primary/60"
-            >
-              Join the Waitlist
             </Link>
           </div>
         </motion.div>

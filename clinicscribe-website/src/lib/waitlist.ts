@@ -82,11 +82,13 @@ export async function isEmailRegistered(email: string): Promise<boolean> {
 }
 
 async function addToLocalWaitlist(entry: WaitlistInput): Promise<WaitlistResult> {
-  if (await isEmailRegistered(entry.email)) {
-    return { success: false, message: "This email is already on the waitlist." };
+  const entries = await readEntries();
+  const normalized = entry.email.toLowerCase();
+
+  if (entries.some((e) => e.email.toLowerCase() === normalized)) {
+    return { success: true, message: "You're on the list!" };
   }
 
-  const entries = await readEntries();
   entries.push({
     ...entry,
     timestamp: new Date().toISOString(),
@@ -105,19 +107,15 @@ async function addToLocalWaitlist(entry: WaitlistInput): Promise<WaitlistResult>
 }
 
 async function addToSupabaseWaitlist(entry: WaitlistInput): Promise<WaitlistResult> {
-  if (await isEmailRegistered(entry.email)) {
-    return { success: false, message: "This email is already on the waitlist." };
-  }
-
   const response = await fetchSupabaseWaitlist("", {
     method: "POST",
     headers: {
-      Prefer: "return=minimal",
+      Prefer: "return=minimal,resolution=ignore-duplicates",
     },
     body: JSON.stringify([
       {
         name: entry.name,
-        email: entry.email,
+        email: entry.email.toLowerCase(),
         role: entry.role,
         source: entry.source,
         timestamp: new Date().toISOString(),
@@ -125,11 +123,7 @@ async function addToSupabaseWaitlist(entry: WaitlistInput): Promise<WaitlistResu
     ]),
   });
 
-  if (!response.ok) {
-    if (response.status === 409) {
-      return { success: false, message: "This email is already on the waitlist." };
-    }
-
+  if (!response.ok && response.status !== 409) {
     throw new WaitlistError("Failed to save waitlist entry to Supabase.");
   }
 

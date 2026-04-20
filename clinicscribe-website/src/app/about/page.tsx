@@ -280,8 +280,8 @@ export default function AboutPage() {
               Talk to the Miraa team
             </h2>
             <p className="mb-6 text-on-surface-variant">
-              Reach out if you want to discuss a pilot, book a demo, explore an
-              integration, or pressure-test whether Miraa fits your workflow.
+              Reach out if you want to discuss a pilot, explore an integration,
+              or pressure-test whether Miraa fits your workflow.
             </p>
             <p className="mb-8 text-sm leading-relaxed text-on-surface-variant">
               Messages go directly to the company inbox, and you can still use{" "}

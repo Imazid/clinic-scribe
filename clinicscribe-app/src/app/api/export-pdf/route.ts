@@ -2,8 +2,15 @@ import React from 'react';
 import { NextResponse } from 'next/server';
 import { renderToBuffer, type DocumentProps } from '@react-pdf/renderer';
 import { ClinicalNoteDocument } from '@/lib/pdf/ClinicalNoteDocument';
-import { createClient } from '@/lib/supabase/server';
 import type { FollowUpTask, MedicationDraft, SOAPNote } from '@/lib/types';
+import {
+  requireUser,
+  rateLimit,
+  checkOrigin,
+  forbidden,
+  tooMany,
+  logError,
+} from '@/lib/apiSecurity';
 
 interface ExportPdfPayload {
   content: SOAPNote;
@@ -28,6 +35,13 @@ function sanitizeFilename(input: string): string {
 }
 
 export async function POST(request: Request) {
+  if (!checkOrigin(request)) return forbidden('Invalid origin');
+
+  const { user, supabase, response } = await requireUser();
+  if (response) return response;
+
+  if (!rateLimit(`export-pdf:${user.id}`, 30, 60_000)) return tooMany();
+
   try {
     const body = (await request.json()) as ExportPdfPayload;
 
@@ -36,6 +50,31 @@ export async function POST(request: Request) {
         { error: 'content and patientName are required' },
         { status: 400 }
       );
+    }
+
+    let profileId: string | null = null;
+
+    if (body.consultationId) {
+      const { data: consultation } = await supabase
+        .from('consultations')
+        .select('id, clinic_id')
+        .eq('id', body.consultationId)
+        .single();
+
+      if (!consultation) {
+        return NextResponse.json({ error: 'Consultation not found' }, { status: 404 });
+      }
+
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('id, clinic_id')
+        .eq('user_id', user.id)
+        .single();
+
+      if (!profile || profile.clinic_id !== consultation.clinic_id) {
+        return forbidden();
+      }
+      profileId = profile.id;
     }
 
     const documentElement = React.createElement(ClinicalNoteDocument, {
@@ -50,40 +89,18 @@ export async function POST(request: Request) {
     }) as unknown as React.ReactElement<DocumentProps>;
     const buffer = await renderToBuffer(documentElement);
 
-    // Best-effort audit log — never fail the download on logging errors.
-    if (body.consultationId && body.noteId) {
-      try {
-        const supabase = await createClient();
-        const {
-          data: { user },
-        } = await supabase.auth.getUser();
-
-        let profileId: string | null = null;
-        if (user?.id) {
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('id')
-            .eq('user_id', user.id)
-            .maybeSingle();
-          profileId = profile?.id ?? null;
-        }
-
-        if (profileId) {
-          const { error: insertError } = await supabase
-            .from('export_records')
-            .insert({
-              consultation_id: body.consultationId,
-              note_id: body.noteId,
-              format: 'pdf',
-              file_path: null,
-              exported_by: profileId,
-            });
-          if (insertError) {
-            console.warn('export_records insert failed:', insertError.message);
-          }
-        }
-      } catch (logError) {
-        console.warn('export_records audit log skipped:', logError);
+    if (body.consultationId && body.noteId && profileId) {
+      const { error: insertError } = await supabase
+        .from('export_records')
+        .insert({
+          consultation_id: body.consultationId,
+          note_id: body.noteId,
+          format: 'pdf',
+          file_path: null,
+          exported_by: profileId,
+        });
+      if (insertError) {
+        logError('export-pdf-audit', insertError);
       }
     }
 
@@ -99,8 +116,7 @@ export async function POST(request: Request) {
       },
     });
   } catch (error) {
-    console.error('PDF export error:', error);
-    const message = error instanceof Error ? error.message : 'Export failed';
-    return NextResponse.json({ error: message }, { status: 500 });
+    logError('export-pdf', error);
+    return NextResponse.json({ error: 'Export failed' }, { status: 500 });
   }
 }

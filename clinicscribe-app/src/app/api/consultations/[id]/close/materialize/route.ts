@@ -6,6 +6,7 @@ import {
   materializeCareTasks,
 } from '@/lib/workflow/artifacts';
 import type { ClinicalNote, Consultation, Patient } from '@/lib/types';
+import { checkOrigin, forbidden } from '@/lib/apiSecurity';
 
 const missingWorkflowSchemaCodes = new Set(['PGRST200', 'PGRST205']);
 
@@ -13,6 +14,7 @@ export async function POST(
   request: Request,
   context: { params: Promise<{ id: string }> }
 ) {
+  if (!checkOrigin(request)) return forbidden('Invalid origin');
   try {
     const { id } = await context.params;
     const { noteId } = (await request.json()) as { noteId?: string };

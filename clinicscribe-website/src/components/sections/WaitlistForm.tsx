@@ -61,6 +61,7 @@ export function WaitlistForm({ source = "waitlist_page", className = "" }: Waitl
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [role, setRole] = useState("");
+  const [honeypot, setHoneypot] = useState("");
   const [formState, setFormState] = useState<FormState>("idle");
   const [errorMessage, setErrorMessage] = useState("");
 
@@ -84,6 +85,7 @@ export function WaitlistForm({ source = "waitlist_page", className = "" }: Waitl
           email: email.trim(),
           role,
           source,
+          website: honeypot,
         }),
       });
       const data = await res.json();
@@ -92,6 +94,7 @@ export function WaitlistForm({ source = "waitlist_page", className = "" }: Waitl
         setName("");
         setEmail("");
         setRole("");
+        setHoneypot("");
         setFormState("success");
       } else {
         setErrorMessage(data.message || "Something went wrong.");
@@ -132,6 +135,27 @@ export function WaitlistForm({ source = "waitlist_page", className = "" }: Waitl
             onSubmit={handleSubmit}
             className="glass-card rounded-2xl p-6 md:p-8 shadow-ambient"
           >
+            <div
+              aria-hidden="true"
+              style={{
+                position: "absolute",
+                left: "-9999px",
+                width: 1,
+                height: 1,
+                overflow: "hidden",
+              }}
+            >
+              <label htmlFor="wf-website">Leave this field empty</label>
+              <input
+                id="wf-website"
+                name="website"
+                type="text"
+                tabIndex={-1}
+                autoComplete="off"
+                value={honeypot}
+                onChange={(e) => setHoneypot(e.target.value)}
+              />
+            </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <input
                 type="text"

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { buildQAFindings } from '@/lib/workflow/artifacts';
+import { checkOrigin, forbidden } from '@/lib/apiSecurity';
 import type {
   ClinicalNote,
   ConfidenceScores,
@@ -25,6 +26,7 @@ export async function POST(
   request: Request,
   context: { params: Promise<{ id: string }> }
 ) {
+  if (!checkOrigin(request)) return forbidden('Invalid origin');
   try {
     const { id } = await context.params;
     const supabase = await createClient();

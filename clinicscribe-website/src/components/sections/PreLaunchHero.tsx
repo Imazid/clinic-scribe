@@ -111,10 +111,10 @@ export function PreLaunchHero() {
               <ArrowRight className="w-4 h-4" />
             </Link>
             <Link
-              href="/demo"
+              href="/product"
               className="px-6 py-3.5 rounded-full bg-transparent text-primary font-semibold text-[15px] border border-outline-variant hover:bg-surface-container-high transition-colors"
             >
-              Book a 15-min demo
+              See how it works
             </Link>
           </motion.div>
 

@@ -75,10 +75,10 @@ export function Hero() {
               className="mt-10 flex flex-wrap items-center gap-4"
             >
               <Link
-                href="/demo"
-                className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-primary to-primary-container px-8 py-4 font-semibold text-on-primary transition-shadow hover:shadow-ambient-lg"
+                href="/waitlist"
+                className="inline-flex items-center gap-2 rounded-full bg-primary px-8 py-4 font-semibold text-on-primary transition-all hover:-translate-y-px hover:shadow-ambient-sm"
               >
-                Book a Demo
+                Join the waitlist
                 <ArrowRight className="h-4 w-4" />
               </Link>
               <Link
