@@ -479,7 +479,7 @@ export const TESTIMONIALS = [
     quote: "What impressed me most was the safety architecture. Mandatory review, audit trails, confidence checks — this feels like it was designed by people who understand clinical responsibility.",
     name: "Dr. James Chen",
     role: "Cardiologist",
-    clinic: "Pilot Practice, Melbourne",
+    clinic: "Pilot Practice, Sydney",
     placeholder: true,
   },
   {

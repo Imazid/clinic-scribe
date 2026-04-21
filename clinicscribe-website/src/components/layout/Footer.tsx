@@ -70,7 +70,7 @@ export function Footer() {
         {/* Bottom Bar */}
         <div className="pt-6 flex flex-col md:flex-row items-center justify-between gap-4" style={{ borderTop: "1px solid rgba(216, 207, 190, 0.7)" }}>
           <p className="text-xs text-outline">
-            &copy; {new Date().getFullYear()} Miraa Health. Made with care in Melbourne.
+            &copy; {new Date().getFullYear()} Miraa Health. Made with care in Sydney.
           </p>
           <p className="text-xs text-outline text-center">
             AI-generated clinical documentation requires clinician review before finalisation. Not a medical device.
