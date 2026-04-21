@@ -4,8 +4,10 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import { ArrowRight, ChevronDown, Mic } from "lucide-react";
 import { PRELAUNCH } from "@/lib/constants";
-import { AnimatedCounter } from "@/components/ui/AnimatedCounter";
+import { LiveCount } from "@/components/ui/LiveCount";
 import { GradientMesh } from "@/components/ui/GradientMesh";
+import { Parallax } from "@/components/ui/Parallax";
+import { MagneticButton } from "@/components/ui/MagneticButton";
 
 const container = {
   hidden: { opacity: 0 },
@@ -103,13 +105,15 @@ export function PreLaunchHero() {
 
           {/* CTAs */}
           <motion.div variants={item} className="mt-9 flex gap-3 flex-wrap">
-            <Link
-              href="/waitlist"
-              className="inline-flex items-center gap-2 px-6 py-3.5 rounded-full bg-primary text-on-primary font-semibold text-[15px] hover:-translate-y-px hover:shadow-ambient-sm transition-all"
-            >
-              Join the waitlist
-              <ArrowRight className="w-4 h-4" />
-            </Link>
+            <MagneticButton>
+              <Link
+                href="/waitlist"
+                className="inline-flex items-center gap-2 px-6 py-3.5 rounded-full bg-primary text-on-primary font-semibold text-[15px] hover:-translate-y-px hover:shadow-ambient-sm transition-all"
+              >
+                Join the waitlist
+                <ArrowRight className="w-4 h-4" />
+              </Link>
+            </MagneticButton>
             <Link
               href="/product"
               className="px-6 py-3.5 rounded-full bg-transparent text-primary font-semibold text-[15px] border border-outline-variant hover:bg-surface-container-high transition-colors"
@@ -136,16 +140,17 @@ export function PreLaunchHero() {
             <p className="text-sm text-on-surface-variant">
               Join{" "}
               <span className="font-semibold text-primary">
-                <AnimatedCounter target={PRELAUNCH.socialProofCount} suffix="+" />
+                <LiveCount fallback={PRELAUNCH.socialProofCount} />
               </span>{" "}
               {PRELAUNCH.socialProofText}
             </p>
           </motion.div>
 
           {/* Capture dock mockup */}
+          <Parallax speed={0.15} className="mt-[72px]">
           <motion.div
             variants={item}
-            className="mt-[72px] rounded-[28px] overflow-hidden shadow-ambient-lg"
+            className="rounded-[28px] overflow-hidden shadow-ambient-lg"
             style={{ background: "linear-gradient(160deg, #1F1A14 0%, #3B2E22 100%)" }}
           >
             <div className="p-9 md:px-10">
@@ -197,6 +202,7 @@ export function PreLaunchHero() {
               </div>
             </div>
           </motion.div>
+          </Parallax>
 
           {/* Scroll indicator */}
           <motion.div

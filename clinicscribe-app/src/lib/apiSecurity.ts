@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import type { SupabaseClient } from '@supabase/supabase-js';
 
 // In-memory sliding-window rate limiter. Per-instance only — for
 // distributed enforcement add @upstash/ratelimit and swap the impl.
@@ -93,4 +94,44 @@ export function logError(scope: string, error: unknown) {
   const name = error instanceof Error ? error.name : 'UnknownError';
   const status = (error as { status?: number })?.status;
   console.error(`[${scope}] ${name}${status ? ` (${status})` : ''}`);
+}
+
+interface AuditEntry {
+  clinicId: string;
+  userId: string;
+  action: string;
+  entityType: string;
+  entityId: string;
+  details?: Record<string, unknown>;
+  ipAddress?: string | null;
+}
+
+// Best-effort write to audit_logs. Never throws — non-repudiation logging
+// must not block the underlying operation.
+export async function writeAuditLog(
+  supabase: SupabaseClient,
+  entry: AuditEntry
+): Promise<void> {
+  try {
+    const { error } = await supabase.from('audit_logs').insert({
+      clinic_id: entry.clinicId,
+      user_id: entry.userId,
+      action: entry.action,
+      entity_type: entry.entityType,
+      entity_id: entry.entityId,
+      details: entry.details ?? {},
+      ip_address: entry.ipAddress ?? null,
+    });
+    if (error) logError(`audit-${entry.action}`, error);
+  } catch (err) {
+    logError(`audit-${entry.action}`, err);
+  }
+}
+
+export function getRequestIp(request: Request): string | null {
+  return (
+    request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
+    request.headers.get('x-real-ip') ||
+    null
+  );
 }

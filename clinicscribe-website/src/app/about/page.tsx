@@ -240,13 +240,21 @@ export default function AboutPage() {
             </h2>
           </motion.div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div
+            className={
+              team.length === 1
+                ? "flex justify-center"
+                : "grid grid-cols-1 md:grid-cols-3 gap-6"
+            }
+          >
             {team.map((member, i) => (
               <motion.div
                 key={i}
                 {...stagger}
                 transition={{ duration: 0.5, delay: i * 0.1 }}
-                className="card-lift group bg-surface-container-lowest/95 rounded-2xl border border-outline-variant/25 p-6 shadow-ambient-sm text-center transition-shadow hover:shadow-ambient"
+                className={`card-lift group bg-surface-container-lowest/95 rounded-2xl border border-outline-variant/25 p-6 shadow-ambient-sm text-center transition-shadow hover:shadow-ambient ${
+                  team.length === 1 ? "w-full max-w-md" : ""
+                }`}
               >
                 <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-primary to-primary-container flex items-center justify-center mx-auto mb-5">
                   <span className="text-2xl font-bold text-on-primary">

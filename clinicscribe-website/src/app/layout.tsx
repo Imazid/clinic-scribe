@@ -4,6 +4,8 @@ import { Analytics } from "@vercel/analytics/next";
 import "./globals.css";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
+import { SmoothScroll } from "@/components/providers/SmoothScroll";
+import { CustomCursor } from "@/components/ui/CustomCursor";
 import { BRAND } from "@/lib/constants";
 
 const plusJakarta = Plus_Jakarta_Sans({
@@ -68,12 +70,14 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="scroll-smooth">
+    <html lang="en">
       <body className={`${plusJakarta.variable} ${fraunces.variable} font-sans antialiased bg-surface text-on-surface`}>
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
+        <SmoothScroll />
+        <CustomCursor />
         <Navbar />
         <main>{children}</main>
         <Footer />

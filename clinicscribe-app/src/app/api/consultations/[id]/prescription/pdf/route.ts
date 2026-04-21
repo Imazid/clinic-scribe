@@ -4,6 +4,13 @@ import { renderToBuffer, type DocumentProps } from '@react-pdf/renderer';
 import { createClient } from '@/lib/supabase/server';
 import { PrescriptionDocument } from '@/lib/pdf/PrescriptionDocument';
 import type { Patient, Prescription } from '@/lib/types';
+import {
+  checkOrigin,
+  forbidden,
+  getRequestIp,
+  logError,
+  writeAuditLog,
+} from '@/lib/apiSecurity';
 
 function sanitize(input: string): string {
   return input
@@ -18,6 +25,7 @@ export async function POST(
   request: Request,
   context: { params: Promise<{ id: string }> }
 ) {
+  if (!checkOrigin(request)) return forbidden('Invalid origin');
   try {
     const { id: consultationId } = await context.params;
     const body = (await request.json().catch(() => ({}))) as {
@@ -65,14 +73,16 @@ export async function POST(
     let clinicianName = 'Clinician';
     let clinicName = 'Miraa';
     let profileId: string | null = null;
+    let clinicId: string | null = null;
     if (user?.id) {
       const { data: profile } = await supabase
         .from('profiles')
-        .select('id, first_name, last_name, clinic:clinics(name)')
+        .select('id, clinic_id, first_name, last_name, clinic:clinics(name)')
         .eq('user_id', user.id)
         .maybeSingle();
       if (profile) {
         profileId = profile.id;
+        clinicId = profile.clinic_id;
         clinicianName = `Dr. ${profile.first_name} ${profile.last_name}`;
         const clinic = profile.clinic as { name?: string } | { name?: string }[] | null;
         if (Array.isArray(clinic)) {
@@ -98,24 +108,35 @@ export async function POST(
     }) as unknown as React.ReactElement<DocumentProps>;
     const buffer = await renderToBuffer(documentElement);
 
-    // Best-effort audit log — don't fail the download if logging fails.
+    // Best-effort export_records insert (legacy/UI surface).
     if (typedPrescription.clinical_note_id && profileId) {
-      try {
-        const { error: insertError } = await supabase
-          .from('export_records')
-          .insert({
-            consultation_id: consultationId,
-            note_id: typedPrescription.clinical_note_id,
-            format: 'pdf',
-            file_path: null,
-            exported_by: profileId,
-          });
-        if (insertError) {
-          console.warn('prescription export_records insert failed:', insertError.message);
-        }
-      } catch (logError) {
-        console.warn('prescription export_records audit log skipped:', logError);
-      }
+      const { error: insertError } = await supabase
+        .from('export_records')
+        .insert({
+          consultation_id: consultationId,
+          note_id: typedPrescription.clinical_note_id,
+          format: 'pdf',
+          file_path: null,
+          exported_by: profileId,
+        });
+      if (insertError) logError('prescription-pdf-export-record', insertError);
+    }
+
+    // Non-repudiation audit trail for PHI export.
+    if (clinicId && user?.id) {
+      await writeAuditLog(supabase, {
+        clinicId,
+        userId: user.id,
+        action: 'prescription.export',
+        entityType: 'prescription',
+        entityId: typedPrescription.id,
+        details: {
+          format: 'pdf',
+          consultation_id: consultationId,
+          patient_id: typedPrescription.patient.id,
+        },
+        ipAddress: getRequestIp(request),
+      });
     }
 
     // Flip to 'printed' on first successful render, but don't clobber dispensed/void.
@@ -140,8 +161,7 @@ export async function POST(
       },
     });
   } catch (error) {
-    console.error('Prescription PDF error:', error);
-    const message = error instanceof Error ? error.message : 'Failed to render prescription';
-    return NextResponse.json({ error: message }, { status: 500 });
+    logError('prescription-pdf', error);
+    return NextResponse.json({ error: 'Failed to render prescription' }, { status: 500 });
   }
 }

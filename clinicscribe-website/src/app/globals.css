@@ -314,3 +314,14 @@ body {
   background: linear-gradient(90deg, transparent, rgba(47, 90, 122, 0.7), transparent);
   filter: blur(1px);
 }
+
+/* Custom cursor escape hatch — opt elements back into the native pointer */
+.cursor-native,
+.cursor-native * {
+  cursor: auto !important;
+}
+
+.custom-cursor-active,
+.custom-cursor-active * {
+  cursor: none !important;
+}

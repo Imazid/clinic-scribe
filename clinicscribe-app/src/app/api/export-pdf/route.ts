@@ -10,6 +10,8 @@ import {
   forbidden,
   tooMany,
   logError,
+  writeAuditLog,
+  getRequestIp,
 } from '@/lib/apiSecurity';
 
 interface ExportPdfPayload {
@@ -53,6 +55,7 @@ export async function POST(request: Request) {
     }
 
     let profileId: string | null = null;
+    let clinicId: string | null = null;
 
     if (body.consultationId) {
       const { data: consultation } = await supabase
@@ -75,6 +78,7 @@ export async function POST(request: Request) {
         return forbidden();
       }
       profileId = profile.id;
+      clinicId = profile.clinic_id;
     }
 
     const documentElement = React.createElement(ClinicalNoteDocument, {
@@ -102,6 +106,22 @@ export async function POST(request: Request) {
       if (insertError) {
         logError('export-pdf-audit', insertError);
       }
+    }
+
+    if (clinicId) {
+      await writeAuditLog(supabase, {
+        clinicId,
+        userId: user.id,
+        action: 'clinical_note.export',
+        entityType: 'clinical_note',
+        entityId: body.noteId ?? body.consultationId ?? 'unknown',
+        details: {
+          format: 'pdf',
+          consultation_id: body.consultationId ?? null,
+          patient_name: body.patientName,
+        },
+        ipAddress: getRequestIp(request),
+      });
     }
 
     const slug = sanitizeFilename(body.patientName || 'clinical-note');

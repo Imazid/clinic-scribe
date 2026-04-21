@@ -24,6 +24,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { WORKFLOW_STEPS, FEATURES } from "@/lib/constants";
+import { FloatingElements } from "@/components/ui/FloatingElements";
 
 const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   ClipboardList,
@@ -42,14 +43,18 @@ const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
 const fadeUp = {
   initial: { opacity: 0, y: 30 },
   whileInView: { opacity: 1, y: 0 },
-  viewport: { once: true },
+  viewport: { once: true, margin: "-80px" },
   transition: { duration: 0.6 },
 };
 
 const stagger = {
   initial: { opacity: 0, y: 20 },
   whileInView: { opacity: 1, y: 0 },
-  viewport: { once: true },
+  viewport: { once: true, margin: "-60px" },
+};
+
+const mockupHover = {
+  whileHover: { y: -6, transition: { duration: 0.3, ease: "easeOut" as const } },
 };
 
 const captureHighlights = [
@@ -190,8 +195,9 @@ export default function ProductPage() {
   return (
     <>
       {/* Hero */}
-      <section className="section-atmosphere overflow-hidden bg-surface-container-low pt-32 pb-16">
-        <div className="max-w-7xl mx-auto px-6 text-center">
+      <section className="section-atmosphere relative overflow-hidden bg-surface-container-low pt-32 pb-16">
+        <FloatingElements variant="hero" />
+        <div className="relative max-w-7xl mx-auto px-6 text-center">
           <motion.p {...fadeUp} className="label-text text-secondary mb-4">
             Product
           </motion.p>
@@ -296,8 +302,9 @@ export default function ProductPage() {
 
             <motion.div
               {...fadeUp}
+              {...mockupHover}
               transition={{ duration: 0.6, delay: 0.2 }}
-              className="relative overflow-hidden rounded-[2rem] border border-outline-variant/35 bg-surface-container-lowest p-4 shadow-ambient lg:p-5"
+              className="relative overflow-hidden rounded-[2rem] border border-outline-variant/35 bg-surface-container-lowest p-4 shadow-ambient transition-shadow hover:shadow-ambient-lg lg:p-5"
             >
               <div className="pointer-events-none absolute inset-x-0 top-0 h-28 bg-gradient-to-r from-secondary-fixed/35 via-secondary-fixed/10 to-primary/5" />
 
@@ -497,6 +504,7 @@ export default function ProductPage() {
 
             <motion.div
               {...fadeUp}
+              {...mockupHover}
               transition={{ duration: 0.6, delay: 0.2 }}
               className="relative overflow-hidden rounded-[2.25rem] border border-white/70 bg-[linear-gradient(180deg,rgba(255,255,255,0.92),rgba(246,243,238,0.96))] p-3 shadow-[0_24px_80px_rgba(58,46,34,0.10)] lg:p-4"
             >

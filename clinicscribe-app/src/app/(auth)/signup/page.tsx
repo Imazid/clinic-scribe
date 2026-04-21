@@ -1,8 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Eye, EyeOff, Stethoscope } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
@@ -12,8 +12,54 @@ import { Input } from '@/components/ui/Input';
 import { PasswordStrengthMeter } from '@/components/ui/PasswordStrengthMeter';
 import { PhoneInput, countryByIso } from '@/components/ui/PhoneInput';
 
+interface InvitationPreview {
+  email: string;
+  role: string;
+  clinicName: string | null;
+  expiresAt: string;
+}
+
 export default function SignupPage() {
+  return (
+    <Suspense fallback={null}>
+      <SignupInner />
+    </Suspense>
+  );
+}
+
+function SignupInner() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const inviteToken = searchParams.get('token');
+  const [invite, setInvite] = useState<InvitationPreview | null>(null);
+  const [inviteError, setInviteError] = useState('');
+
+  useEffect(() => {
+    if (!inviteToken) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch(`/api/invitations/lookup?token=${encodeURIComponent(inviteToken)}`);
+        if (cancelled) return;
+        const data = await res.json();
+        if (!res.ok) {
+          setInviteError(data.error || 'Invitation invalid');
+          return;
+        }
+        setInvite(data);
+        setForm((f) => ({
+          ...f,
+          email: data.email,
+          clinicName: data.clinicName ?? f.clinicName,
+        }));
+      } catch {
+        if (!cancelled) setInviteError('Could not load invitation');
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [inviteToken]);
   const [form, setForm] = useState<SignupInput>({
     firstName: '',
     lastName: '',
@@ -59,6 +105,7 @@ export default function SignupPage() {
           clinic_name: form.clinicName,
           phone: fullPhone,
           country_code: form.country,
+          ...(invite && inviteToken ? { invite_token: inviteToken } : {}),
         },
         emailRedirectTo: `${window.location.origin}/auth/callback`,
       },
@@ -91,8 +138,18 @@ export default function SignupPage() {
         <span className="text-xl font-bold text-primary">Miraa</span>
       </div>
 
-      <h2 className="text-2xl font-bold text-on-surface mb-1">Create your account</h2>
-      <p className="text-sm text-on-surface-variant mb-8">Start your free trial today</p>
+      <h2 className="text-2xl font-bold text-on-surface mb-1">
+        {invite ? `Join ${invite.clinicName ?? 'your clinic'}` : 'Create your account'}
+      </h2>
+      <p className="text-sm text-on-surface-variant mb-8">
+        {invite
+          ? `You've been invited as ${invite.role}. Set your password to accept.`
+          : 'Start your free trial today'}
+      </p>
+
+      {inviteError && (
+        <div className="mb-4 p-3 rounded-lg bg-error/10 text-error text-sm">{inviteError}</div>
+      )}
 
       {serverError && (
         <div className="mb-4 p-3 rounded-lg bg-error/10 text-error text-sm">{serverError}</div>
@@ -103,7 +160,9 @@ export default function SignupPage() {
           <Input id="firstName" label="First Name" value={form.firstName} onChange={(e) => update('firstName', e.target.value)} error={errors.firstName} />
           <Input id="lastName" label="Last Name" value={form.lastName} onChange={(e) => update('lastName', e.target.value)} error={errors.lastName} />
         </div>
-        <Input id="clinicName" label="Clinic Name" value={form.clinicName} onChange={(e) => update('clinicName', e.target.value)} error={errors.clinicName} />
+        {!invite && (
+          <Input id="clinicName" label="Clinic Name" value={form.clinicName} onChange={(e) => update('clinicName', e.target.value)} error={errors.clinicName} />
+        )}
         <PhoneInput
           country={form.country}
           phone={form.phone}
@@ -111,7 +170,7 @@ export default function SignupPage() {
           onPhoneChange={(p) => update('phone', p)}
           error={errors.phone || errors.country}
         />
-        <Input id="email" label="Email" type="email" placeholder="you@clinic.com" value={form.email} onChange={(e) => update('email', e.target.value)} error={errors.email} />
+        <Input id="email" label="Email" type="email" placeholder="you@clinic.com" value={form.email} onChange={(e) => update('email', e.target.value)} error={errors.email} disabled={!!invite} />
         <Input
           id="password"
           label="Password"

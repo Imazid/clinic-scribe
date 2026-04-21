@@ -75,13 +75,15 @@ export default function PricingPage() {
       {/* Pricing Cards */}
       <section className="section-atmosphere py-20 bg-surface">
         <div className="max-w-7xl mx-auto px-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 pt-4">
             {PRICING_TIERS.map((tier, i) => (
               <motion.div
                 key={tier.name}
                 {...stagger}
                 transition={{ duration: 0.5, delay: i * 0.1 }}
-                className={`card-lift group relative flex flex-col rounded-2xl border border-outline-variant/25 p-6 ${
+                className={`card-lift group relative flex flex-col rounded-2xl border border-outline-variant/25 overflow-visible ${
+                  tier.highlighted ? "p-6 pt-10" : "p-6"
+                } ${
                   tier.highlighted
                     ? "bg-gradient-to-b from-primary to-primary-container text-on-primary shadow-ambient-lg ring-2 ring-secondary-container"
                     : "bg-surface-container-lowest/95 shadow-ambient-sm"

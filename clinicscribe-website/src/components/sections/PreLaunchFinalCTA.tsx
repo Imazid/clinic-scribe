@@ -4,8 +4,9 @@ import { useState, type FormEvent } from "react";
 import { motion } from "framer-motion";
 import { ArrowRight, Loader2, CheckCircle } from "lucide-react";
 import { PRELAUNCH } from "@/lib/constants";
-import { AnimatedCounter } from "@/components/ui/AnimatedCounter";
+import { LiveCount } from "@/components/ui/LiveCount";
 import { FloatingElements } from "@/components/ui/FloatingElements";
+import { MagneticButton } from "@/components/ui/MagneticButton";
 
 type FormState = "idle" | "submitting" | "success" | "error";
 
@@ -99,20 +100,22 @@ export function PreLaunchFinalCTA() {
                 className="w-full sm:flex-1 px-5 py-3.5 text-sm text-on-surface bg-surface-container-lowest rounded-full outline-none focus:ring-2 focus:ring-secondary/30 placeholder:text-outline"
                 required
               />
-              <button
-                type="submit"
-                disabled={formState === "submitting"}
-                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-full bg-surface-container-lowest px-6 py-3.5 font-semibold text-primary transition-shadow hover:shadow-ambient-lg disabled:opacity-60"
-              >
-                {formState === "submitting" ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                ) : (
-                  <>
-                    {PRELAUNCH.ctaText}
-                    <ArrowRight className="w-4 h-4" />
-                  </>
-                )}
-              </button>
+              <MagneticButton className="w-full sm:w-auto">
+                <button
+                  type="submit"
+                  disabled={formState === "submitting"}
+                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-full bg-surface-container-lowest px-6 py-3.5 font-semibold text-primary transition-shadow hover:shadow-ambient-lg disabled:opacity-60"
+                >
+                  {formState === "submitting" ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <>
+                      {PRELAUNCH.ctaText}
+                      <ArrowRight className="w-4 h-4" />
+                    </>
+                  )}
+                </button>
+              </MagneticButton>
             </form>
           )}
 
@@ -123,7 +126,7 @@ export function PreLaunchFinalCTA() {
           <p className="mt-6 text-sm text-on-primary/50">
             Join{" "}
             <span className="font-semibold text-on-primary/70">
-              <AnimatedCounter target={PRELAUNCH.socialProofCount} suffix="+" />
+              <LiveCount fallback={PRELAUNCH.socialProofCount} />
             </span>{" "}
             {PRELAUNCH.socialProofText}
           </p>
