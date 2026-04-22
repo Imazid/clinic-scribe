@@ -15,10 +15,10 @@ export function CustomCursor() {
   const [state, setState] = useState<CursorState>("default");
   const [visible, setVisible] = useState(false);
 
-  const dotX = useMotionValue(-100);
-  const dotY = useMotionValue(-100);
-  const ringX = useSpring(dotX, { stiffness: 280, damping: 26, mass: 0.5 });
-  const ringY = useSpring(dotY, { stiffness: 280, damping: 26, mass: 0.5 });
+  const rawX = useMotionValue(-100);
+  const rawY = useMotionValue(-100);
+  const x = useSpring(rawX, { stiffness: 520, damping: 38, mass: 0.35 });
+  const y = useSpring(rawY, { stiffness: 520, damping: 38, mass: 0.35 });
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -42,8 +42,8 @@ export function CustomCursor() {
     if (!enabled) return;
 
     const handleMove = (e: MouseEvent) => {
-      dotX.set(e.clientX);
-      dotY.set(e.clientY);
+      rawX.set(e.clientX);
+      rawY.set(e.clientY);
       if (!visible) setVisible(true);
 
       const target = e.target as Element | null;
@@ -68,56 +68,30 @@ export function CustomCursor() {
       document.removeEventListener("mouseleave", handleLeave);
       document.removeEventListener("mouseenter", handleEnter);
     };
-  }, [enabled, dotX, dotY, visible]);
+  }, [enabled, rawX, rawY, visible]);
 
   if (!enabled) return null;
 
-  const ringSize = state === "hover" ? 52 : state === "text" ? 4 : 32;
-  const ringHeight = state === "text" ? 24 : ringSize;
-  const ringOpacity = visible ? 1 : 0;
-  const dotOpacity = state === "hover" ? 0 : visible ? 1 : 0;
-  const ringBorder =
-    state === "hover"
-      ? "2px solid #2F5A7A"
-      : state === "text"
-        ? "2px solid #1F1A14"
-        : "1.5px solid rgba(31, 26, 20, 0.55)";
-  const ringBackground = state === "hover" ? "rgba(47, 90, 122, 0.08)" : "transparent";
-  const ringRadius = state === "text" ? 2 : ringSize;
+  const width = state === "hover" ? 56 : state === "text" ? 3 : 24;
+  const height = state === "text" ? 26 : width;
+  const radius = state === "text" ? 2 : 9999;
 
   return (
-    <>
+    <motion.div
+      aria-hidden="true"
+      style={{
+        x,
+        y,
+        opacity: visible ? 1 : 0,
+        mixBlendMode: "difference",
+      }}
+      className="pointer-events-none fixed left-0 top-0 z-[9999] -translate-x-1/2 -translate-y-1/2"
+    >
       <motion.div
-        aria-hidden="true"
-        style={{
-          x: dotX,
-          y: dotY,
-          opacity: dotOpacity,
-        }}
-        className="pointer-events-none fixed left-0 top-0 z-[9999] -translate-x-1/2 -translate-y-1/2"
-      >
-        <div className="h-1.5 w-1.5 rounded-full bg-primary" />
-      </motion.div>
-      <motion.div
-        aria-hidden="true"
-        style={{
-          x: ringX,
-          y: ringY,
-          opacity: ringOpacity,
-        }}
-        className="pointer-events-none fixed left-0 top-0 z-[9999] -translate-x-1/2 -translate-y-1/2"
-      >
-        <motion.div
-          animate={{
-            width: ringSize,
-            height: ringHeight,
-            borderRadius: ringRadius,
-            border: ringBorder,
-            background: ringBackground,
-          }}
-          transition={{ type: "spring", stiffness: 260, damping: 22 }}
-        />
-      </motion.div>
-    </>
+        animate={{ width, height, borderRadius: radius }}
+        transition={{ type: "spring", stiffness: 420, damping: 28, mass: 0.4 }}
+        style={{ backgroundColor: "#FCF9F4" }}
+      />
+    </motion.div>
   );
 }
