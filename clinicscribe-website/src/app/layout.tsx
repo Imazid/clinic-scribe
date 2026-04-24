@@ -6,6 +6,7 @@ import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { SmoothScroll } from "@/components/providers/SmoothScroll";
 import { CustomCursor } from "@/components/ui/CustomCursor";
+import { ScrollProgressBar } from "@/components/ui/ScrollProgressBar";
 import { BRAND } from "@/lib/constants";
 
 const plusJakarta = Plus_Jakarta_Sans({
@@ -77,6 +78,7 @@ export default function RootLayout({
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
         <SmoothScroll />
+        <ScrollProgressBar />
         <CustomCursor />
         <Navbar />
         <main>{children}</main>

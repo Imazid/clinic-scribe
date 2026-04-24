@@ -8,6 +8,8 @@ import { LiveCount } from "@/components/ui/LiveCount";
 import { GradientMesh } from "@/components/ui/GradientMesh";
 import { Parallax } from "@/components/ui/Parallax";
 import { MagneticButton } from "@/components/ui/MagneticButton";
+import { TextReveal } from "@/components/ui/TextReveal";
+import { CursorGlow } from "@/components/ui/CursorGlow";
 
 const container = {
   hidden: { opacity: 0 },
@@ -54,6 +56,7 @@ export function PreLaunchHero() {
     <section className="relative min-h-screen overflow-hidden bg-surface flex items-center pt-24 pb-16">
       {/* Background */}
       <GradientMesh />
+      <CursorGlow color="rgba(46,154,147,0.18)" size={680} />
 
       <div className="relative mx-auto max-w-[1280px] px-6 lg:px-12 w-full">
         <motion.div
@@ -74,25 +77,28 @@ export function PreLaunchHero() {
           </motion.div>
 
           {/* Headline */}
-          <motion.h1
-            variants={item}
-            className="mt-8 font-bold tracking-[-0.035em] text-primary leading-[1.02] max-w-[980px]"
-            style={{ fontSize: "clamp(48px, 7vw, 84px)" }}
-          >
-            The quiet part{" "}
-            <span
-              className="font-display italic font-normal"
-              style={{
-                background: "linear-gradient(92deg, #2F5A7A 20%, #6FA1C2 80%)",
-                WebkitBackgroundClip: "text",
-                WebkitTextFillColor: "transparent",
-                backgroundClip: "text",
-              }}
-            >
-              of care
-            </span>
-            , finally handled.
-          </motion.h1>
+          <motion.div variants={item}>
+            <TextReveal
+              as="h1"
+              className="mt-8 font-bold tracking-[-0.035em] text-primary leading-[1.02] max-w-[980px]"
+              style={{ fontSize: "clamp(48px, 7vw, 84px)" }}
+              stagger={0.05}
+              segments={[
+                { text: "The quiet part " },
+                {
+                  text: "of care",
+                  className: "font-display italic font-normal",
+                  style: {
+                    background: "linear-gradient(92deg, #2F5A7A 20%, #6FA1C2 80%)",
+                    WebkitBackgroundClip: "text",
+                    WebkitTextFillColor: "transparent",
+                    backgroundClip: "text",
+                  },
+                },
+                { text: ", finally handled." },
+              ]}
+            />
+          </motion.div>
 
           {/* Subheadline */}
           <motion.p
@@ -147,10 +153,11 @@ export function PreLaunchHero() {
           </motion.div>
 
           {/* Capture dock mockup */}
-          <Parallax speed={0.15} className="mt-[72px]">
+          <Parallax speed={0.2} className="mt-[72px] relative">
+          <CursorGlow color="rgba(111,161,194,0.35)" size={560} />
           <motion.div
             variants={item}
-            className="rounded-[28px] overflow-hidden shadow-ambient-lg"
+            className="relative rounded-[28px] overflow-hidden shadow-ambient-lg"
             style={{ background: "linear-gradient(160deg, #1F1A14 0%, #3B2E22 100%)" }}
           >
             <div className="p-9 md:px-10">
@@ -159,6 +166,10 @@ export function PreLaunchHero() {
                 {/* Pulsing mic */}
                 <div className="relative w-14 h-14 shrink-0">
                   <span className="absolute inset-0 rounded-full bg-secondary animate-[mira-pulse_1.8s_ease-out_infinite]" />
+                  <span
+                    className="absolute inset-0 rounded-full border border-secondary/60 animate-[pulse-ring_2.2s_ease-out_infinite]"
+                    style={{ animationDelay: "0.6s" }}
+                  />
                   <span className="absolute inset-[10px] rounded-full bg-secondary flex items-center justify-center">
                     <Mic className="w-[22px] h-[22px] text-white" />
                   </span>
