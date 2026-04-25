@@ -7,6 +7,8 @@ import { PRELAUNCH } from "@/lib/constants";
 import { LiveCount } from "@/components/ui/LiveCount";
 import { FloatingElements } from "@/components/ui/FloatingElements";
 import { MagneticButton } from "@/components/ui/MagneticButton";
+import { CursorGlow } from "@/components/ui/CursorGlow";
+import { TextReveal } from "@/components/ui/TextReveal";
 
 type FormState = "idle" | "submitting" | "success" | "error";
 
@@ -55,6 +57,7 @@ export function PreLaunchFinalCTA() {
   return (
     <section className="relative hero-gradient py-24 lg:py-32 overflow-hidden">
       <FloatingElements variant="cta" />
+      <CursorGlow color="rgba(228,238,245,0.22)" size={680} />
 
       <div className="relative mx-auto max-w-7xl px-6 lg:px-8">
         <motion.div
@@ -64,9 +67,12 @@ export function PreLaunchFinalCTA() {
           transition={{ duration: 0.5 }}
           className="mx-auto max-w-2xl text-center"
         >
-          <h2 className="text-3xl font-bold tracking-tight text-on-primary md:text-4xl lg:text-5xl">
-            Join the waitlist for launch
-          </h2>
+          <TextReveal
+            as="h2"
+            text="Join the waitlist for launch"
+            className="text-3xl font-bold tracking-tight text-on-primary md:text-4xl lg:text-5xl"
+            stagger={0.06}
+          />
           <p className="mt-6 text-lg leading-relaxed text-on-primary/70">
             Miraa is not live yet. We will email you as soon as the app launches
             and the 14-day free trial is ready.

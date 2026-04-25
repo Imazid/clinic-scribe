@@ -23,6 +23,7 @@ import Link from "next/link";
 import { WORKFLOW_STEPS, FEATURES } from "@/lib/constants";
 import { FloatingElements } from "@/components/ui/FloatingElements";
 import { MagneticButton } from "@/components/ui/MagneticButton";
+import { TextReveal } from "@/components/ui/TextReveal";
 
 const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   ClipboardList,
@@ -509,16 +510,16 @@ export default function ProductPage() {
           >
             Product
           </motion.p>
-          <motion.h1
-            initial={{ opacity: 0, y: 18 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.05 }}
+          <TextReveal
+            as="h1"
             className="mt-4 text-4xl md:text-6xl font-bold text-primary tracking-tight"
             style={{ letterSpacing: "-0.02em" }}
-          >
-            From the room
-            <span className="accent-serif"> to the record</span>
-          </motion.h1>
+            stagger={0.05}
+            segments={[
+              { text: "From the room" },
+              { text: " to the record", className: "accent-serif" },
+            ]}
+          />
           <motion.p
             initial={{ opacity: 0, y: 18 }}
             animate={{ opacity: 1, y: 0 }}

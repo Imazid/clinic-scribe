@@ -3,6 +3,7 @@ import { TrustBar } from "@/components/sections/TrustBar";
 import { Problem } from "@/components/sections/Problem";
 import { WorkflowDiagram } from "@/components/sections/WorkflowDiagram";
 import { FeatureGrid } from "@/components/sections/FeatureGrid";
+import { DeviceGallery } from "@/components/sections/DeviceGallery";
 import { SafetyFirst } from "@/components/sections/SafetyFirst";
 import { RiskControl } from "@/components/sections/RiskControl";
 import { IntegrationsPreview } from "@/components/sections/IntegrationsPreview";
@@ -23,6 +24,7 @@ export default function HomePage() {
       <Problem />
       <WorkflowDiagram />
       <FeatureGrid />
+      <DeviceGallery />
       <SafetyFirst />
       <RiskControl />
       <IntegrationsPreview />

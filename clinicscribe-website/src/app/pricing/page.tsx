@@ -15,6 +15,7 @@ import {
 import Link from "next/link";
 import { PRICING_TIERS, PRICING_DISCLAIMER } from "@/lib/constants";
 import { MagneticButton } from "@/components/ui/MagneticButton";
+import { TextReveal } from "@/components/ui/TextReveal";
 
 const fadeUp = {
   initial: { opacity: 0, y: 24 },
@@ -69,16 +70,16 @@ export default function PricingPage() {
           >
             Pricing
           </motion.p>
-          <motion.h1
-            initial={{ opacity: 0, y: 18 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.05 }}
+          <TextReveal
+            as="h1"
             className="mt-4 text-4xl md:text-6xl font-bold text-primary tracking-tight"
             style={{ letterSpacing: "-0.02em" }}
-          >
-            Simple plans,
-            <span className="accent-serif"> built to scale</span>
-          </motion.h1>
+            stagger={0.05}
+            segments={[
+              { text: "Simple plans," },
+              { text: " built to scale", className: "accent-serif" },
+            ]}
+          />
           <motion.p
             initial={{ opacity: 0, y: 18 }}
             animate={{ opacity: 1, y: 0 }}

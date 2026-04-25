@@ -1,45 +1,48 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { CheckCircle, ArrowRightCircle, Circle } from "lucide-react";
+import { Sparkles, Compass, Mountain } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { ROADMAP } from "@/lib/constants";
+import { AnimatedTimeline, type TimelineItem } from "@/components/ui/AnimatedTimeline";
 
-const statusConfig: Record<
-  string,
-  { icon: LucideIcon; badge: string; badgeBg: string; badgeText: string; accent: string }
-> = {
-  current: {
-    icon: CheckCircle,
-    badge: "Current",
-    badgeBg: "bg-[#34c759]/15",
-    badgeText: "text-[#1a7a34]",
-    accent: "border-secondary",
-  },
-  next: {
-    icon: ArrowRightCircle,
-    badge: "Next",
-    badgeBg: "bg-secondary-fixed/30",
-    badgeText: "text-secondary",
-    accent: "border-secondary/40",
-  },
-  future: {
-    icon: Circle,
-    badge: "Future",
-    badgeBg: "bg-surface-container-high",
-    badgeText: "text-on-surface-variant",
-    accent: "border-outline-variant",
-  },
+const phaseIcons: LucideIcon[] = [Sparkles, Compass, Mountain];
+
+const badgeForStatus: Record<string, { label: string; tone: "current" | "next" | "future" }> = {
+  current: { label: "Current", tone: "current" },
+  next: { label: "Next", tone: "next" },
+  future: { label: "Future", tone: "future" },
 };
 
 export function Roadmap() {
+  const items: TimelineItem[] = ROADMAP.map((phase, i) => ({
+    key: phase.phase,
+    eyebrow: phase.phase,
+    title: phase.title,
+    badge: badgeForStatus[phase.status],
+    icon: phaseIcons[i] ?? Sparkles,
+    body: (
+      <ul className="space-y-2.5">
+        {phase.items.map((item) => (
+          <li
+            key={item}
+            className="flex items-start gap-2.5 text-sm leading-relaxed text-on-surface-variant"
+          >
+            <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-secondary/60" />
+            {item}
+          </li>
+        ))}
+      </ul>
+    ),
+  }));
+
   return (
     <section className="section-atmosphere bg-surface py-24 lg:py-32">
       <div className="mx-auto max-w-7xl px-6 lg:px-8">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
+          viewport={{ once: true, margin: "-80px" }}
           transition={{ duration: 0.5 }}
           className="mx-auto max-w-2xl text-center"
         >
@@ -47,51 +50,13 @@ export function Roadmap() {
           <h2 className="mt-3 text-3xl font-bold tracking-tight text-primary md:text-4xl">
             Where we&apos;re headed
           </h2>
+          <p className="mt-4 text-on-surface-variant leading-relaxed">
+            Three phases. Built deliberately, shipped openly.
+          </p>
         </motion.div>
 
-        <div className="mt-14 grid gap-8 lg:grid-cols-3">
-          {ROADMAP.map((phase, i) => {
-            const config = statusConfig[phase.status] || statusConfig.future;
-            const StatusIcon = config.icon;
-
-            return (
-              <motion.div
-                key={phase.phase}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: i * 0.12 }}
-                whileHover={{ y: -10 }}
-                className={`card-lift relative rounded-2xl border-t-4 bg-surface-container-lowest/95 p-8 shadow-ambient-sm ${config.accent}`}
-              >
-                <div className="flex items-center justify-between">
-                  <span className="label-text text-on-surface-variant">
-                    {phase.phase}
-                  </span>
-                  <span
-                    className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[0.65rem] font-semibold uppercase tracking-wider ${config.badgeBg} ${config.badgeText}`}
-                  >
-                    <StatusIcon className="h-3 w-3" />
-                    {config.badge}
-                  </span>
-                </div>
-                <h3 className="mt-4 text-xl font-bold text-primary">
-                  {phase.title}
-                </h3>
-                <ul className="mt-5 space-y-3">
-                  {phase.items.map((item) => (
-                    <li
-                      key={item}
-                      className="flex items-start gap-2 text-sm leading-relaxed text-on-surface-variant"
-                    >
-                      <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-outline-variant" />
-                      {item}
-                    </li>
-                  ))}
-                </ul>
-              </motion.div>
-            );
-          })}
+        <div className="mx-auto mt-16 max-w-3xl">
+          <AnimatedTimeline items={items} />
         </div>
       </div>
     </section>

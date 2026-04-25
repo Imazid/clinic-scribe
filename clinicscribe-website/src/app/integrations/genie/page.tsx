@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { BRAND, GENIE_INTEGRATION } from "@/lib/constants";
+import { TextReveal } from "@/components/ui/TextReveal";
 
 const fadeUp = {
   initial: { opacity: 0, y: 30 },
@@ -57,9 +58,12 @@ export default function GenieIntegrationPage() {
                 FHIR R4
               </span>
             </div>
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-primary tracking-tight mb-6">
-              Genie Solutions Integration
-            </h1>
+            <TextReveal
+              as="h1"
+              text="Genie Solutions Integration"
+              className="text-4xl md:text-5xl lg:text-6xl font-bold text-primary tracking-tight mb-6"
+              stagger={0.05}
+            />
             <p className="text-lg md:text-xl text-on-surface-variant max-w-3xl mx-auto mb-8">
               Seamlessly connect {BRAND.name} with Australia&apos;s leading
               specialist practice management software. Pull patient context,

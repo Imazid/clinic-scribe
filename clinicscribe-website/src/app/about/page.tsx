@@ -14,6 +14,7 @@ import {
 import Link from "next/link";
 import { ContactForm } from "@/components/sections/ContactForm";
 import { BRAND } from "@/lib/constants";
+import { TextReveal } from "@/components/ui/TextReveal";
 
 const fadeUp = {
   initial: { opacity: 0, y: 30 },
@@ -72,13 +73,12 @@ export default function AboutPage() {
           <motion.p {...fadeUp} className="label-text text-secondary mb-4">
             About Us
           </motion.p>
-          <motion.h1
-            {...fadeUp}
-            transition={{ duration: 0.6, delay: 0.1 }}
+          <TextReveal
+            as="h1"
+            text={`About ${BRAND.name}`}
             className="text-4xl md:text-5xl lg:text-6xl font-bold text-primary tracking-tight mb-6"
-          >
-            About {BRAND.name}
-          </motion.h1>
+            stagger={0.05}
+          />
           <motion.p
             {...fadeUp}
             transition={{ duration: 0.6, delay: 0.2 }}
