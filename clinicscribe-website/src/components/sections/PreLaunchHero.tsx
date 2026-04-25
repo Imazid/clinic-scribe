@@ -153,7 +153,7 @@ export function PreLaunchHero() {
           </motion.div>
 
           {/* Capture dock mockup */}
-          <Parallax speed={0.2} className="mt-[72px] relative">
+          <Parallax speed={0.45} className="mt-[72px] relative">
           <CursorGlow color="rgba(111,161,194,0.35)" size={560} />
           <motion.div
             variants={item}
