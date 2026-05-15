@@ -51,7 +51,7 @@ export const metadata: Metadata = {
   },
 };
 
-const jsonLd = {
+const organizationJsonLd = {
   "@context": "https://schema.org",
   "@type": "Organization",
   name: BRAND.name,
@@ -65,6 +65,27 @@ const jsonLd = {
   },
 };
 
+const softwareJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  name: BRAND.name,
+  applicationCategory: "MedicalApplication",
+  description: BRAND.description,
+  url: BRAND.url,
+  operatingSystem: "Web, iOS",
+  offers: {
+    "@type": "Offer",
+    price: "0",
+    priceCurrency: "AUD",
+    description: "Free pilot access — contact for pricing",
+  },
+  publisher: {
+    "@type": "Organization",
+    name: BRAND.name,
+    url: BRAND.url,
+  },
+};
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -75,7 +96,11 @@ export default function RootLayout({
       <body className={`${plusJakarta.variable} ${fraunces.variable} font-sans antialiased bg-surface text-on-surface`}>
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(softwareJsonLd) }}
         />
         <SmoothScroll />
         <ScrollProgressBar />
