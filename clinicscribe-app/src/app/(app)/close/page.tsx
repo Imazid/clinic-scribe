@@ -44,12 +44,17 @@ function ClosePageInner() {
   const [tasks, setTasks] = useState<CareTask[]>([]);
   const [documents, setDocuments] = useState<GeneratedDocument[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [completingTaskId, setCompletingTaskId] = useState<string | null>(null);
   const [updatingDocumentId, setUpdatingDocumentId] = useState<string | null>(null);
 
   const load = useCallback(async () => {
-    if (!profile?.clinic_id) return;
+    if (!profile?.clinic_id) {
+      setLoading(false);
+      return;
+    }
     setLoading(true);
+    setLoadError(null);
     try {
       const [taskData, documentData] = await Promise.all([
         getCareTasks(profile.clinic_id, 'all'),
@@ -58,8 +63,13 @@ function ClosePageInner() {
       setTasks(taskData);
       setDocuments(documentData);
     } catch (error) {
-      console.error(error);
-      addToast('Failed to load tasks workspace', 'error');
+      const message =
+        error instanceof Error ? error.message : 'Failed to load tasks workspace';
+      if (process.env.NODE_ENV !== 'production') {
+        console.error('[close-load]', error);
+      }
+      setLoadError(message);
+      addToast(message, 'error');
     } finally {
       setLoading(false);
     }
@@ -174,6 +184,19 @@ function ClosePageInner() {
           {Array.from({ length: 6 }).map((_, index) => (
             <Skeleton key={index} variant="rectangular" className="h-16 w-full rounded-2xl" />
           ))}
+        </div>
+      ) : loadError ? (
+        <div className="rounded-2xl border border-error/30 bg-error/5 p-5">
+          <p className="text-xs font-bold uppercase tracking-wider text-error mb-2">
+            Couldn&apos;t load tasks workspace
+          </p>
+          <p className="text-sm text-on-surface">{loadError}</p>
+          <p className="mt-3 text-xs text-on-surface-variant">
+            If you just deployed, the <code className="font-mono">care_tasks</code> /
+            <code className="font-mono"> generated_documents</code> migrations may not have run yet.
+            Tasks materialize automatically the first time you approve a clinical note in
+            the consultation review screen.
+          </p>
         </div>
       ) : view === 'closeout' ? (
         <CloseoutView

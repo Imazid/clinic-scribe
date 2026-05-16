@@ -1,237 +1,280 @@
 'use client';
 
-import { useMemo, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Badge } from '@/components/ui/Badge';
-import { SearchInput } from '@/components/ui/SearchInput';
 import { cn } from '@/lib/utils';
+import { useAuthStore } from '@/lib/stores/auth-store';
 import type { LucideIcon } from 'lucide-react';
 import {
   Bell,
-  Building,
   ChevronRight,
   CreditCard,
   FileText,
+  LayoutDashboard,
+  LifeBuoy,
   Palette,
-  Settings2,
+  Plug,
   Shield,
+  Sliders,
   User,
+  Users,
 } from 'lucide-react';
 
-type SettingsNavItem = {
+/**
+ * Settings shell — left sidebar, right pane.
+ *
+ * Rail (left, 17rem): grounded card with a section list. Each row is icon
+ * + label, no descriptions; the active row uses a filled slate-blue pill.
+ *
+ * Pane (right): owns ALL of its own chrome — a section header (eyebrow +
+ * title + summary) followed by the child page's content. Children are
+ * pure content blocks; they don't bring their own max-width / breadcrumb /
+ * page-background, those live here.
+ */
+
+type SectionMeta = {
+  href: string;
   label: string;
-  description: string;
   icon: LucideIcon;
-  href?: string;
-  disabled?: boolean;
+  /** Used in the right-pane header. */
+  eyebrow: string;
+  title: string;
+  summary: string;
 };
 
-const SETTINGS_GROUPS: Array<{ label: string; items: SettingsNavItem[] }> = [
+const SECTIONS: SectionMeta[] = [
   {
-    label: 'Personal',
-    items: [
-      {
-        label: 'Account',
-        description: 'Overview and clinic identity',
-        icon: User,
-        href: '/settings',
-      },
-      {
-        label: 'Profile',
-        description: 'Personal details and specialty',
-        icon: User,
-        href: '/settings/profile',
-      },
-    ],
+    href: '/settings',
+    label: 'Overview',
+    icon: LayoutDashboard,
+    eyebrow: 'Settings',
+    title: 'Account overview',
+    summary: 'Your profile, clinic, and workflow preferences at a glance.',
   },
   {
-    label: 'Billing & Access',
-    items: [
-      {
-        label: 'Billing',
-        description: 'Subscription, seats, and invoices',
-        icon: CreditCard,
-        href: '/settings/billing',
-      },
-      {
-        label: 'Notifications',
-        description: 'Email and workflow alerts',
-        icon: Bell,
-        disabled: true,
-      },
-      {
-        label: 'Security',
-        description: 'Sessions and sign-in controls',
-        icon: Shield,
-        href: '/settings/security',
-      },
-    ],
+    href: '/settings/profile',
+    label: 'Profile',
+    icon: User,
+    eyebrow: 'You',
+    title: 'Profile',
+    summary: 'Personal details, specialty, and provider context.',
   },
   {
-    label: 'Compliance',
-    items: [
-      {
-        label: 'Legal & Privacy',
-        description: 'Privacy policy, terms, and AI safety documents',
-        icon: FileText,
-        href: '/settings/legal',
-      },
-    ],
+    href: '/settings/security',
+    label: 'Security',
+    icon: Shield,
+    eyebrow: 'You',
+    title: 'Security',
+    summary: 'Sign-in controls, multi-factor authentication, and sessions.',
   },
   {
-    label: 'Clinic',
-    items: [
-      {
-        label: 'Clinic',
-        description: 'Organisation and clinic preferences',
-        icon: Building,
-        disabled: true,
-      },
-      {
-        label: 'Appearance',
-        description: 'Theme and display preferences',
-        icon: Palette,
-        disabled: true,
-      },
-    ],
+    href: '/settings/notifications',
+    label: 'Notifications',
+    icon: Bell,
+    eyebrow: 'You',
+    title: 'Notifications',
+    summary: 'How Miraa reaches you — email, in-app, and quiet hours.',
+  },
+  {
+    href: '/settings/team',
+    label: 'Team',
+    icon: Users,
+    eyebrow: 'Clinic',
+    title: 'Team',
+    summary: 'Members, roles, and pending invitations.',
+  },
+  {
+    href: '/settings/billing',
+    label: 'Billing',
+    icon: CreditCard,
+    eyebrow: 'Clinic',
+    title: 'Billing & subscription',
+    summary: 'Plan, seats, payment method, and invoices.',
+  },
+  {
+    href: '/settings/integrations',
+    label: 'Integrations',
+    icon: Plug,
+    eyebrow: 'Clinic',
+    title: 'Integrations',
+    summary: 'EMR sync, calendar, and connected services.',
+  },
+  {
+    href: '/settings/workflow',
+    label: 'Workflow',
+    icon: Sliders,
+    eyebrow: 'Preferences',
+    title: 'Workflow preferences',
+    summary: 'How you step through capture, review, and approval.',
+  },
+  {
+    href: '/settings/appearance',
+    label: 'Appearance',
+    icon: Palette,
+    eyebrow: 'Preferences',
+    title: 'Appearance',
+    summary: 'Theme, density, and visual preferences.',
+  },
+  {
+    href: '/settings/legal',
+    label: 'Legal & privacy',
+    icon: FileText,
+    eyebrow: 'Reference',
+    title: 'Legal & privacy',
+    summary: 'Terms, privacy policy, and AI safety documents.',
   },
 ];
 
-function isActivePath(pathname: string, href?: string) {
-  if (!href) return false;
+const GROUPS: Array<{ label: string; sections: SectionMeta[] }> = [
+  { label: 'You',         sections: SECTIONS.filter((s) => s.eyebrow === 'You' || s.label === 'Overview') },
+  { label: 'Clinic',      sections: SECTIONS.filter((s) => s.eyebrow === 'Clinic') },
+  { label: 'Preferences', sections: SECTIONS.filter((s) => s.eyebrow === 'Preferences') },
+  { label: 'Reference',   sections: SECTIONS.filter((s) => s.eyebrow === 'Reference') },
+];
+
+function isActive(pathname: string, href: string) {
   if (href === '/settings') return pathname === '/settings';
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
-export default function SettingsLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+function activeSection(pathname: string): SectionMeta {
+  // Prefer the most specific match (longest href) to avoid /settings matching
+  // for /settings/billing.
+  return (
+    SECTIONS.filter((s) => isActive(pathname, s.href)).sort(
+      (a, b) => b.href.length - a.href.length
+    )[0] ?? SECTIONS[0]
+  );
+}
+
+export default function SettingsLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const [query, setQuery] = useState('');
+  const clinic = useAuthStore((s) => s.clinic);
+  const profile = useAuthStore((s) => s.profile);
+  const current = activeSection(pathname);
 
-  const filteredGroups = useMemo(() => {
-    const normalizedQuery = query.trim().toLowerCase();
-    if (!normalizedQuery) {
-      return SETTINGS_GROUPS;
-    }
-
-    return SETTINGS_GROUPS.map((group) => ({
-      ...group,
-      items: group.items.filter((item) =>
-        [item.label, item.description, group.label]
-          .join(' ')
-          .toLowerCase()
-          .includes(normalizedQuery)
-      ),
-    })).filter((group) => group.items.length > 0);
-  }, [query]);
+  const roleLabel =
+    profile?.role === 'admin' ? 'Owner' : profile?.role ? capitalize(profile.role) : null;
 
   return (
-    <div className="grid gap-6 xl:grid-cols-[18rem_minmax(0,1fr)]">
-      <aside className="xl:sticky xl:top-6 self-start rounded-[1.75rem] border border-outline-variant/50 bg-surface-container-lowest p-4 shadow-ambient-sm">
-        <div className="mb-4 px-2">
-          <div className="flex items-center gap-2 mb-2">
-            <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-secondary/12 text-secondary">
-              <Settings2 className="h-5 w-5" />
-            </div>
-            <div>
-              <p className="text-lg font-semibold text-on-surface">Settings</p>
-              <p className="text-xs text-on-surface-variant">
-                Personal, billing, and clinic controls
-              </p>
-            </div>
-          </div>
+    <div
+      className="flex gap-6 items-start"
+      style={{ flexDirection: 'row' }}
+    >
+      {/* ─── Sidebar ─── */}
+      <aside
+        className="
+          shrink-0 self-start rounded-2xl border border-outline-variant/40 bg-surface-container-lowest
+          shadow-[0_18px_40px_-12px_rgba(0,23,54,0.18),0_4px_12px_-4px_rgba(0,23,54,0.08)]
+          sticky
+          flex flex-col
+        "
+        style={{
+          width: '17rem',
+          top: 'calc(var(--header-height) + 1rem)',
+          height: 'calc(100vh - var(--header-height) - 2rem)',
+        }}
+      >
+        {/* Workspace header */}
+        <div className="border-b border-outline-variant/40 px-4 pb-3.5 pt-4">
+          <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-secondary">
+            Settings
+          </p>
+          <p className="mt-1.5 truncate font-display text-[17px] font-semibold leading-tight tracking-[-0.02em] text-on-surface">
+            {clinic?.name ?? 'Your workspace'}
+          </p>
+          {roleLabel && (
+            <span className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-secondary/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-secondary">
+              <span className="h-1 w-1 rounded-full bg-secondary" />
+              {roleLabel}
+            </span>
+          )}
         </div>
 
-        <SearchInput
-          className="mb-4"
-          placeholder="Search settings"
-          value={query}
-          onSearch={setQuery}
-        />
-
-        <div className="space-y-5">
-          {filteredGroups.map((group) => (
+        {/* Nav */}
+        <nav className="flex-1 space-y-5 overflow-y-auto px-3 py-4">
+          {GROUPS.map((group) => (
             <div key={group.label}>
-              <p className="label-text px-2 text-outline mb-2">{group.label}</p>
-              <div className="space-y-1">
-                {group.items.map((item) => {
-                  const active = isActivePath(pathname, item.href);
-                  const Icon = item.icon;
-
-                  const content = (
-                    <div
-                      className={cn(
-                        'flex items-center gap-3 rounded-2xl px-3 py-3 transition-colors',
-                        active
-                          ? 'bg-secondary/10 text-secondary'
-                          : item.disabled
-                            ? 'text-outline'
-                            : 'text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface'
-                      )}
-                    >
-                      <div
+              <p className="px-2 pb-1.5 text-[10px] font-bold uppercase tracking-[0.12em] text-outline">
+                {group.label}
+              </p>
+              <ul className="space-y-0.5">
+                {group.sections.map((section) => {
+                  const active = isActive(pathname, section.href);
+                  const Icon = section.icon;
+                  return (
+                    <li key={section.href}>
+                      <Link
+                        href={section.href}
+                        aria-current={active ? 'page' : undefined}
                         className={cn(
-                          'flex h-9 w-9 items-center justify-center rounded-xl',
+                          'group relative flex items-center gap-2.5 rounded-xl px-2.5 py-2 text-[13px] font-semibold transition-colors',
                           active
-                            ? 'bg-secondary/12 text-secondary'
-                            : item.disabled
-                              ? 'bg-surface-container text-outline'
-                              : 'bg-surface-container-low text-on-surface-variant'
+                            ? 'bg-on-surface text-surface'
+                            : 'text-on-surface-variant hover:bg-surface-container/60 hover:text-on-surface'
                         )}
                       >
-                        <Icon className="h-4 w-4" />
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-center gap-2">
-                          <p className="text-sm font-semibold">{item.label}</p>
-                          {item.disabled ? (
-                            <Badge variant="default" className="text-[10px]">
-                              Soon
-                            </Badge>
-                          ) : null}
-                        </div>
-                        <p className="mt-0.5 text-xs text-on-surface-variant">
-                          {item.description}
-                        </p>
-                      </div>
-                      {!item.disabled ? (
-                        <ChevronRight
+                        {active && (
+                          <span
+                            aria-hidden="true"
+                            className="absolute -left-[3px] top-1/2 h-5 w-0.5 -translate-y-1/2 rounded-full bg-secondary"
+                          />
+                        )}
+                        <Icon
                           className={cn(
                             'h-4 w-4 shrink-0',
-                            active ? 'text-secondary' : 'text-outline'
+                            active ? 'text-surface' : 'text-on-surface-variant group-hover:text-on-surface'
                           )}
                         />
-                      ) : null}
-                    </div>
-                  );
-
-                  if (item.disabled || !item.href) {
-                    return (
-                      <div key={item.label} aria-disabled="true">
-                        {content}
-                      </div>
-                    );
-                  }
-
-                  return (
-                    <Link key={item.label} href={item.href}>
-                      {content}
-                    </Link>
+                        <span className="flex-1 truncate">{section.label}</span>
+                        <ChevronRight
+                          className={cn(
+                            'h-3.5 w-3.5 shrink-0 transition-opacity',
+                            active ? 'text-surface/70' : 'text-outline opacity-0 group-hover:opacity-100'
+                          )}
+                        />
+                      </Link>
+                    </li>
                   );
                 })}
-              </div>
+              </ul>
             </div>
           ))}
+        </nav>
+
+        {/* Footer */}
+        <div className="border-t border-outline-variant/40 px-3 py-3">
+          <Link
+            href="/help"
+            className="flex items-center gap-2.5 rounded-xl px-2.5 py-2 text-[12px] font-semibold text-on-surface-variant transition-colors hover:bg-surface-container/60 hover:text-on-surface"
+          >
+            <LifeBuoy className="h-3.5 w-3.5" />
+            <span className="flex-1">Need help?</span>
+            <ChevronRight className="h-3 w-3 text-outline" />
+          </Link>
         </div>
       </aside>
 
-      <div className="min-w-0 rounded-[1.85rem] border border-outline-variant/50 bg-surface-container-lowest p-5 shadow-ambient-sm sm:p-7">
-        {children}
+      {/* ─── Right pane ─── */}
+      <div
+        className="min-w-0 rounded-2xl border border-outline-variant/40 bg-surface-container-lowest shadow-[0_12px_28px_-12px_rgba(0,23,54,0.10)]"
+        style={{ flex: '1 1 0%' }}
+      >
+        <header className="border-b border-outline-variant/40 px-7 py-6">
+          <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-secondary">
+            {current.eyebrow}
+          </p>
+          <h1 className="mt-1 font-display text-[26px] font-semibold leading-tight tracking-[-0.02em]">
+            {current.title}
+          </h1>
+          <p className="mt-1.5 text-[13px] text-on-surface-variant">{current.summary}</p>
+        </header>
+        <div className="px-7 py-7">{children}</div>
       </div>
     </div>
   );
+}
+
+function capitalize(s: string) {
+  return s.charAt(0).toUpperCase() + s.slice(1);
 }

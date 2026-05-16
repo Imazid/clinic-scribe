@@ -1,15 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getStripe } from '@/lib/stripe';
-import { createServerClient } from '@supabase/ssr';
+import { createClient as createSupabaseClient } from '@supabase/supabase-js';
 import type Stripe from 'stripe';
 import { logError } from '@/lib/apiSecurity';
 
-// Use service role key for webhook — no user session available
+/**
+ * Service-role client for the webhook. There is no user session — Stripe
+ * authenticates via signature verification — and we read/write across all
+ * clinics. Use the canonical service-role pattern (`@supabase/supabase-js`)
+ * rather than the SSR cookie shim so it's obvious to readers that this
+ * code runs OUTSIDE RLS.
+ */
 function createServiceClient() {
-  return createServerClient(
+  return createSupabaseClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!,
-    { cookies: { getAll: () => [], setAll: () => {} } }
+    { auth: { persistSession: false, autoRefreshToken: false } }
   );
 }
 
@@ -43,19 +49,37 @@ export async function POST(request: NextRequest) {
 
   const supabase = createServiceClient();
 
-  // Idempotency: short-circuit duplicate deliveries. Insert first; if the
-  // event_id already exists, Postgres returns a 23505 (unique violation)
-  // and we return 200 without re-running side effects.
-  const { error: idempotencyError } = await supabase
-    .from('stripe_events')
-    .insert({ event_id: event.id, event_type: event.type });
+  // ─── Idempotency state machine ────────────────────────────────────────
+  //   1. Claim the event by inserting a row with `processed_at = NULL`.
+  //      A unique-violation means we (or another worker) already claimed
+  //      it — short-circuit with a 200 so Stripe stops retrying.
+  //   2. Run side effects.
+  //   3. Mark `processed_at = now()` on success.
+  //   4. On error: persist `last_error`, leave `processed_at` NULL, return
+  //      500 so Stripe retries. The retry will see the duplicate-claim
+  //      short-circuit, which is what we want — operator must inspect the
+  //      stuck row, fix the underlying problem, then delete the marker
+  //      to let Stripe's next retry through.
+  //
+  //   We deliberately do NOT delete the marker on error: every handler in
+  //   this file is an idempotent UPDATE on a clinics row, but we cannot
+  //   guarantee that property holds for future handlers. Deleting the
+  //   marker would risk double-applying additive side effects on retry.
+  // ──────────────────────────────────────────────────────────────────────
 
-  if (idempotencyError) {
-    // 23505 = duplicate key; treat as already-processed
-    if ((idempotencyError as { code?: string }).code === '23505') {
+  const { error: claimError } = await supabase
+    .from('stripe_events')
+    .insert({
+      event_id: event.id,
+      event_type: event.type,
+      processed_at: null,
+    });
+
+  if (claimError) {
+    if ((claimError as { code?: string }).code === '23505') {
       return NextResponse.json({ received: true, duplicate: true });
     }
-    return serverError('stripe-webhook-idempotency', idempotencyError);
+    return serverError('stripe-webhook-claim', claimError);
   }
 
   try {
@@ -88,7 +112,7 @@ export async function POST(request: NextRequest) {
             })
             .eq('id', clinicId);
 
-          if (error) return serverError('stripe-webhook-checkout', error);
+          if (error) throw error;
         }
         break;
       }
@@ -113,7 +137,7 @@ export async function POST(request: NextRequest) {
             })
             .eq('id', clinicId);
 
-          if (error) return serverError('stripe-webhook-sub-updated', error);
+          if (error) throw error;
         }
         break;
       }
@@ -135,7 +159,7 @@ export async function POST(request: NextRequest) {
             })
             .eq('id', clinicId);
 
-          if (error) return serverError('stripe-webhook-sub-deleted', error);
+          if (error) throw error;
         }
         break;
       }
@@ -151,16 +175,27 @@ export async function POST(request: NextRequest) {
             .update({ stripe_subscription_status: 'past_due' })
             .eq('stripe_subscription_id', subscriptionId);
 
-          if (error) return serverError('stripe-webhook-payment-failed', error);
+          if (error) throw error;
         }
         break;
       }
     }
 
+    // Side effects committed — flip the marker to processed.
+    await supabase
+      .from('stripe_events')
+      .update({ processed_at: new Date().toISOString(), last_error: null })
+      .eq('event_id', event.id);
+
     return NextResponse.json({ received: true });
   } catch (err) {
-    // Roll back the idempotency row so Stripe's retry gets a real attempt.
-    await supabase.from('stripe_events').delete().eq('event_id', event.id);
+    // Persist the failure for operator triage. We do NOT delete the marker:
+    // see the contract comment above.
+    const errorText = err instanceof Error ? err.message.slice(0, 500) : String(err).slice(0, 500);
+    await supabase
+      .from('stripe_events')
+      .update({ last_error: errorText })
+      .eq('event_id', event.id);
     return serverError('stripe-webhook-dispatch', err);
   }
 }

@@ -1,7 +1,15 @@
 import { NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
 import { buildQAFindings } from '@/lib/workflow/artifacts';
-import { checkOrigin, forbidden } from '@/lib/apiSecurity';
+import {
+  checkOrigin,
+  forbidden,
+  logError,
+  notFound,
+  rateLimit,
+  requireCallerClinic,
+  requireUser,
+  tooMany,
+} from '@/lib/apiSecurity';
 import type {
   ClinicalNote,
   ConfidenceScores,
@@ -27,22 +35,33 @@ export async function POST(
   context: { params: Promise<{ id: string }> }
 ) {
   if (!checkOrigin(request)) return forbidden('Invalid origin');
+
+  const { user, supabase, response: authError } = await requireUser();
+  if (authError) return authError;
+  if (!(await rateLimit(`note-qa:${user.id}`, 30, 60_000))) return tooMany();
+
   try {
     const { id } = await context.params;
-    const supabase = await createClient();
+
+    const { clinicId, response: clinicError } = await requireCallerClinic(
+      supabase,
+      user.id
+    );
+    if (clinicError) return clinicError;
+
     const body = (await request.json()) as QABody;
 
     const { data: consultation, error } = await supabase
       .from('consultations')
-      .select('patient:patients(*), transcript:transcripts(*)')
+      .select('clinic_id, patient:patients(*), transcript:transcripts(*)')
       .eq('id', id)
-      .single();
+      .maybeSingle();
 
-    if (error || !consultation) {
-      return NextResponse.json({ error: 'Consultation not found' }, { status: 404 });
-    }
+    if (error || !consultation) return notFound('Consultation not found');
+    if (consultation.clinic_id !== clinicId) return notFound('Consultation not found');
 
     const typedConsultation = consultation as unknown as {
+      clinic_id: string;
       patient: Patient | null;
       transcript: Transcript[] | null;
     };
@@ -99,14 +118,25 @@ export async function POST(
       : 'ready';
 
     if (body.noteId) {
-      await supabase
+      // Verify the noteId belongs to this consultation before mutating it
+      // — without this an authenticated caller could feed any noteId in
+      // their clinic and stomp on its qa_findings.
+      const { data: noteOwnership } = await supabase
         .from('clinical_notes')
-        .update({
-          qa_findings: qaFindings,
-          verification_status: verificationStatus,
-          updated_at: new Date().toISOString(),
-        })
-        .eq('id', body.noteId);
+        .select('id, consultation_id')
+        .eq('id', body.noteId)
+        .maybeSingle();
+
+      if (noteOwnership && noteOwnership.consultation_id === id) {
+        await supabase
+          .from('clinical_notes')
+          .update({
+            qa_findings: qaFindings,
+            verification_status: verificationStatus,
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', body.noteId);
+      }
     }
 
     return NextResponse.json({
@@ -114,8 +144,10 @@ export async function POST(
       verification_status: verificationStatus,
     });
   } catch (error) {
-    console.error('QA generation error:', error);
-    const message = error instanceof Error ? error.message : 'Failed to generate QA findings';
-    return NextResponse.json({ error: message }, { status: 500 });
+    logError('note-qa', error);
+    return NextResponse.json(
+      { error: 'Failed to generate QA findings' },
+      { status: 500 }
+    );
   }
 }

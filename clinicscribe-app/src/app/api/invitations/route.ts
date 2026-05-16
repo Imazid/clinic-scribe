@@ -1,5 +1,4 @@
 import { NextResponse } from 'next/server';
-import { randomBytes } from 'node:crypto';
 import {
   checkOrigin,
   forbidden,
@@ -8,6 +7,10 @@ import {
   requireUser,
   tooMany,
 } from '@/lib/apiSecurity';
+import {
+  generateInvitationToken,
+  hashInvitationToken,
+} from '@/lib/invitations/token';
 
 interface CreateInvitationBody {
   email?: string;
@@ -15,10 +18,6 @@ interface CreateInvitationBody {
 }
 
 const VALID_ROLES = new Set(['admin', 'clinician', 'receptionist']);
-
-function generateToken(): string {
-  return randomBytes(24).toString('base64url');
-}
 
 export async function GET() {
   const { user, supabase, response } = await requireUser();
@@ -52,7 +51,7 @@ export async function POST(request: Request) {
   const { user, supabase, response } = await requireUser();
   if (response) return response;
 
-  if (!rateLimit(`invite-create:${user.id}`, 20, 60_000)) return tooMany();
+  if (!(await rateLimit(`invite-create:${user.id}`, 20, 60_000))) return tooMany();
 
   try {
     const body = (await request.json()) as CreateInvitationBody;
@@ -75,7 +74,12 @@ export async function POST(request: Request) {
 
     if (!profile || profile.role !== 'admin') return forbidden('Admins only');
 
-    const token = generateToken();
+    // The plaintext token only ever exists in this request's memory and in
+    // the email link delivered to the invitee. The DB stores only the
+    // SHA-256 hash so a backup/log/replica leak doesn't surrender accept
+    // tokens.
+    const token = generateInvitationToken();
+    const tokenHash = hashInvitationToken(token);
 
     const { data, error } = await supabase
       .from('clinic_invitations')
@@ -84,6 +88,7 @@ export async function POST(request: Request) {
         email,
         role,
         token,
+        token_hash: tokenHash,
         invited_by: profile.id,
       })
       .select('id, email, role, expires_at, created_at')

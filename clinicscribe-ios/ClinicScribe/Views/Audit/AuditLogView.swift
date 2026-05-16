@@ -5,14 +5,55 @@ struct AuditLogView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            CSSearchBar(text: $vm.searchText, placeholder: "Search actions, entities...")
+            ScrollView {
+                VStack(alignment: .leading, spacing: Theme.spacingMd) {
+                    heroStrip
+                    CSSearchBar(text: $vm.searchText, placeholder: "Search actions, entities…")
+                        .onChange(of: vm.searchText) {
+                            Task { await vm.load() }
+                        }
+                    listContent
+                }
                 .padding(.horizontal, Theme.spacingMd)
                 .padding(.vertical, Theme.spacingSm)
-                .onChange(of: vm.searchText) {
-                    Task { await vm.load() }
-                }
+            }
+        }
+        .background(Theme.surface)
+        .navigationTitle("Audit log")
+        .task {
+            if let clinicId = AuthService.shared.currentProfile?.clinicId {
+                vm.clinicId = clinicId
+                await vm.load()
+            }
+        }
+    }
 
-            Group {
+    private var heroStrip: some View {
+        let total = vm.filteredLogs.count
+        let stats: [CSStat] = [
+            CSStat(label: "Events", value: "\(total)", sub: "Visible", systemImage: "list.bullet.rectangle"),
+            CSStat(label: "Status", value: vm.errorMessage == nil ? "Live" : "Error",
+                   sub: vm.errorMessage == nil ? "Streaming" : "See below",
+                   systemImage: "checkmark.shield",
+                   tone: vm.errorMessage == nil ? .success : .error),
+        ]
+        return CSHeroStrip(
+            eyebrow: "AUDIT",
+            title: {
+                HStack(alignment: .firstTextBaseline, spacing: 6) {
+                    Text("Complete")
+                    CSHeroAccent("traceability")
+                    Text(".")
+                }
+            },
+            description: "Every action across the app — note generation, drafts, approvals, exports — recorded for compliance.",
+            stats: stats
+        )
+    }
+
+    @ViewBuilder
+    private var listContent: some View {
+        Group {
                 if vm.isLoading {
                     ProgressView()
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -34,28 +75,15 @@ struct AuditLogView: View {
                     )
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                 } else {
-                    ScrollView {
-                        LazyVStack(spacing: Theme.spacingSm) {
-                            ForEach(vm.filteredLogs) { log in
-                                AuditLogRow(log: log)
-                            }
+                    LazyVStack(spacing: Theme.spacingSm) {
+                        ForEach(vm.filteredLogs) { log in
+                            AuditLogRow(log: log)
                         }
-                        .padding(.horizontal, Theme.spacingMd)
-                        .padding(.vertical, Theme.spacingSm)
                     }
                 }
             }
         }
-        .background(Theme.surface)
-        .navigationTitle("Audit Log")
-        .task {
-            if let clinicId = AuthService.shared.currentProfile?.clinicId {
-                vm.clinicId = clinicId
-                await vm.load()
-            }
-        }
     }
-}
 
 private struct AuditLogRow: View {
     let log: AuditLog

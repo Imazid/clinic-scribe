@@ -2,14 +2,14 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { PageHeader } from '@/components/layout/PageHeader';
 import { Card, CardTitle } from '@/components/ui/Card';
 import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
 import { useAuthStore } from '@/lib/stores/auth-store';
 import { createClient } from '@/lib/supabase/client';
 import { Badge } from '@/components/ui/Badge';
-import { Building, CircleUserRound, CreditCard, KeyRound, Mail, Shield } from 'lucide-react';
+import { Building, CircleUserRound, CreditCard, KeyRound, Mail, ShieldCheck, ListChecks, FileText, Users } from 'lucide-react';
+import { useNoteReviewLayout } from '@/lib/hooks/useNoteReviewLayout';
 
 function formatRole(role?: string | null) {
   if (!role) return 'Not set';
@@ -30,6 +30,7 @@ export default function SettingsPage() {
   const clinic = useAuthStore((state) => state.clinic);
   const [email, setEmail] = useState('');
   const [mfaEnabled, setMfaEnabled] = useState<boolean | null>(null);
+  const { layout: noteReviewLayout, setLayout: setNoteReviewLayout, ready: noteReviewLayoutReady } = useNoteReviewLayout();
 
   useEffect(() => {
     async function loadUserData() {
@@ -54,12 +55,6 @@ export default function SettingsPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader
-        eyebrow="Personal"
-        title="Account"
-        description="Manage your account, clinic identity, and billing context from one workspace."
-      />
-
       <Card className="overflow-hidden p-0">
         <div className="border-b border-outline-variant/40 px-6 py-5">
           <p className="text-base font-semibold text-on-surface">About you</p>
@@ -128,6 +123,14 @@ export default function SettingsPage() {
               >
                 <CreditCard className="h-4 w-4" />
                 Open billing
+              </Button>
+              <Button
+                variant="outline"
+                size="action"
+                onClick={() => router.push('/settings/team')}
+              >
+                <Users className="h-4 w-4" />
+                Manage team
               </Button>
             </div>
           </div>
@@ -214,6 +217,73 @@ export default function SettingsPage() {
           </Card>
         </div>
       </div>
+
+      <Card className="overflow-hidden p-0">
+        <div className="border-b border-outline-variant/40 px-6 py-5">
+          <p className="flex items-center gap-2 text-base font-semibold text-on-surface">
+            <ShieldCheck className="h-4 w-4 text-secondary" />
+            Workflow preferences
+          </p>
+          <p className="mt-1 text-sm text-on-surface-variant">
+            How you want to step through note review and verify queues.
+          </p>
+        </div>
+        <div className="px-6 py-6">
+          <div>
+            <p className="text-sm font-semibold text-on-surface">Note review layout</p>
+            <p className="mt-1 text-sm text-on-surface-variant">
+              Choose how pending notes surface from the dashboard and inbox.
+            </p>
+            <div className="mt-4 grid gap-3 sm:grid-cols-2">
+              {[
+                {
+                  id: 'single' as const,
+                  icon: FileText,
+                  title: 'Direct review (default)',
+                  body: 'Clicking a pending note opens the full review page directly.',
+                },
+                {
+                  id: 'queue' as const,
+                  icon: ListChecks,
+                  title: 'Verify queue index',
+                  body: 'A /notes/queue index lists every pending note as a roomy verify card; clicking opens the same review.',
+                },
+              ].map((option) => {
+                const isActive = noteReviewLayout === option.id;
+                const Icon = option.icon;
+                return (
+                  <button
+                    key={option.id}
+                    type="button"
+                    onClick={() => setNoteReviewLayout(option.id)}
+                    disabled={!noteReviewLayoutReady}
+                    className={
+                      'flex flex-col items-start gap-2 rounded-2xl border px-4 py-4 text-left transition-colors disabled:opacity-50 ' +
+                      (isActive
+                        ? 'border-secondary bg-secondary/5 ring-2 ring-secondary/20'
+                        : 'border-outline-variant bg-surface-container-lowest hover:border-secondary/40')
+                    }
+                  >
+                    <div className="flex w-full items-center justify-between">
+                      <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-secondary/10 text-secondary">
+                        <Icon className="h-4 w-4" />
+                      </div>
+                      {isActive && <Badge variant="info">Active</Badge>}
+                    </div>
+                    <p className="text-sm font-semibold text-on-surface">{option.title}</p>
+                    <p className="text-xs leading-relaxed text-on-surface-variant">
+                      {option.body}
+                    </p>
+                  </button>
+                );
+              })}
+            </div>
+            <p className="mt-3 text-xs text-outline">
+              Stored on this device. We&apos;ll move this to your profile when cross-device sync ships.
+            </p>
+          </div>
+        </div>
+      </Card>
     </div>
   );
 }

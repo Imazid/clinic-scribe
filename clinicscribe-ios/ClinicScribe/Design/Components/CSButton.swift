@@ -2,7 +2,19 @@ import SwiftUI
 import UIKit
 
 enum CSButtonVariant {
-    case primary, secondary, outline, ghost, danger
+    /// Solid filled — espresso primary on cream.
+    case primary
+    /// Tonal grey — for secondary actions in dense layouts.
+    case secondary
+    /// White surface with hairline outline.
+    case outline
+    /// Transparent — for tertiary text-style actions.
+    case ghost
+    /// Warm-red destructive.
+    case danger
+    /// Chip-style — slate-blue fixed fill, slate-blue text. Mirrors the
+    /// web `<Button variant="soft">` for tertiary CTAs.
+    case soft
 }
 
 enum CSButtonSize {
@@ -46,9 +58,10 @@ struct CSButtonStyle: ButtonStyle {
         switch variant {
         case .primary: return Theme.primary
         case .secondary: return Theme.surfaceContainer
-        case .outline: return .clear
+        case .outline: return Theme.surfaceContainerLowest
         case .ghost: return .clear
         case .danger: return Theme.error
+        case .soft: return Theme.secondaryFixed
         }
     }
 
@@ -59,9 +72,10 @@ struct CSButtonStyle: ButtonStyle {
         switch variant {
         case .primary: return Theme.onPrimary
         case .secondary: return Theme.onSurface
-        case .outline: return Theme.primary
-        case .ghost: return Theme.primary
+        case .outline: return Theme.onSurface
+        case .ghost: return Theme.onSurfaceVariant
         case .danger: return Theme.onPrimary
+        case .soft: return Theme.secondary
         }
     }
 }

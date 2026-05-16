@@ -354,3 +354,37 @@ body {
 .custom-cursor-active * {
   cursor: none !important;
 }
+
+/* ──────────────────────────────────────────────────────────
+   Global reduced-motion fallback
+   Belt-and-braces alongside the per-component reduced-motion
+   gates already in TextReveal / Parallax / TiltCard / etc.
+   Disables long-running keyframe animations + neutralises
+   transition durations site-wide when the user opts out.
+   ────────────────────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  html {
+    scroll-behavior: auto;
+  }
+
+  /* Stop the marquee tracks dead — no infinite scroll */
+  .marquee-track,
+  .marquee-track-reverse {
+    animation: none !important;
+    transform: translateX(0) !important;
+  }
+
+  /* Ambient background drift / mesh shimmer */
+  .animate-gradient-shift {
+    animation: none !important;
+  }
+}

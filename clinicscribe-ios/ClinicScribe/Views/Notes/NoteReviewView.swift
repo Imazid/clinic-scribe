@@ -1,112 +1,78 @@
 import SwiftUI
 
+/// `NoteReviewView` — pixel-faithful to the design package's `IOSReview`.
+/// Editorial hero ("Nothing leaves the system without *you.*"), workflow
+/// stepper anchored at `verify`, then a four-tab cluster: Note / Transcript /
+/// Summary / Provenance. All existing data wiring (template picker, SOAP
+/// editors, medications, follow-ups, referrals, QA findings, approval bar)
+/// preserved verbatim — visual only.
 struct NoteReviewView: View {
     let consultation: Consultation
     @StateObject private var vm = NoteReviewViewModel()
     @Environment(\.dismiss) private var dismiss
     @State private var isPresentingTemplatePicker = false
     @State private var templates: [NoteTemplate] = NoteTemplateCatalog.allTemplates
+    @State private var activeTab: ReviewTab = .note
+
+    private enum ReviewTab: String, CaseIterable, Identifiable {
+        case note, transcript, summary, provenance
+        var id: String { rawValue }
+        var label: String {
+            switch self {
+            case .note: return "Note"
+            case .transcript: return "Transcript"
+            case .summary: return "Summary"
+            case .provenance: return "Provenance"
+            }
+        }
+        var systemImage: String {
+            switch self {
+            case .note: return "doc.text"
+            case .transcript: return "text.alignleft"
+            case .summary: return "envelope"
+            case .provenance: return "checkmark.shield"
+            }
+        }
+    }
 
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: Theme.spacingLg) {
+                hero
+
+                CSWorkflowStepper(active: .verify, completed: [.prepare, .capture])
+
                 if vm.isGenerating {
-                    VStack(spacing: Theme.spacingMd) {
-                        ProgressView()
-                        Text("Generating clinical note...")
-                            .font(.subheadline)
-                            .foregroundStyle(Theme.onSurfaceVariant)
-                    }
-                    .frame(maxWidth: .infinity)
-                    .padding(40)
+                    generatingPanel
                 } else if vm.note == nil, let error = vm.errorMessage {
-                    VStack(spacing: Theme.spacingMd) {
-                        Image(systemName: "exclamationmark.triangle")
-                            .font(.largeTitle)
-                            .foregroundStyle(Theme.error)
-                            .accessibilityLabel("Error")
-                        Text("Failed to generate note")
-                            .font(.headline)
-                            .foregroundStyle(Theme.onSurface)
-                        Text(error)
-                            .font(.subheadline)
-                            .foregroundStyle(Theme.onSurfaceVariant)
-                            .multilineTextAlignment(.center)
-                        Button("Retry") {
-                            Task { await vm.load(consultation: consultation) }
-                        }
-                        .buttonStyle(.bordered)
-                    }
-                    .frame(maxWidth: .infinity)
-                    .padding(40)
+                    errorPanel(error: error)
                 } else if vm.note == nil, let transcript = vm.transcript {
                     templateControls(transcript: transcript)
-
                     TranscriptViewer(transcript: transcript)
-
                     if let error = vm.errorMessage {
                         Text(error).font(.caption).foregroundStyle(Theme.error)
                     }
                 } else if vm.note == nil && vm.transcript == nil {
-                    CSCard {
-                        VStack(alignment: .leading, spacing: Theme.spacingSm) {
-                            Text("Verify will unlock once the transcript is ready")
-                                .font(.headline)
-                                .foregroundStyle(Theme.onSurface)
-                            Text("This session is still moving through capture or transcription. Come back once the transcript has been created.")
-                                .font(.subheadline)
-                                .foregroundStyle(Theme.onSurfaceVariant)
-                        }
-                    }
+                    waitingPanel
                 } else {
                     templateControls(transcript: vm.transcript)
 
-                    if let transcript = vm.transcript {
-                        TranscriptViewer(transcript: transcript)
-                    }
-
-                    // Confidence
                     if let note = vm.note {
                         ConfidenceIndicator(scores: note.confidenceScores)
                     }
-
                     if let status = vm.verificationStatus {
                         VerificationStatusCard(status: status)
                     }
 
-                    if !vm.provenance.isEmpty {
-                        ProvenanceCard(items: vm.provenance)
-                    }
+                    tabSwitcher
 
-                    if !vm.qaFindings.isEmpty {
-                        QAFindingCard(findings: vm.qaFindings)
-                    }
-
-                    // SOAP Sections
-                    SOAPSectionEditor(title: "Subjective", text: $vm.subjective)
-                    SOAPSectionEditor(title: "Objective", text: $vm.objective)
-                    SOAPSectionEditor(title: "Assessment", text: $vm.assessment)
-                    SOAPSectionEditor(title: "Plan", text: $vm.plan)
-
-                    // Medications
-                    MedicationDraftView(medications: $vm.medications)
-
-                    // Follow-up Tasks
-                    FollowUpTasksView(tasks: $vm.followUpTasks)
-
-                    // Referrals
-                    if !vm.referrals.isEmpty {
-                        VStack(alignment: .leading, spacing: Theme.spacingSm) {
-                            Text("Referrals").font(.headline).foregroundStyle(Theme.onSurface)
-                            ForEach(vm.referrals, id: \.self) { r in
-                                Text("- \(r)").font(.body).foregroundStyle(Theme.onSurface)
-                            }
+                    Group {
+                        switch activeTab {
+                        case .note: noteTab
+                        case .transcript: transcriptTab
+                        case .summary: summaryTab
+                        case .provenance: provenanceTab
                         }
-                        .cardStyle()
-                    }
-
-                    if let summary = vm.patientSummarySnapshot {
-                        PatientCommunicationCard(summary: summary)
                     }
 
                     if let error = vm.errorMessage {
@@ -160,6 +126,253 @@ struct NoteReviewView: View {
         .sheet(isPresented: $isPresentingTemplatePicker) {
             NoteTemplatePickerView(title: "Choose Template", templates: templates, selectedTemplate: $vm.selectedTemplate)
                 .presentationDetents([.large])
+        }
+    }
+
+    // MARK: - Hero
+
+    private var hero: some View {
+        let confidence = vm.note?.confidenceScores.overall ?? 0
+        let confidenceValue = vm.note == nil ? "—" : "\(Int(round(confidence * 100)))%"
+        let flagCount = vm.qaFindings.count
+        let stats: [CSStat] = [
+            CSStat(label: "Patient", value: consultation.patient?.fullName ?? "Unknown",
+                   sub: consultation.consultationType,
+                   systemImage: "person.crop.circle"),
+            CSStat(label: "Confidence", value: confidenceValue,
+                   sub: vm.note == nil ? "Awaiting note" : confidenceLabel(confidence),
+                   systemImage: "gauge.high",
+                   tone: confidenceTone(confidence)),
+            CSStat(label: "Flags", value: "\(flagCount)",
+                   sub: flagCount == 0 ? "Clear" : "Resolve to approve",
+                   systemImage: "exclamationmark.shield",
+                   tone: flagCount == 0 ? .success : .warning),
+            CSStat(label: "Template", value: vm.selectedTemplate.name,
+                   sub: vm.selectedTemplate.preferredFormat.rawValue
+                        .replacingOccurrences(of: "_", with: " ")
+                        .capitalized,
+                   systemImage: "doc.text.below.ecg"),
+        ]
+        return CSHeroStrip(
+            eyebrow: "VERIFY",
+            title: {
+                HStack(alignment: .firstTextBaseline, spacing: 6) {
+                    Text("Nothing leaves the system without")
+                    CSHeroAccent("you.")
+                }
+            },
+            description: "Edit the draft, resolve flags, sign it off. Miraa drafts — you decide.",
+            stats: stats
+        )
+    }
+
+    private func confidenceLabel(_ score: Double) -> String {
+        switch score {
+        case 0.85...: return "High"
+        case 0.7..<0.85: return "Solid"
+        case 0.5..<0.7: return "Review carefully"
+        default: return "Low — verify each section"
+        }
+    }
+
+    private func confidenceTone(_ score: Double) -> CSStat.Tone {
+        if vm.note == nil { return .default }
+        switch score {
+        case 0.85...: return .success
+        case 0.7..<0.85: return .info
+        case 0.5..<0.7: return .warning
+        default: return .error
+        }
+    }
+
+    // MARK: - Tab switcher
+
+    private var tabSwitcher: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 6) {
+                ForEach(ReviewTab.allCases) { tab in
+                    Button {
+                        withAnimation(.spring(response: 0.3)) { activeTab = tab }
+                    } label: {
+                        HStack(spacing: 6) {
+                            Image(systemName: tab.systemImage)
+                                .font(.system(size: 11, weight: .bold))
+                            Text(tab.label)
+                                .font(.system(size: 13, weight: .semibold))
+                            if tab == .provenance && !vm.qaFindings.isEmpty {
+                                Text("\(vm.qaFindings.count)")
+                                    .font(.system(size: 10, weight: .bold))
+                                    .padding(.horizontal, 6)
+                                    .padding(.vertical, 1)
+                                    .background(Capsule().fill(Theme.error))
+                                    .foregroundStyle(Color.white)
+                            }
+                        }
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 8)
+                        .foregroundStyle(activeTab == tab ? Theme.onPrimary : Theme.onSurfaceVariant)
+                        .background(activeTab == tab ? Theme.primary : Color.clear)
+                        .clipShape(RoundedRectangle(cornerRadius: 11))
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+            .padding(4)
+        }
+        .background(Theme.surfaceContainerLowest)
+        .clipShape(RoundedRectangle(cornerRadius: Theme.radiusMd))
+    }
+
+    // MARK: - Tab content
+
+    private var noteTab: some View {
+        VStack(alignment: .leading, spacing: Theme.spacingMd) {
+            SOAPSectionEditor(title: "Subjective", text: $vm.subjective)
+            SOAPSectionEditor(title: "Objective", text: $vm.objective)
+            SOAPSectionEditor(title: "Assessment", text: $vm.assessment)
+            SOAPSectionEditor(title: "Plan", text: $vm.plan)
+
+            MedicationDraftView(medications: $vm.medications)
+            FollowUpTasksView(tasks: $vm.followUpTasks)
+
+            if !vm.referrals.isEmpty {
+                CSCard {
+                    VStack(alignment: .leading, spacing: Theme.spacingSm) {
+                        Text("Referrals")
+                            .font(.headline)
+                            .foregroundStyle(Theme.onSurface)
+                        ForEach(vm.referrals, id: \.self) { r in
+                            HStack(alignment: .top, spacing: 8) {
+                                Image(systemName: "arrow.up.right.circle.fill")
+                                    .font(.system(size: 13))
+                                    .foregroundStyle(Theme.secondary)
+                                    .padding(.top, 2)
+                                Text(r)
+                                    .font(.body)
+                                    .foregroundStyle(Theme.onSurface)
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private var transcriptTab: some View {
+        Group {
+            if let transcript = vm.transcript {
+                TranscriptViewer(transcript: transcript)
+            } else {
+                CSCard {
+                    Text("No transcript available for this session.")
+                        .font(.subheadline)
+                        .foregroundStyle(Theme.onSurfaceVariant)
+                }
+            }
+        }
+    }
+
+    private var summaryTab: some View {
+        Group {
+            if let summary = vm.patientSummarySnapshot {
+                PatientCommunicationCard(summary: summary)
+            } else {
+                CSCard {
+                    VStack(alignment: .leading, spacing: Theme.spacingXS) {
+                        Text("Patient summary not generated yet")
+                            .font(.subheadline.weight(.semibold))
+                            .foregroundStyle(Theme.onSurface)
+                        Text("After approval, Miraa can produce a plain-language summary, instructions, and a family-ready email from this draft.")
+                            .font(.caption)
+                            .foregroundStyle(Theme.onSurfaceVariant)
+                    }
+                }
+            }
+        }
+    }
+
+    private var provenanceTab: some View {
+        VStack(alignment: .leading, spacing: Theme.spacingMd) {
+            if !vm.qaFindings.isEmpty {
+                QAFindingCard(findings: vm.qaFindings)
+            }
+            if !vm.provenance.isEmpty {
+                ProvenanceCard(items: vm.provenance)
+            }
+            if vm.qaFindings.isEmpty && vm.provenance.isEmpty {
+                CSCard {
+                    HStack(spacing: 10) {
+                        Image(systemName: "checkmark.shield.fill")
+                            .font(.system(size: 18))
+                            .foregroundStyle(Theme.success)
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("No flags raised")
+                                .font(.subheadline.weight(.semibold))
+                                .foregroundStyle(Theme.onSurface)
+                            Text("Provenance entries will appear once the model traces SOAP sentences back to transcript turns.")
+                                .font(.caption)
+                                .foregroundStyle(Theme.onSurfaceVariant)
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // MARK: - State panels
+
+    private var generatingPanel: some View {
+        CSCard {
+            VStack(spacing: Theme.spacingMd) {
+                ProgressView()
+                Text("Drafting clinical note…")
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(Theme.onSurface)
+                Text("Miraa is structuring the transcript using \(vm.selectedTemplate.name). This usually takes under a minute.")
+                    .font(.caption)
+                    .foregroundStyle(Theme.onSurfaceVariant)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, Theme.spacingMd)
+            }
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, Theme.spacingMd)
+        }
+    }
+
+    private func errorPanel(error: String) -> some View {
+        CSCard {
+            VStack(spacing: Theme.spacingSm) {
+                Image(systemName: "exclamationmark.triangle.fill")
+                    .font(.title2)
+                    .foregroundStyle(Theme.error)
+                    .accessibilityLabel("Error")
+                Text("Failed to generate note")
+                    .font(.headline)
+                    .foregroundStyle(Theme.onSurface)
+                Text(error)
+                    .font(.caption)
+                    .foregroundStyle(Theme.onSurfaceVariant)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, Theme.spacingMd)
+                CSButton(title: "Retry", variant: .outline, size: .sm, isFullWidth: false) {
+                    Task { await vm.load(consultation: consultation) }
+                }
+            }
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, Theme.spacingMd)
+        }
+    }
+
+    private var waitingPanel: some View {
+        CSCard {
+            VStack(alignment: .leading, spacing: Theme.spacingSm) {
+                Text("Verify will unlock once the transcript is ready")
+                    .font(.headline)
+                    .foregroundStyle(Theme.onSurface)
+                Text("This session is still moving through capture or transcription. Come back once the transcript has been created.")
+                    .font(.subheadline)
+                    .foregroundStyle(Theme.onSurfaceVariant)
+            }
         }
     }
 

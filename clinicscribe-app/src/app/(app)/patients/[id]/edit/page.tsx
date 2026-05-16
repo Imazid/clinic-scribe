@@ -4,7 +4,6 @@ import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { BreadcrumbNav } from '@/components/layout/BreadcrumbNav';
-import { Card } from '@/components/ui/Card';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { PatientForm } from '@/components/patients/PatientForm';
 import { getPatient, updatePatient } from '@/lib/api/patients';
@@ -21,9 +20,13 @@ export default function EditPatientPage() {
 
   useEffect(() => {
     async function load() {
-      try { setPatient(await getPatient(id)); }
-      catch { addToast('Failed to load patient', 'error'); }
-      finally { setLoading(false); }
+      try {
+        setPatient(await getPatient(id));
+      } catch {
+        addToast('Failed to load patient', 'error');
+      } finally {
+        setLoading(false);
+      }
     }
     load();
   }, [id, addToast]);
@@ -34,16 +37,43 @@ export default function EditPatientPage() {
     router.push(`/patients/${id}`);
   }
 
-  if (loading) return <Skeleton variant="rectangular" className="h-96 w-full" />;
-  if (!patient) return <div className="text-center py-16 text-on-surface-variant">Patient not found.</div>;
+  if (loading) {
+    return (
+      <div className="space-y-4">
+        <Skeleton variant="rectangular" className="h-12 w-64" />
+        <Skeleton variant="rectangular" className="h-96 w-full" />
+      </div>
+    );
+  }
+  if (!patient) {
+    return (
+      <div className="py-16 text-center text-on-surface-variant">Patient not found.</div>
+    );
+  }
+
+  const fullName = `${patient.first_name} ${patient.last_name}`.trim();
 
   return (
-    <div>
-      <BreadcrumbNav items={[{ label: 'Patients', href: '/patients' }, { label: `${patient.first_name} ${patient.last_name}`, href: `/patients/${id}` }, { label: 'Edit' }]} />
-      <PageHeader title="Edit Patient" className="mt-4" />
-      <Card className="max-w-3xl">
-        <PatientForm initialData={patient} onSubmit={handleSubmit} submitLabel="Update Patient" />
-      </Card>
+    <div className="space-y-6">
+      <BreadcrumbNav
+        items={[
+          { label: 'Patients', href: '/patients' },
+          { label: fullName, href: `/patients/${id}` },
+          { label: 'Edit' },
+        ]}
+      />
+      <PageHeader
+        eyebrow="Patients"
+        title={`Edit ${fullName}`}
+        description="Update demographics, contact, identifiers, and medical context. Changes apply to all future briefs and consultations."
+        variant="feature"
+      />
+      <PatientForm
+        initialData={patient}
+        onSubmit={handleSubmit}
+        onCancel={() => router.push(`/patients/${id}`)}
+        submitLabel="Update patient"
+      />
     </div>
   );
 }

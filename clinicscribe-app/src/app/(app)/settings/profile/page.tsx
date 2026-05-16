@@ -1,7 +1,6 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { PageHeader } from '@/components/layout/PageHeader';
 import { Card } from '@/components/ui/Card';
 import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
@@ -61,13 +60,7 @@ export default function ProfilePage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader
-        eyebrow="Personal"
-        title="Profile"
-        description="Update the clinician details used across visit briefs, note generation, and exported documents."
-      />
-
-      <Card className="max-w-3xl overflow-hidden p-0">
+      <Card className="overflow-hidden p-0">
         <div className="border-b border-outline-variant/40 px-6 py-5">
           <p className="text-base font-semibold text-on-surface">About you</p>
           <p className="mt-1 text-sm text-on-surface-variant">

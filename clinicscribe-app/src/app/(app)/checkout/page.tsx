@@ -88,10 +88,19 @@ function CheckoutContent() {
     setError('');
 
     try {
+      // Recover the referral slug if the visitor came through /r/<slug>.
+      // /api/stripe/create-checkout maps the slug to its Stripe promo code
+      // and applies the 3-months-free discount automatically.
+      const referralCode = readReferralCookie();
+
       const res = await fetch('/api/stripe/create-checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ plan: selectedPlan, seats }),
+        body: JSON.stringify({
+          plan: selectedPlan,
+          seats,
+          ...(referralCode ? { referralCode } : {}),
+        }),
       });
 
       const data = await res.json();
@@ -237,4 +246,21 @@ export default function CheckoutPage() {
       <CheckoutContent />
     </Suspense>
   );
+}
+
+/**
+ * Reads the `miraa_ref` cookie set by `/r/<slug>`. We use a cookie (not
+ * just a query param) so the referral survives OAuth redirects and the
+ * email-verification round-trip.
+ */
+function readReferralCookie(): string | null {
+  if (typeof document === 'undefined') return null;
+  const target = 'miraa_ref=';
+  for (const part of document.cookie.split(';')) {
+    const trimmed = part.trim();
+    if (trimmed.startsWith(target)) {
+      return decodeURIComponent(trimmed.slice(target.length));
+    }
+  }
+  return null;
 }

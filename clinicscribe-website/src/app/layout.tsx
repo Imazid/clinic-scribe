@@ -22,16 +22,22 @@ const fraunces = Fraunces({
   axes: ["opsz"],
 });
 
+const homeTitle = `${BRAND.name} — ${BRAND.tagline}`;
+const homeDescription =
+  "Miraa listens to your consultation, drafts the note, and lets you verify and export — so clinicians spend more time with patients and less with paperwork. Built in Australia.";
+
 export const metadata: Metadata = {
   metadataBase: new URL(BRAND.url),
   title: {
-    default: `${BRAND.name} — ${BRAND.expandedName}`,
+    default: homeTitle,
     template: `%s | ${BRAND.name}`,
   },
-  description: BRAND.description,
+  description: homeDescription,
+  applicationName: BRAND.name,
   keywords: [
     "clinical documentation",
     "clinical workflow copilot",
+    "ambient clinical scribe",
     "medical transcription",
     "SOAP notes",
     "healthcare AI",
@@ -39,29 +45,75 @@ export const metadata: Metadata = {
     "clinical notes",
     "Australia",
     "GP software",
+    "FHIR",
+    "Genie integration",
     "medical workflow",
   ],
   authors: [{ name: BRAND.name }],
+  creator: BRAND.name,
+  publisher: BRAND.name,
+  alternates: {
+    canonical: "/",
+  },
   openGraph: {
     type: "website",
     locale: "en_AU",
     siteName: BRAND.name,
-    title: `${BRAND.name} — ${BRAND.expandedName}`,
-    description: BRAND.description,
+    title: homeTitle,
+    description: homeDescription,
+    url: BRAND.url,
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: homeTitle,
+    description: homeDescription,
+    creator: "@miraahealth",
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
   },
 };
 
-const jsonLd = {
+const organizationLd = {
   "@context": "https://schema.org",
   "@type": "Organization",
   name: BRAND.name,
   url: BRAND.url,
   description: BRAND.description,
   foundingDate: BRAND.founded,
+  email: BRAND.supportEmail,
   address: {
     "@type": "PostalAddress",
     addressLocality: "Sydney",
     addressCountry: "AU",
+  },
+};
+
+const softwareApplicationLd = {
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  name: BRAND.name,
+  applicationCategory: "MedicalApplication",
+  operatingSystem: "Web, iOS",
+  description: homeDescription,
+  url: BRAND.url,
+  offers: {
+    "@type": "Offer",
+    price: "0",
+    priceCurrency: "AUD",
+    description: "Join the waitlist — 14-day free trial at launch",
+  },
+  publisher: {
+    "@type": "Organization",
+    name: BRAND.name,
+    url: BRAND.url,
   },
 };
 
@@ -75,7 +127,11 @@ export default function RootLayout({
       <body className={`${plusJakarta.variable} ${fraunces.variable} font-sans antialiased bg-surface text-on-surface`}>
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationLd) }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(softwareApplicationLd) }}
         />
         <SmoothScroll />
         <ScrollProgressBar />

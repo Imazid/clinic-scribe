@@ -155,7 +155,7 @@ export default function PreparePage() {
           <p className="label-text text-secondary mb-2">Summary</p>
           <h2 className="text-xl font-semibold text-on-surface">Workflow stats</h2>
         </div>
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 xl:grid-cols-6">
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 2xl:grid-cols-6">
           <MetricCard icon={Sparkles} label="Briefs Ready" value={briefReady} />
           <MetricCard
             icon={FileClock}

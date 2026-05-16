@@ -5,9 +5,12 @@ export const loginSchema = z.object({
   password: z.string().min(8, 'Password must be at least 8 characters'),
 });
 
+// 12-char minimum aligns with RACGP / ACSC guidance for healthcare access.
+// The signup form copy already says "At least 12 characters" — schema and
+// UI now match.
 const strongPassword = z
   .string()
-  .min(8, 'Must be at least 8 characters')
+  .min(12, 'Must be at least 12 characters')
   .regex(/[A-Z]/, 'Include an uppercase letter')
   .regex(/[a-z]/, 'Include a lowercase letter')
   .regex(/[0-9]/, 'Include a number')

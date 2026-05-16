@@ -18,7 +18,7 @@ export async function POST(
   const { user, supabase, response } = await requireUser();
   if (response) return response;
 
-  if (!rateLimit(`generate-note:${user.id}`, 10, 60_000)) return tooMany();
+  if (!(await rateLimit(`generate-note:${user.id}`, 10, 60_000))) return tooMany();
 
   try {
     const { id } = await context.params;

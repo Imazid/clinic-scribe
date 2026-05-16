@@ -71,9 +71,10 @@ export function useAudioDevice() {
     if (!track) return;
 
     const label = track.label || 'Unknown';
-    const type = classifyDevice(label);
-    const shortLabel = shortenLabel(label);
-    setDevice({ label, type, shortLabel });
+    setDevice((prev) => {
+      if (prev?.label === label) return prev;
+      return { label, type: classifyDevice(label), shortLabel: shortenLabel(label) };
+    });
   }, []);
 
   const detectDefault = useCallback(async () => {
@@ -81,10 +82,11 @@ export function useAudioDevice() {
       // Need permission to get device labels — request a temporary stream
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       const track = stream.getAudioTracks()[0];
-      const label = track.label || 'Unknown';
-      const type = classifyDevice(label);
-      const shortLabel = shortenLabel(label);
-      setDevice({ label, type, shortLabel });
+      const label = track?.label || 'Unknown';
+      setDevice((prev) => {
+        if (prev?.label === label) return prev;
+        return { label, type: classifyDevice(label), shortLabel: shortenLabel(label) };
+      });
       // Stop the temporary stream
       stream.getTracks().forEach((t) => t.stop());
     } catch {

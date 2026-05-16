@@ -2,8 +2,9 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { useParams, useSearchParams } from 'next/navigation';
-import { PageHeader } from '@/components/layout/PageHeader';
 import { BreadcrumbNav } from '@/components/layout/BreadcrumbNav';
+import { HeroStrip, HeroAccent, type HeroStripStat } from '@/components/ui/HeroStrip';
+import { WorkflowStepper } from '@/components/ui/WorkflowStepper';
 import { NoteEditor } from '@/components/notes/NoteEditor';
 import { NoteApprovalBar } from '@/components/notes/NoteApprovalBar';
 import { MedicationDraftSection } from '@/components/notes/MedicationDraft';
@@ -49,7 +50,7 @@ import { WorkflowPackSummaryCard } from '@/components/workflow/WorkflowPackSumma
 import { getWorkflowPackByTemplateKey } from '@/lib/workflow/packs';
 import { useWorkspaceTemplates } from '@/lib/hooks/useWorkspaceTemplates';
 import { WorkflowProgress } from '@/components/workflow/WorkflowProgress';
-import { Waypoints, ShieldCheck, ArrowLeftRight, BookOpen, FileText, Pill, Sparkles } from 'lucide-react';
+import { Waypoints, ShieldCheck, ArrowLeftRight, BookOpen, FileText, Pill, Sparkles, AlertTriangle, FileCheck } from 'lucide-react';
 
 export default function ReviewPage() {
   const { id } = useParams<{ id: string }>();
@@ -89,7 +90,11 @@ export default function ReviewPage() {
       nextConfidence: ConfidenceScores,
       nextMedications: MedicationDraft[],
       nextTasks: FollowUpTask[],
-      nextReferrals: string[]
+      nextReferrals: string[],
+      /** Previously-resolved finding codes to preserve across regenerations.
+       *  When QA reruns and a finding with the same code reappears, we keep
+       *  it marked resolved so the clinician doesn't have to re-clear it. */
+      previousResolvedCodes: Set<string> = new Set()
     ) => {
       const provenanceResult = await generateProvenance(id, {
         noteId: activeNoteId,
@@ -109,11 +114,14 @@ export default function ReviewPage() {
         follow_up_tasks: nextTasks,
         provenance_map: provenanceResult.provenance_map,
       });
-      setQaFindings(qaResult.qa_findings);
+      const mergedFindings = qaResult.qa_findings.map((f) =>
+        previousResolvedCodes.has(f.code) ? { ...f, resolved: true } : f
+      );
+      setQaFindings(mergedFindings);
 
       return {
         provenance: provenanceResult.provenance_map,
-        qaFindings: qaResult.qa_findings,
+        qaFindings: mergedFindings,
       };
     },
     [id]
@@ -136,7 +144,14 @@ export default function ReviewPage() {
       setFollowUpTasks(existingNote.follow_up_tasks || []);
       setReferrals(existingNote.referrals || []);
       setProvenance(existingNote.provenance_map || []);
-      setQaFindings(existingNote.qa_findings || []);
+      const loadedFindings = existingNote.qa_findings || [];
+      setQaFindings(loadedFindings);
+      // Hydrate the resolvedFindings Set from the persisted resolved flag so
+      // findings the clinician already cleared stay cleared after reload.
+      const persistedResolved = new Set(
+        loadedFindings.filter((f) => f.resolved).map((f) => f.code)
+      );
+      setResolvedFindings(persistedResolved);
       setNoteId(existingNote.id);
       setIsApproved(existingNote.is_approved);
       if (
@@ -149,7 +164,8 @@ export default function ReviewPage() {
           existingNote.confidence_scores || { subjective: 0, objective: 0, assessment: 0, plan: 0, overall: 0 },
           existingNote.medications || [],
           existingNote.follow_up_tasks || [],
-          existingNote.referrals || []
+          existingNote.referrals || [],
+          persistedResolved
         ).catch((error) => console.error('Verification refresh failed:', error));
       }
     } else if (consultation.transcript && templateResolved) {
@@ -533,12 +549,63 @@ export default function ReviewPage() {
     { id: 'summary', label: 'Summary', icon: FileText, count: 0 },
   ];
 
+  /**
+   * Persist the qa_findings array (with resolved flags) to clinical_notes so
+   * resolutions survive reload. Best-effort: rolls back local state on failure.
+   */
+  async function persistQaFindings(nextFindings: QAFinding[]) {
+    if (!noteId) return;
+    const supabase = createClient();
+    const { error } = await supabase
+      .from('clinical_notes')
+      .update({ qa_findings: nextFindings, updated_at: new Date().toISOString() })
+      .eq('id', noteId);
+    if (error) {
+      if (process.env.NODE_ENV !== 'production') {
+        console.error('[qa-persist]', error);
+      }
+      throw error;
+    }
+  }
+
+  async function applyResolutionChange(finding: QAFinding, kind: 'resolved' | 'dismissed') {
+    const previousFindings = qaFindings;
+    const previousSet = resolvedFindings;
+    const nowIso = new Date().toISOString();
+    const nextFindings = qaFindings.map((f) =>
+      f.code === finding.code
+        ? { ...f, resolved: true, resolved_at: f.resolved_at ?? nowIso }
+        : f
+    );
+    const nextSet = new Set(resolvedFindings).add(finding.code);
+
+    // Optimistic local update so the UI clears instantly.
+    setQaFindings(nextFindings);
+    setResolvedFindings(nextSet);
+
+    if (!noteId) return;
+    try {
+      await persistQaFindings(nextFindings);
+    } catch {
+      // Roll back on failure so the user sees the unresolved state again
+      // rather than a silent inconsistency.
+      setQaFindings(previousFindings);
+      setResolvedFindings(previousSet);
+      addToast(
+        kind === 'resolved'
+          ? 'Failed to save resolution. Please try again.'
+          : 'Failed to dismiss finding. Please try again.',
+        'error'
+      );
+    }
+  }
+
   function handleResolveQA(finding: QAFinding) {
-    setResolvedFindings((prev) => new Set(prev).add(finding.code));
+    void applyResolutionChange(finding, 'resolved');
   }
 
   function handleDismissQA(finding: QAFinding) {
-    setResolvedFindings((prev) => new Set(prev).add(finding.code));
+    void applyResolutionChange(finding, 'dismissed');
   }
 
   function handleEditSection(section: string) {
@@ -557,9 +624,15 @@ export default function ReviewPage() {
     setIsRechecking(true);
     try {
       const result = await runVerificationArtifacts(
-        noteId, content, confidence, medications, followUpTasks, referrals
+        noteId,
+        content,
+        confidence,
+        medications,
+        followUpTasks,
+        referrals,
+        resolvedFindings
       );
-      // Auto-resolve findings that no longer appear
+      // Drop any resolved codes for findings the new run no longer surfaces.
       const newCodes = new Set(result.qaFindings.map((f) => f.code));
       setResolvedFindings((prev) => {
         const next = new Set(prev);
@@ -568,6 +641,14 @@ export default function ReviewPage() {
         }
         return next;
       });
+      // Persist the merged findings (with preserved `resolved` flags) so the
+      // re-check result + clinician resolutions both survive a reload.
+      try {
+        await persistQaFindings(result.qaFindings);
+      } catch {
+        // Persist failure shouldn't block the toast — surface separately.
+        addToast('Re-check ran but couldn’t save. Try again.', 'error');
+      }
       setContentEdited(false);
       addToast('Safety check updated', 'success');
     } catch {
@@ -577,14 +658,88 @@ export default function ReviewPage() {
     }
   }
 
+  const patientName = consultation.patient
+    ? `${consultation.patient.first_name} ${consultation.patient.last_name}`
+    : 'this consultation';
+  const overallConfidence = Math.round((confidence?.overall ?? 0) * 100);
+  const criticalCount = qaFindings.filter(
+    (f) => f.severity === 'critical' && !resolvedFindings.has(f.code),
+  ).length;
+  const warningCount = qaFindings.filter(
+    (f) => f.severity === 'warning' && !resolvedFindings.has(f.code),
+  ).length;
+  const heroStats: HeroStripStat[] = [
+    {
+      label: 'Confidence',
+      value: `${overallConfidence}%`,
+      sub:
+        overallConfidence >= 85
+          ? 'High'
+          : overallConfidence >= 60
+            ? 'Mid'
+            : 'Review',
+      icon: Sparkles,
+      tone:
+        overallConfidence >= 85
+          ? 'success'
+          : overallConfidence >= 60
+            ? 'warning'
+            : 'error',
+    },
+    {
+      label: 'Critical flags',
+      value: criticalCount,
+      sub: criticalCount === 0 ? 'Clear' : 'Block approval',
+      icon: AlertTriangle,
+      tone: criticalCount > 0 ? 'error' : 'default',
+    },
+    {
+      label: 'Warnings',
+      value: warningCount,
+      sub: warningCount === 0 ? 'None' : 'To review',
+      icon: ShieldCheck,
+      tone: warningCount > 0 ? 'warning' : 'default',
+    },
+    {
+      label: 'Status',
+      value: isApproved ? 'Approved' : 'Draft',
+      sub: isApproved ? 'Closed' : 'Awaiting sign-off',
+      icon: FileCheck,
+      tone: isApproved ? 'success' : 'default',
+    },
+  ];
+
   return (
-    <div>
-      <BreadcrumbNav items={[
-        { label: 'Consultations', href: '/consultations' },
-        { label: consultation.patient ? `${consultation.patient.first_name} ${consultation.patient.last_name}` : 'Consultation', href: `/consultations/${id}` },
-        { label: 'Review' },
-      ]} />
-      <PageHeader title="Review Clinical Note" className="mt-4" />
+    <div className="space-y-5">
+      <BreadcrumbNav
+        items={[
+          { label: 'Consultations', href: '/consultations' },
+          {
+            label: consultation.patient
+              ? `${consultation.patient.first_name} ${consultation.patient.last_name}`
+              : 'Consultation',
+            href: `/consultations/${id}`,
+          },
+          { label: 'Review' },
+        ]}
+      />
+
+      <HeroStrip
+        eyebrow="Verify · Sign-off"
+        title={
+          <>
+            <HeroAccent>Nothing</HeroAccent> leaves the system without you.
+          </>
+        }
+        description={
+          consultation.patient
+            ? `Reviewing the AI-drafted note for ${patientName}. Resolve flags, edit any section, then approve when ready.`
+            : 'Reviewing the AI-drafted note. Resolve flags, edit any section, then approve when ready.'
+        }
+        stats={heroStats}
+      />
+
+      <WorkflowStepper active={isApproved ? 'approve' : 'verify'} />
 
       {isGenerating && (
         <motion.div

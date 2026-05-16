@@ -48,7 +48,12 @@ struct ConsultationSessionWorkspaceView: View {
         ScrollView {
             if let consultation = vm.consultation {
                 VStack(alignment: .leading, spacing: Theme.spacingLg) {
-                    sessionHeader(consultation: consultation)
+                    sessionHero(consultation: consultation)
+
+                    CSWorkflowStepper(
+                        active: workflowStep(for: consultation.status),
+                        completed: completedSteps(for: consultation.status)
+                    )
 
                     templateCard(for: consultation)
 
@@ -115,43 +120,81 @@ struct ConsultationSessionWorkspaceView: View {
         }
     }
 
-    private func sessionHeader(consultation: Consultation) -> some View {
-        CSCard {
-            VStack(alignment: .leading, spacing: Theme.spacingMd) {
-                HStack(alignment: .top, spacing: Theme.spacingMd) {
-                    CSAvatar(initials: consultation.patient?.initials ?? "?", size: 48)
-
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text(consultation.patient?.fullName ?? "Unknown Patient")
-                            .font(.title3.weight(.bold))
-                            .foregroundStyle(Theme.primary)
-                        Text(consultation.consultationType)
-                            .font(.subheadline.weight(.medium))
-                            .foregroundStyle(Theme.onSurface)
-                        Text(DateFormatters.formatISO(consultation.startedAt))
-                            .font(.caption)
-                            .foregroundStyle(Theme.onSurfaceVariant)
+    private func sessionHero(consultation: Consultation) -> some View {
+        let stats: [CSStat] = [
+            CSStat(label: "Patient", value: consultation.patient?.fullName ?? "Unknown",
+                   sub: consultation.consultationType,
+                   systemImage: "person.crop.circle"),
+            CSStat(label: "Status", value: consultation.status.label,
+                   sub: DateFormatters.formatISO(consultation.startedAt),
+                   systemImage: "clock",
+                   tone: tone(for: consultation.status)),
+            CSStat(label: "Recording", value: consultation.audioRecording == nil ? "Pending" : "Saved",
+                   sub: consultation.audioRecording == nil ? "Awaiting capture" : "On file",
+                   systemImage: "waveform",
+                   tone: consultation.audioRecording == nil ? .default : .success),
+            CSStat(label: "Transcript", value: consultation.transcript == nil ? "Pending" : "Ready",
+                   sub: consultation.transcript == nil ? "Awaiting" : "Verified copy",
+                   systemImage: "text.alignleft",
+                   tone: consultation.transcript == nil ? .default : .success),
+        ]
+        return VStack(alignment: .leading, spacing: Theme.spacingSm) {
+            CSHeroStrip(
+                eyebrow: "CAPTURE SESSION",
+                title: {
+                    HStack(alignment: .firstTextBaseline, spacing: 6) {
+                        Text("Stay present.")
+                        CSHeroAccent("We'll listen.")
                     }
+                },
+                description: "Miraa captures the consult, drafts the note, and surfaces flags. You stay focused on the patient.",
+                stats: stats
+            )
 
-                    Spacer()
-
-                    CSBadge(text: consultation.status.label, variant: consultation.status.badgeVariant)
-                }
-
-                HStack(spacing: Theme.spacingSm) {
-                    metricChip(label: "Recording", value: consultation.audioRecording == nil ? "Pending" : "Saved")
-                    metricChip(label: "Transcript", value: consultation.transcript == nil ? "Pending" : "Ready")
-                }
-
-                if isResolvingTemplate {
-                    ProgressView("Loading template...")
+            if isResolvingTemplate {
+                HStack(spacing: 6) {
+                    ProgressView().scaleEffect(0.7)
+                    Text("Loading template…")
                         .font(.caption)
-                } else if let templateErrorMessage {
-                    Text(templateErrorMessage)
-                        .font(.caption)
-                        .foregroundStyle(Theme.error)
+                        .foregroundStyle(Theme.onSurfaceVariant)
                 }
+                .padding(.horizontal, Theme.spacingSm)
+            } else if let templateErrorMessage {
+                Text(templateErrorMessage)
+                    .font(.caption)
+                    .foregroundStyle(Theme.error)
+                    .padding(.horizontal, Theme.spacingSm)
             }
+        }
+    }
+
+    private func tone(for status: ConsultationStatus) -> CSStat.Tone {
+        switch status {
+        case .recording: return .error
+        case .transcribing, .generating: return .warning
+        case .reviewPending: return .warning
+        case .approved, .closeoutPending, .closed, .exported: return .success
+        case .scheduled, .briefReady: return .default
+        }
+    }
+
+    private func workflowStep(for status: ConsultationStatus) -> CSWorkflowStep {
+        switch status {
+        case .scheduled, .briefReady: return .prepare
+        case .recording, .transcribing, .generating: return .capture
+        case .reviewPending: return .verify
+        case .approved: return .approve
+        case .closeoutPending, .closed, .exported: return .close
+        }
+    }
+
+    private func completedSteps(for status: ConsultationStatus) -> Set<CSWorkflowStep> {
+        switch status {
+        case .scheduled, .briefReady: return []
+        case .recording, .transcribing, .generating: return [.prepare]
+        case .reviewPending: return [.prepare, .capture]
+        case .approved: return [.prepare, .capture, .verify]
+        case .closeoutPending, .closed, .exported: return [.prepare, .capture, .verify, .approve]
         }
     }
 
@@ -181,21 +224,6 @@ struct ConsultationSessionWorkspaceView: View {
                 }
             }
         }
-    }
-
-    private func metricChip(label: String, value: String) -> some View {
-        VStack(alignment: .leading, spacing: 2) {
-            Text(label)
-                .font(.caption)
-                .foregroundStyle(Theme.onSurfaceVariant)
-            Text(value)
-                .font(.subheadline.weight(.semibold))
-                .foregroundStyle(Theme.onSurface)
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(Theme.spacingSm)
-        .background(Theme.surfaceContainerLow)
-        .clipShape(RoundedRectangle(cornerRadius: Theme.radiusSm))
     }
 
     private func templateCard(for consultation: Consultation) -> some View {

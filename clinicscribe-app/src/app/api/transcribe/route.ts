@@ -23,7 +23,7 @@ export async function POST(request: Request) {
   const { user, response } = await requireUser();
   if (response) return response;
 
-  if (!rateLimit(`transcribe:${user.id}`, 20, 60_000)) return tooMany();
+  if (!(await rateLimit(`transcribe:${user.id}`, 20, 60_000))) return tooMany();
 
   try {
     const formData = await request.formData();

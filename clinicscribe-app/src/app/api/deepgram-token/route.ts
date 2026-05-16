@@ -1,26 +1,34 @@
 import { NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import {
+  logError,
+  rateLimit,
+  requireUser,
+  tooMany,
+} from '@/lib/apiSecurity';
 
-let cachedProjectId: string | null = null;
-
+/**
+ * Resolves the Deepgram project id at request time. The previous version
+ * cached the result in a module-level singleton, which on Vercel's Fluid
+ * Compute would pin the FIRST tenant's project for the warm-instance
+ * lifetime. If we ever scope Deepgram projects per-clinic that would leak
+ * keys across tenants. Cheaper to fetch fresh than to break tenancy.
+ */
 async function resolveProjectId(apiKey: string): Promise<string | null> {
-  if (cachedProjectId) return cachedProjectId;
   const res = await fetch('https://api.deepgram.com/v1/projects', {
     headers: { Authorization: `Token ${apiKey}` },
   });
   if (!res.ok) return null;
   const projects = await res.json();
-  cachedProjectId = projects.projects?.[0]?.project_id ?? null;
-  return cachedProjectId;
+  return projects.projects?.[0]?.project_id ?? null;
 }
 
 export async function GET() {
-  // Require an authenticated session — even short-lived tokens are PHI-adjacent
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
+  const { user, response } = await requireUser();
+  if (response) return response;
+
+  // 30 ephemeral keys per minute is well above legitimate (one per session
+  // start) and well below what a stolen session cookie could exfiltrate.
+  if (!(await rateLimit(`deepgram-token:${user.id}`, 30, 60_000))) return tooMany();
 
   const apiKey = process.env.DEEPGRAM_API_KEY;
   if (!apiKey) {
@@ -56,7 +64,8 @@ export async function GET() {
     }
 
     return NextResponse.json({ key: tempKey.key });
-  } catch {
+  } catch (err) {
+    logError('deepgram-token', err);
     return NextResponse.json({ error: 'Transcription unavailable' }, { status: 503 });
   }
 }

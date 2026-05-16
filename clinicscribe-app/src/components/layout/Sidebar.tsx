@@ -25,6 +25,8 @@ import {
   LayoutTemplate,
   ListTodo,
   Plus,
+  Gift,
+  LifeBuoy,
 } from 'lucide-react';
 
 const icons: Record<string, React.ComponentType<{ className?: string }>> = {
@@ -41,6 +43,8 @@ const icons: Record<string, React.ComponentType<{ className?: string }>> = {
   Stethoscope,
   LayoutTemplate,
   ListTodo,
+  Gift,
+  LifeBuoy,
 };
 
 const BADGE_MAP: Record<string, keyof ReturnType<typeof useSidebarCounts>> = {
@@ -76,7 +80,7 @@ export function Sidebar() {
       >
         {/* Logo */}
         <div className="h-[var(--header-height)] flex items-center px-5 border-b border-outline-variant/30">
-          <Link href="/prepare" className="flex items-center gap-3">
+          <Link href="/dashboard" className="flex items-center gap-3" aria-label="Go to Miraa dashboard">
             <div className="w-9 h-9 rounded-xl bg-secondary flex items-center justify-center shrink-0">
               <Stethoscope className="w-5 h-5 text-on-secondary" />
             </div>

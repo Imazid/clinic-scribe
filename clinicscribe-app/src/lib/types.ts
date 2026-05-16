@@ -272,6 +272,11 @@ export interface QAFinding {
   severity: QAFindingSeverity;
   section?: keyof SOAPNote | 'medications' | 'follow_up' | 'overall';
   suggested_fix?: string;
+  /** Set true after the clinician resolves or dismisses the finding.
+   *  Persisted inside the qa_findings JSONB column so it survives reload. */
+  resolved?: boolean;
+  /** ISO timestamp captured at resolution time, for audit context. */
+  resolved_at?: string;
 }
 
 export interface TemplateSectionDefinition {

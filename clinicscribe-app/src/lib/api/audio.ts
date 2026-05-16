@@ -30,6 +30,9 @@ export async function getAudioUrl(path: string) {
   const supabase = createClient();
   const { data } = await supabase.storage
     .from('audio-recordings')
-    .createSignedUrl(path, 3600);
+    // 5-minute TTL — long enough for the review UI to fetch the recording,
+    // short enough that a stray browser-history entry or a shoulder-surfed
+    // link can't be replayed against PHI later.
+    .createSignedUrl(path, 5 * 60);
   return data?.signedUrl;
 }

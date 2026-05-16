@@ -1,13 +1,56 @@
 import SwiftUI
 
+/// `MainTabView` — pixel-faithful to the design package's `IOSTabBar`:
+/// floating pill tab bar that hovers above content with backdrop blur. Active
+/// tab grows into a labeled chip; inactive tabs are icon-only.
 struct MainTabView: View {
-    var body: some View {
-        TabView {
-            NavigationStack {
-                DashboardView()
-            }
-            .tabItem { Label("Prepare", systemImage: "calendar.badge.clock") }
+    @State private var selection: TabSlot = .prepare
 
+    enum TabSlot: String, CaseIterable, Identifiable {
+        case prepare, capture, verify, tasks, more
+
+        var id: String { rawValue }
+        var label: String {
+            switch self {
+            case .prepare: return "Prepare"
+            case .capture: return "Capture"
+            case .verify: return "Verify"
+            case .tasks: return "Tasks"
+            case .more: return "More"
+            }
+        }
+        var systemImage: String {
+            switch self {
+            case .prepare: return "calendar.badge.clock"
+            case .capture: return "mic.circle.fill"
+            case .verify: return "checkmark.shield"
+            case .tasks: return "tray.full"
+            case .more: return "ellipsis"
+            }
+        }
+    }
+
+    var body: some View {
+        ZStack(alignment: .bottom) {
+            content
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .safeAreaInset(edge: .bottom, spacing: 0) {
+                    Color.clear.frame(height: 56)
+                }
+
+            FloatingPillTabBar(selection: $selection)
+                .padding(.horizontal, 16)
+                .padding(.bottom, 6)
+        }
+        .background(Theme.surface)
+    }
+
+    @ViewBuilder
+    private var content: some View {
+        switch selection {
+        case .prepare:
+            NavigationStack { DashboardView() }
+        case .capture:
             NavigationStack {
                 ConsultationListView(
                     navigationTitle: "Capture",
@@ -16,8 +59,7 @@ struct MainTabView: View {
                     destinationMode: .sessionWorkspace
                 )
             }
-            .tabItem { Label("Capture", systemImage: "mic.circle") }
-
+        case .verify:
             NavigationStack {
                 ConsultationListView(
                     navigationTitle: "Verify",
@@ -26,19 +68,73 @@ struct MainTabView: View {
                     destinationMode: .verify
                 )
             }
-            .tabItem { Label("Verify", systemImage: "checklist") }
-
-            NavigationStack {
-                TasksWorkspaceView()
-            }
-            .tabItem { Label("Tasks", systemImage: "tray.full") }
-
-            NavigationStack {
-                MoreView()
-            }
-            .tabItem { Label("More", systemImage: "ellipsis") }
+        case .tasks:
+            NavigationStack { TasksWorkspaceView() }
+        case .more:
+            NavigationStack { MoreView() }
         }
-        .tint(Theme.secondary)
+    }
+}
+
+private struct FloatingPillTabBar: View {
+    @Binding var selection: MainTabView.TabSlot
+
+    var body: some View {
+        HStack(spacing: 4) {
+            ForEach(MainTabView.TabSlot.allCases) { slot in
+                let isActive = selection == slot
+                Button {
+                    withAnimation(.spring(response: 0.32, dampingFraction: 0.78)) {
+                        selection = slot
+                    }
+                } label: {
+                    HStack(spacing: 6) {
+                        Image(systemName: slot.systemImage)
+                            .font(.system(size: 15, weight: .semibold))
+                        if isActive {
+                            Text(slot.label)
+                                .font(.system(size: 13, weight: .semibold))
+                                .lineLimit(1)
+                        }
+                    }
+                    .padding(.vertical, 10)
+                    .padding(.horizontal, isActive ? 14 : 12)
+                    .frame(minHeight: 40)
+                    .frame(maxWidth: isActive ? .infinity : nil)
+                    .foregroundStyle(isActive ? Theme.onPrimary : Theme.onSurfaceVariant)
+                    .background(
+                        Group {
+                            if isActive {
+                                RoundedRectangle(cornerRadius: 20)
+                                    .fill(Theme.primary)
+                            } else {
+                                Color.clear
+                            }
+                        }
+                    )
+                    .clipShape(RoundedRectangle(cornerRadius: 20))
+                    .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel(slot.label)
+                .accessibilityAddTraits(isActive ? [.isSelected] : [])
+            }
+        }
+        .padding(6)
+        .background(
+            ZStack {
+                RoundedRectangle(cornerRadius: 26)
+                    .fill(.ultraThinMaterial)
+                RoundedRectangle(cornerRadius: 26)
+                    .fill(Theme.surfaceContainerLowest.opacity(0.65))
+            }
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 26)
+                .strokeBorder(Theme.outlineVariant.opacity(0.7), lineWidth: 1)
+        )
+        .shadow(color: Color.black.opacity(0.10), radius: 18, y: 8)
+        .shadow(color: Color.black.opacity(0.04), radius: 4, y: 1)
     }
 }
 

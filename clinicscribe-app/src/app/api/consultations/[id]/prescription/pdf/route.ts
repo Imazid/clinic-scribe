@@ -1,7 +1,6 @@
 import React from 'react';
 import { NextResponse } from 'next/server';
 import { renderToBuffer, type DocumentProps } from '@react-pdf/renderer';
-import { createClient } from '@/lib/supabase/server';
 import { PrescriptionDocument } from '@/lib/pdf/PrescriptionDocument';
 import type { Patient, Prescription } from '@/lib/types';
 import {
@@ -9,16 +8,28 @@ import {
   forbidden,
   getRequestIp,
   logError,
+  notFound,
+  rateLimit,
+  requireCallerClinic,
+  requireUser,
+  tooMany,
   writeAuditLog,
 } from '@/lib/apiSecurity';
 
+const MAX_FILENAME_SLUG_LENGTH = 60;
+
 function sanitize(input: string): string {
-  return input
-    .normalize('NFKD')
-    .replace(/[^\w\-]+/g, '-')
-    .replace(/-+/g, '-')
-    .replace(/^-|-$/g, '')
-    .toLowerCase() || 'prescription';
+  const slug =
+    input
+      .normalize('NFKD')
+      .replace(/[^\w\-]+/g, '-')
+      .replace(/-+/g, '-')
+      .replace(/^-|-$/g, '')
+      .toLowerCase() || 'prescription';
+  // Cap to keep `Content-Disposition` headers and filesystem paths sane.
+  return slug.length > MAX_FILENAME_SLUG_LENGTH
+    ? slug.slice(0, MAX_FILENAME_SLUG_LENGTH)
+    : slug;
 }
 
 export async function POST(
@@ -26,6 +37,11 @@ export async function POST(
   context: { params: Promise<{ id: string }> }
 ) {
   if (!checkOrigin(request)) return forbidden('Invalid origin');
+
+  const { user, supabase, response: authError } = await requireUser();
+  if (authError) return authError;
+  if (!(await rateLimit(`prescription-pdf:${user.id}`, 30, 60_000))) return tooMany();
+
   try {
     const { id: consultationId } = await context.params;
     const body = (await request.json().catch(() => ({}))) as {
@@ -38,7 +54,25 @@ export async function POST(
       );
     }
 
-    const supabase = await createClient();
+    // Caller's profile + clinic — required to scope every read below.
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('id, clinic_id, first_name, last_name, clinic:clinics(name)')
+      .eq('user_id', user.id)
+      .maybeSingle();
+
+    if (!profile) return forbidden();
+
+    const profileId: string = profile.id;
+    const clinicId: string = profile.clinic_id;
+    const clinicianName = `Dr. ${profile.first_name} ${profile.last_name}`;
+    let clinicName = 'Miraa';
+    const clinic = profile.clinic as { name?: string } | { name?: string }[] | null;
+    if (Array.isArray(clinic)) {
+      clinicName = clinic[0]?.name ?? clinicName;
+    } else if (clinic && typeof clinic === 'object' && 'name' in clinic && clinic.name) {
+      clinicName = clinic.name;
+    }
 
     const { data: prescription, error: rxError } = await supabase
       .from('prescriptions')
@@ -47,50 +81,28 @@ export async function POST(
       .maybeSingle();
 
     if (rxError) {
-      return NextResponse.json({ error: rxError.message }, { status: 500 });
+      logError('prescription-pdf-load', rxError);
+      return NextResponse.json({ error: 'Failed to load prescription' }, { status: 500 });
     }
-    if (!prescription) {
-      return NextResponse.json({ error: 'Prescription not found' }, { status: 404 });
-    }
+    if (!prescription) return notFound('Prescription not found');
 
     const typedPrescription = prescription as unknown as Prescription & {
       patient: Patient | null;
     };
+
+    // Cross-clinic enforcement: prescription must belong to this clinic AND
+    // (if present) must reference the consultation in the URL.
+    if (typedPrescription.clinic_id !== clinicId) {
+      return notFound('Prescription not found');
+    }
+    if (typedPrescription.consultation_id && typedPrescription.consultation_id !== consultationId) {
+      return notFound('Prescription not found');
+    }
     if (!typedPrescription.patient) {
       return NextResponse.json({ error: 'Patient context missing' }, { status: 400 });
     }
-    if (typedPrescription.consultation_id && typedPrescription.consultation_id !== consultationId) {
-      return NextResponse.json(
-        { error: 'Prescription does not belong to this consultation' },
-        { status: 400 }
-      );
-    }
-
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    let clinicianName = 'Clinician';
-    let clinicName = 'Miraa';
-    let profileId: string | null = null;
-    let clinicId: string | null = null;
-    if (user?.id) {
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('id, clinic_id, first_name, last_name, clinic:clinics(name)')
-        .eq('user_id', user.id)
-        .maybeSingle();
-      if (profile) {
-        profileId = profile.id;
-        clinicId = profile.clinic_id;
-        clinicianName = `Dr. ${profile.first_name} ${profile.last_name}`;
-        const clinic = profile.clinic as { name?: string } | { name?: string }[] | null;
-        if (Array.isArray(clinic)) {
-          clinicName = clinic[0]?.name ?? clinicName;
-        } else if (clinic && typeof clinic === 'object' && 'name' in clinic && clinic.name) {
-          clinicName = clinic.name;
-        }
-      }
+    if (typedPrescription.patient.clinic_id !== clinicId) {
+      return notFound('Prescription not found');
     }
 
     const issuedDate = new Date().toLocaleDateString('en-AU', {
@@ -109,7 +121,7 @@ export async function POST(
     const buffer = await renderToBuffer(documentElement);
 
     // Best-effort export_records insert (legacy/UI surface).
-    if (typedPrescription.clinical_note_id && profileId) {
+    if (typedPrescription.clinical_note_id) {
       const { error: insertError } = await supabase
         .from('export_records')
         .insert({
@@ -123,21 +135,19 @@ export async function POST(
     }
 
     // Non-repudiation audit trail for PHI export.
-    if (clinicId && user?.id) {
-      await writeAuditLog(supabase, {
-        clinicId,
-        userId: user.id,
-        action: 'prescription.export',
-        entityType: 'prescription',
-        entityId: typedPrescription.id,
-        details: {
-          format: 'pdf',
-          consultation_id: consultationId,
-          patient_id: typedPrescription.patient.id,
-        },
-        ipAddress: getRequestIp(request),
-      });
-    }
+    await writeAuditLog(supabase, {
+      clinicId,
+      userId: user.id,
+      action: 'prescription.export',
+      entityType: 'prescription',
+      entityId: typedPrescription.id,
+      details: {
+        format: 'pdf',
+        consultation_id: consultationId,
+        patient_id: typedPrescription.patient.id,
+      },
+      ipAddress: getRequestIp(request),
+    });
 
     // Flip to 'printed' on first successful render, but don't clobber dispensed/void.
     if (typedPrescription.status === 'approved') {

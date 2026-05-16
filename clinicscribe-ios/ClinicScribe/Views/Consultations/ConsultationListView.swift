@@ -33,18 +33,45 @@ struct ConsultationListView: View {
         _vm = StateObject(wrappedValue: ConsultationListViewModel(statusFilter: defaultStatusFilter))
     }
 
+    private var heroStrip: some View {
+        let total = vm.consultations.count
+        let recording = vm.consultations.filter { $0.status == .recording }.count
+        let processing = vm.consultations.filter { [.transcribing, .generating].contains($0.status) }.count
+        let pending = vm.consultations.filter { $0.status == .reviewPending }.count
+        let stats: [CSStat] = [
+            CSStat(label: "Total", value: "\(total)", sub: "Sessions",
+                   systemImage: "list.bullet.rectangle.portrait"),
+            CSStat(label: "Recording", value: "\(recording)",
+                   sub: recording == 0 ? "Idle" : "Live",
+                   systemImage: "record.circle",
+                   tone: recording > 0 ? .error : .default),
+            CSStat(label: "Processing", value: "\(processing)",
+                   sub: processing == 0 ? "—" : "In flight",
+                   systemImage: "arrow.triangle.2.circlepath",
+                   tone: processing > 0 ? .warning : .default),
+            CSStat(label: "Awaiting review", value: "\(pending)",
+                   sub: pending == 0 ? "Clear" : "To approve",
+                   systemImage: "checkmark.shield",
+                   tone: pending > 0 ? .warning : .default),
+        ]
+        return CSHeroStrip(
+            eyebrow: navigationTitle.uppercased(),
+            title: {
+                HStack(alignment: .firstTextBaseline, spacing: 6) {
+                    Text("Pick up a session, or")
+                    CSHeroAccent("start fresh")
+                    Text(".")
+                }
+            },
+            description: helperText,
+            stats: stats
+        )
+    }
+
     var body: some View {
         VStack(spacing: 0) {
             VStack(spacing: Theme.spacingSm) {
-                VStack(alignment: .leading, spacing: Theme.spacingXS) {
-                    Text(navigationTitle)
-                        .font(.title3.weight(.bold))
-                        .foregroundStyle(Theme.primary)
-                    Text(helperText)
-                        .font(.caption)
-                        .foregroundStyle(Theme.onSurfaceVariant)
-                }
-                .frame(maxWidth: .infinity, alignment: .leading)
+                heroStrip
 
                 CSSearchBar(text: $vm.searchText, placeholder: "Search by patient...")
 

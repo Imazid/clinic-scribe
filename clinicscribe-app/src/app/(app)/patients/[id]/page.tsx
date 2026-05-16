@@ -2,55 +2,68 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { PageHeader } from '@/components/layout/PageHeader';
+import {
+  AlertTriangle,
+  CalendarCheck,
+  ClipboardCheck,
+  Clock,
+  Edit,
+  FileOutput,
+  ListChecks,
+  Mic,
+  ShieldCheck,
+} from 'lucide-react';
 import { BreadcrumbNav } from '@/components/layout/BreadcrumbNav';
+import { HeroStrip, HeroAccent, type HeroStripStat } from '@/components/ui/HeroStrip';
 import { Card, CardTitle } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { Skeleton } from '@/components/ui/Skeleton';
+import { Avatar } from '@/components/ui/Avatar';
 import { PatientTimeline } from '@/components/patients/PatientTimeline';
 import { PatientStorySummary } from '@/components/patients/PatientStorySummary';
 import { PatientStoryFeed } from '@/components/patients/PatientStoryFeed';
-import { Avatar } from '@/components/ui/Avatar';
+import { PatientSections } from '@/components/patient/PatientSections';
 import { getPatient, getPatientConsultations } from '@/lib/api/patients';
-import { getPatientTimeline, getCareTasks, getGeneratedDocuments } from '@/lib/api/workflow';
-import { useAuthStore } from '@/lib/stores/auth-store';
-import { formatDate } from '@/lib/utils';
-import { GENERATED_DOCUMENT_KIND_LABELS, GENERATED_DOCUMENT_STATUS_LABELS, CARE_TASK_STATUS_LABELS } from '@/lib/constants';
-import { cn } from '@/lib/utils';
-import type { Patient, Consultation, ConsentStatus, TimelineEvent, CareTask, GeneratedDocument } from '@/lib/types';
 import {
-  Edit,
-  Mic,
-  Phone,
-  Mail,
-  Calendar,
-  Shield,
-  LayoutDashboard,
-  Clock,
-  FileOutput,
-  ClipboardCheck,
-  FileText,
-  CalendarClock,
-  AlertTriangle,
-  MapPin,
-  Ruler,
-  Stethoscope,
-  CalendarCheck,
-} from 'lucide-react';
+  getPatientTimeline,
+  getCareTasks,
+  getGeneratedDocuments,
+} from '@/lib/api/workflow';
+import { useAuthStore } from '@/lib/stores/auth-store';
+import type {
+  Patient,
+  Consultation,
+  ConsentStatus,
+  TimelineEvent,
+  CareTask,
+  GeneratedDocument,
+} from '@/lib/types';
+import { cn } from '@/lib/utils';
 
 const consentVariant: Record<ConsentStatus, 'success' | 'error' | 'warning'> = {
-  granted: 'success', revoked: 'error', pending: 'warning',
+  granted: 'success',
+  revoked: 'error',
+  pending: 'warning',
 };
 
-type Tab = 'overview' | 'timeline' | 'documents' | 'tasks';
+type Tab = 'timeline' | 'sections';
 
-const TABS: { id: Tab; label: string; icon: React.ComponentType<{ className?: string }> }[] = [
-  { id: 'overview', label: 'Overview', icon: LayoutDashboard },
+const TABS: Array<{ id: Tab; label: string; icon: typeof Clock }> = [
   { id: 'timeline', label: 'Timeline', icon: Clock },
-  { id: 'documents', label: 'Documents', icon: FileOutput },
-  { id: 'tasks', label: 'Tasks', icon: ClipboardCheck },
+  { id: 'sections', label: 'Sections', icon: ListChecks },
 ];
+
+function ageFromDob(dob: string | null | undefined): number | null {
+  if (!dob) return null;
+  const d = new Date(dob);
+  if (Number.isNaN(d.getTime())) return null;
+  const now = new Date();
+  let age = now.getFullYear() - d.getFullYear();
+  const m = now.getMonth() - d.getMonth();
+  if (m < 0 || (m === 0 && now.getDate() < d.getDate())) age -= 1;
+  return age >= 0 && age < 150 ? age : null;
+}
 
 export default function PatientDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -62,11 +75,14 @@ export default function PatientDetailPage() {
   const [patientTasks, setPatientTasks] = useState<CareTask[]>([]);
   const [patientDocuments, setPatientDocuments] = useState<GeneratedDocument[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<Tab>('overview');
+  const [activeTab, setActiveTab] = useState<Tab>('timeline');
 
   const load = useCallback(async () => {
     try {
-      const [p, c] = await Promise.all([getPatient(id), getPatientConsultations(id)]);
+      const [p, c] = await Promise.all([
+        getPatient(id),
+        getPatientConsultations(id),
+      ]);
       setPatient(p);
       setConsultations(c as Consultation[]);
       const timeline = await getPatientTimeline(id);
@@ -80,8 +96,11 @@ export default function PatientDetailPage() {
         setPatientTasks(allTasks.filter((t) => t.patient_id === id));
         setPatientDocuments(allDocs.filter((d) => d.patient_id === id));
       }
-    } catch (err) { console.error(err); }
-    finally { setLoading(false); }
+    } catch (err) {
+      console.error('[patient-load]', err);
+    } finally {
+      setLoading(false);
+    }
   }, [id, clinicId]);
 
   useEffect(() => {
@@ -90,273 +109,202 @@ export default function PatientDetailPage() {
 
   const openTaskCount = useMemo(
     () => patientTasks.filter((t) => ['open', 'in_progress'].includes(t.status)).length,
-    [patientTasks]
+    [patientTasks],
+  );
+
+  const overdueTaskCount = useMemo(
+    () =>
+      patientTasks.filter(
+        (t) =>
+          t.due_at != null &&
+          new Date(t.due_at).getTime() < Date.now() &&
+          t.status !== 'completed',
+      ).length,
+    [patientTasks],
   );
 
   if (loading) {
     return (
-      <div className="space-y-4">
-        <Skeleton variant="rectangular" className="h-8 w-48" />
-        <Skeleton variant="rectangular" className="h-64 w-full" />
+      <div className="space-y-6">
+        <Skeleton variant="rectangular" className="h-10 w-64" />
+        <Skeleton variant="rectangular" className="h-48 w-full rounded-3xl" />
+        <Skeleton variant="rectangular" className="h-96 w-full rounded-2xl" />
       </div>
     );
   }
 
-  if (!patient) return <div className="text-center py-16 text-on-surface-variant">Patient not found.</div>;
+  if (!patient) {
+    return (
+      <div className="py-16 text-center text-on-surface-variant">
+        Patient not found.
+      </div>
+    );
+  }
+
+  const fullName = `${patient.first_name} ${patient.last_name}`.trim();
+  const age = ageFromDob(patient.date_of_birth);
+  const sexLabel = patient.sex.charAt(0).toUpperCase() + patient.sex.slice(1);
+  const subline = [
+    age != null ? `${age}` : null,
+    sexLabel,
+    patient.mrn ? `MRN-${patient.mrn}` : null,
+  ]
+    .filter(Boolean)
+    .join(' · ');
+
+  const stats: HeroStripStat[] = [
+    {
+      label: 'Visits',
+      value: consultations.length,
+      sub:
+        patient.last_appointment_at
+          ? `Last ${new Date(patient.last_appointment_at).toLocaleDateString('en-AU', { day: 'numeric', month: 'short' })}`
+          : 'No visits yet',
+      icon: CalendarCheck,
+      tone: 'default',
+    },
+    {
+      label: 'Allergies',
+      value: patient.allergies.length,
+      sub: patient.allergies.length === 0 ? 'NKDA' : 'Surfaced in briefs',
+      icon: AlertTriangle,
+      tone: patient.allergies.length > 0 ? 'error' : 'default',
+    },
+    {
+      label: 'Open follow-ups',
+      value: openTaskCount,
+      sub: overdueTaskCount > 0 ? `${overdueTaskCount} overdue` : 'On track',
+      icon: ClipboardCheck,
+      tone: overdueTaskCount > 0 ? 'error' : 'default',
+    },
+    {
+      label: 'Documents',
+      value: patientDocuments.length,
+      sub: 'On file',
+      icon: FileOutput,
+      tone: 'default',
+    },
+  ];
 
   return (
-    <div>
-      <BreadcrumbNav items={[{ label: 'Patients', href: '/patients' }, { label: `${patient.first_name} ${patient.last_name}` }]} />
-      <PageHeader
-        title={`${patient.first_name} ${patient.last_name}`}
-        className="mt-4"
+    <div className="space-y-6">
+      <BreadcrumbNav
+        items={[
+          { label: 'Patients', href: '/patients' },
+          { label: fullName },
+        ]}
+      />
+
+      <HeroStrip
+        eyebrow="Patient profile"
+        title={
+          <span className="inline-flex items-center gap-3">
+            <Avatar firstName={patient.first_name} lastName={patient.last_name} size="lg" />
+            <span>
+              {patient.first_name}{' '}
+              <HeroAccent>{patient.last_name}</HeroAccent>
+            </span>
+          </span>
+        }
+        description={
+          <span className="flex flex-wrap items-center gap-2">
+            <span>{subline || 'Patient'}</span>
+            <Badge variant={consentVariant[patient.consent_status]} className="text-[11px]">
+              <ShieldCheck className="mr-1 h-3 w-3" /> {patient.consent_status}
+            </Badge>
+          </span>
+        }
+        stats={stats}
         actions={
-          <div className="flex items-center gap-2">
-            <Button onClick={() => router.push(`/consultations/new?patient_id=${id}`)}>
-              <Mic className="w-4 h-4" /> Start consultation
+          <>
+            <Button
+              variant="outline"
+              size="md"
+              onClick={() => router.push(`/patients/${id}/edit`)}
+            >
+              <Edit className="h-4 w-4" /> Edit
             </Button>
-            <Button variant="outline" onClick={() => router.push(`/patients/${id}/edit`)}>
-              <Edit className="w-4 h-4" /> Edit
+            <Button
+              size="md"
+              onClick={() => router.push(`/consultations/new?patient_id=${id}`)}
+            >
+              <Mic className="h-4 w-4" /> Start consultation
             </Button>
-          </div>
+          </>
         }
       />
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Left sidebar — patient info */}
-        <div className="space-y-6">
-          <Card>
-            <div className="flex items-center gap-4 mb-4">
-              <Avatar firstName={patient.first_name} lastName={patient.last_name} size="lg" />
-              <div>
-                <p className="font-semibold text-on-surface">{patient.first_name} {patient.last_name}</p>
-                <Badge variant={consentVariant[patient.consent_status]}>{patient.consent_status}</Badge>
-              </div>
-            </div>
-            <div className="space-y-3 text-sm">
-              <div className="flex items-center gap-2 text-on-surface-variant">
-                <Calendar className="w-4 h-4" /> DOB: {formatDate(patient.date_of_birth)}
-              </div>
-              {patient.phone && <div className="flex items-center gap-2 text-on-surface-variant"><Phone className="w-4 h-4" /> {patient.phone}</div>}
-              {patient.email && <div className="flex items-center gap-2 text-on-surface-variant"><Mail className="w-4 h-4" /> {patient.email}</div>}
-              {patient.mrn && <div className="flex items-center gap-2 text-on-surface-variant"><Shield className="w-4 h-4" /> MRN: {patient.mrn}</div>}
-            </div>
-          </Card>
-
-          {(patient.provider_name ||
-            patient.location ||
-            patient.height_cm != null ||
-            patient.last_appointment_at) && (
-            <Card>
-              <p className="label-text text-on-surface-variant mb-3">Care Context</p>
-              <div className="space-y-2 text-sm">
-                {patient.provider_name && (
-                  <div className="flex items-center gap-2 text-on-surface-variant">
-                    <Stethoscope className="w-4 h-4" /> {patient.provider_name}
-                  </div>
-                )}
-                {patient.location && (
-                  <div className="flex items-center gap-2 text-on-surface-variant">
-                    <MapPin className="w-4 h-4" /> {patient.location}
-                  </div>
-                )}
-                {patient.height_cm != null && (
-                  <div className="flex items-center gap-2 text-on-surface-variant">
-                    <Ruler className="w-4 h-4" /> {patient.height_cm} cm
-                  </div>
-                )}
-                {patient.last_appointment_at && (
-                  <div className="flex items-center gap-2 text-on-surface-variant">
-                    <CalendarCheck className="w-4 h-4" /> Last visit: {formatDate(patient.last_appointment_at)}
-                  </div>
-                )}
-              </div>
-            </Card>
-          )}
-
-          {(patient.allergies.length > 0 || patient.conditions.length > 0) && (
-            <Card>
-              {patient.allergies.length > 0 && (
-                <div className="mb-4">
-                  <p className="label-text text-on-surface-variant mb-2">Allergies</p>
-                  <div className="flex flex-wrap gap-1.5">
-                    {patient.allergies.map((a, i) => (
-                      <span key={i} className="px-2 py-1 rounded-lg bg-error/10 text-error text-xs font-medium">{a}</span>
-                    ))}
-                  </div>
-                </div>
+      {/* Tabs */}
+      <div className="flex gap-1.5">
+        {TABS.map((tab) => {
+          const Icon = tab.icon;
+          const count =
+            tab.id === 'timeline'
+              ? consultations.length + timelineEvents.length
+              : tab.id === 'sections'
+                ? openTaskCount + patientDocuments.length
+                : undefined;
+          const isActive = activeTab === tab.id;
+          return (
+            <button
+              key={tab.id}
+              type="button"
+              onClick={() => setActiveTab(tab.id)}
+              className={cn(
+                'inline-flex h-10 items-center gap-2 rounded-full border px-4 text-sm font-semibold transition-colors',
+                isActive
+                  ? 'border-transparent bg-primary text-on-primary'
+                  : 'border-outline-variant bg-surface-container-low text-on-surface-variant hover:border-secondary/30 hover:text-secondary',
               )}
-              {patient.conditions.length > 0 && (
-                <div>
-                  <p className="label-text text-on-surface-variant mb-2">Conditions</p>
-                  <div className="flex flex-wrap gap-1.5">
-                    {patient.conditions.map((c, i) => (
-                      <span key={i} className="px-2 py-1 rounded-lg bg-secondary/10 text-secondary text-xs font-medium">{c}</span>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </Card>
-          )}
-        </div>
-
-        {/* Right content — tabbed area */}
-        <div className="lg:col-span-2 space-y-6">
-          {/* Tab bar */}
-          <div className="flex gap-1 border-b border-outline-variant/20 pb-px">
-            {TABS.map((tab) => {
-              const Icon = tab.icon;
-              const count =
-                tab.id === 'tasks' ? openTaskCount :
-                tab.id === 'documents' ? patientDocuments.length :
-                tab.id === 'timeline' ? consultations.length + timelineEvents.length :
-                undefined;
-              return (
-                <button
-                  key={tab.id}
-                  type="button"
-                  onClick={() => setActiveTab(tab.id)}
+            >
+              <Icon className="h-4 w-4" />
+              {tab.label}
+              {count !== undefined && count > 0 && (
+                <span
                   className={cn(
-                    'flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium rounded-t-lg transition-colors -mb-px',
-                    activeTab === tab.id
-                      ? 'bg-surface-container-lowest text-secondary border-b-2 border-secondary'
-                      : 'text-on-surface-variant hover:text-on-surface hover:bg-surface-container-low'
+                    'inline-flex items-center justify-center rounded-full px-1.5 py-0.5 text-[10px] font-bold',
+                    isActive
+                      ? 'bg-on-primary/15 text-on-primary'
+                      : 'bg-surface-container-high text-on-surface-variant',
                   )}
                 >
-                  <Icon className="w-4 h-4" />
-                  {tab.label}
-                  {count !== undefined && count > 0 && (
-                    <span className="text-[10px] font-bold bg-secondary/10 text-secondary px-1.5 py-0.5 rounded-full">
-                      {count}
-                    </span>
-                  )}
-                </button>
-              );
-            })}
-          </div>
-
-          {/* Tab content */}
-          {activeTab === 'overview' && (
-            <div className="space-y-6">
-              <Card>
-                <PatientStorySummary patient={patient} consultations={consultations} events={timelineEvents} />
-              </Card>
-              <Card>
-                <PatientStoryFeed events={timelineEvents} />
-              </Card>
-            </div>
-          )}
-
-          {activeTab === 'timeline' && (
-            <Card>
-              <CardTitle className="mb-4">Patient Timeline</CardTitle>
-              <PatientTimeline consultations={consultations} timelineEvents={timelineEvents} />
-            </Card>
-          )}
-
-          {activeTab === 'documents' && (
-            <Card>
-              <CardTitle className="mb-4">Generated Documents</CardTitle>
-              {patientDocuments.length === 0 ? (
-                <div className="text-center py-8 text-sm text-on-surface-variant">
-                  No generated documents for this patient yet.
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {patientDocuments.map((doc) => (
-                    <div key={doc.id} className="rounded-xl bg-surface-container-low px-4 py-3">
-                      <div className="flex items-start justify-between gap-3 mb-2">
-                        <div>
-                          <div className="flex items-center gap-2 mb-1">
-                            <FileText className="w-4 h-4 text-secondary" />
-                            <p className="text-sm font-semibold text-on-surface">{doc.title}</p>
-                          </div>
-                          <p className="text-xs text-on-surface-variant">
-                            {GENERATED_DOCUMENT_KIND_LABELS[doc.kind] || doc.kind.replace('_', ' ')}
-                            {' · '}
-                            {formatDate(doc.created_at)}
-                          </p>
-                        </div>
-                        <Badge
-                          variant={
-                            doc.status === 'sent' ? 'success' :
-                            doc.status === 'ready' ? 'info' : 'warning'
-                          }
-                        >
-                          {GENERATED_DOCUMENT_STATUS_LABELS[doc.status]}
-                        </Badge>
-                      </div>
-                      <p className="text-sm text-on-surface-variant line-clamp-3 whitespace-pre-wrap">
-                        {doc.content}
-                      </p>
-                    </div>
-                  ))}
-                </div>
+                  {count}
+                </span>
               )}
-            </Card>
-          )}
-
-          {activeTab === 'tasks' && (
-            <Card>
-              <CardTitle className="mb-4">Care Tasks</CardTitle>
-              {patientTasks.length === 0 ? (
-                <div className="text-center py-8 text-sm text-on-surface-variant">
-                  No care tasks for this patient yet.
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {patientTasks.map((task) => {
-                    const isOverdue = task.due_at && new Date(task.due_at) < new Date();
-                    const isDone = task.status === 'completed';
-                    return (
-                      <div
-                        key={task.id}
-                        className={cn(
-                          'rounded-xl px-4 py-3',
-                          isDone ? 'bg-surface-container-low opacity-70' :
-                          isOverdue ? 'bg-error/5 ring-1 ring-error/20' :
-                          'bg-surface-container-low'
-                        )}
-                      >
-                        <div className="flex items-start justify-between gap-3 mb-1">
-                          <p className={cn(
-                            'text-sm font-semibold',
-                            isDone ? 'text-on-surface-variant line-through' : 'text-on-surface'
-                          )}>
-                            {task.title}
-                          </p>
-                          <Badge
-                            variant={
-                              task.status === 'completed' ? 'success' :
-                              task.status === 'in_progress' ? 'info' : 'default'
-                            }
-                          >
-                            {CARE_TASK_STATUS_LABELS[task.status]}
-                          </Badge>
-                        </div>
-                        {task.description && (
-                          <p className="text-sm text-on-surface-variant line-clamp-2 mb-2">{task.description}</p>
-                        )}
-                        {task.due_at && (
-                          <p className={cn(
-                            'text-xs flex items-center gap-1',
-                            isOverdue && !isDone ? 'text-error font-medium' : 'text-on-surface-variant'
-                          )}>
-                            {isOverdue && !isDone && <AlertTriangle className="w-3 h-3" />}
-                            <CalendarClock className="w-3.5 h-3.5" />
-                            {isOverdue && !isDone ? 'Overdue · ' : ''}
-                            Due {new Date(task.due_at).toLocaleDateString('en-AU')}
-                          </p>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-            </Card>
-          )}
-        </div>
+            </button>
+          );
+        })}
       </div>
+
+      {/* Tab content */}
+      {activeTab === 'timeline' ? (
+        <div className="space-y-6">
+          <Card>
+            <PatientStorySummary
+              patient={patient}
+              consultations={consultations}
+              events={timelineEvents}
+            />
+          </Card>
+          <Card>
+            <CardTitle className="mb-4">Visit history</CardTitle>
+            <PatientTimeline
+              consultations={consultations}
+              timelineEvents={timelineEvents}
+            />
+          </Card>
+          <Card>
+            <CardTitle className="mb-4">Story feed</CardTitle>
+            <PatientStoryFeed events={timelineEvents} />
+          </Card>
+        </div>
+      ) : (
+        <PatientSections
+          patient={patient}
+          tasks={patientTasks}
+          documents={patientDocuments}
+        />
+      )}
     </div>
   );
 }

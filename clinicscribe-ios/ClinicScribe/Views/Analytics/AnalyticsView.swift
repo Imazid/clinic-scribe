@@ -25,8 +25,8 @@ struct AnalyticsView: View {
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
                 ScrollView {
-                    VStack(spacing: Theme.spacingMd) {
-                        summaryCards
+                    VStack(spacing: Theme.spacingLg) {
+                        heroStrip
                         consultationsByTypeChart
                     }
                     .padding()
@@ -47,30 +47,48 @@ struct AnalyticsView: View {
         }
     }
 
-    private var summaryCards: some View {
-        VStack(spacing: Theme.spacingSm + Theme.spacingXS) {
-            HStack(spacing: Theme.spacingSm + Theme.spacingXS) {
-                StatCard(
-                    label: "Total Consultations",
-                    value: "\(vm.totalConsultations)",
-                    icon: "stethoscope",
-                    iconColor: Theme.secondary
-                )
-                StatCard(
-                    label: "Approved Notes",
-                    value: "\(vm.approvedNotes)",
-                    icon: "checkmark.seal",
-                    iconColor: Theme.success
-                )
-            }
+    private var heroStrip: some View {
+        let stats: [CSStat] = [
+            CSStat(
+                label: "Total consults",
+                value: "\(vm.totalConsultations)",
+                sub: "All-time",
+                systemImage: "stethoscope"
+            ),
+            CSStat(
+                label: "Approved notes",
+                value: "\(vm.approvedNotes)",
+                sub: "Signed off",
+                systemImage: "checkmark.seal",
+                tone: .success
+            ),
+            CSStat(
+                label: "Approval rate",
+                value: String(format: "%.0f%%", vm.approvalRate),
+                sub: vm.approvalRate >= 80 ? "Healthy" : "Track",
+                systemImage: "chart.line.uptrend.xyaxis",
+                tone: vm.approvalRate >= 80 ? .success : .default
+            ),
+            CSStat(
+                label: "Status",
+                value: vm.totalConsultations > 0 ? "Live" : "Idle",
+                sub: "Signal",
+                systemImage: "waveform"
+            ),
+        ]
 
-            StatCard(
-                label: "Approval Rate",
-                value: String(format: "%.1f%%", vm.approvalRate),
-                icon: "chart.line.uptrend.xyaxis",
-                iconColor: Theme.primary
-            )
-        }
+        return CSHeroStrip(
+            eyebrow: "ANALYTICS",
+            title: {
+                HStack(alignment: .firstTextBaseline, spacing: 6) {
+                    Text("Documentation")
+                    CSHeroAccent("at a glance")
+                    Text(".")
+                }
+            },
+            description: "Track approval rate, AI confidence, and documentation efficiency. Built to support clinical documentation, not replace clinician judgement.",
+            stats: stats
+        )
     }
 
     @ViewBuilder

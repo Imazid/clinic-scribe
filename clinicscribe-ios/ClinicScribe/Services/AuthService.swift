@@ -1,6 +1,23 @@
 import Foundation
 import Supabase
 import AuthenticationServices
+import CryptoKit
+
+enum AppleSignInError: LocalizedError {
+    case invalidCredential
+    case missingIdentityToken
+    case tokenEncoding
+    case cancelled
+
+    var errorDescription: String? {
+        switch self {
+        case .invalidCredential: return "Apple did not return a valid credential."
+        case .missingIdentityToken: return "Apple sign-in didn't return an identity token."
+        case .tokenEncoding: return "Apple's identity token couldn't be decoded."
+        case .cancelled: return "Apple sign-in was cancelled."
+        }
+    }
+}
 
 @MainActor
 final class AuthService: ObservableObject {
@@ -92,5 +109,74 @@ final class AuthService: ObservableObject {
 
     func getAccessToken() async -> String? {
         try? await supabase.auth.session.accessToken
+    }
+
+    // MARK: - Apple Sign-In
+
+    /// Stored nonce used to verify the Apple ID token. Set when an Apple flow
+    /// starts via `prepareAppleSignInRequest` and consumed by
+    /// `completeAppleSignIn`.
+    private var pendingAppleNonce: String?
+
+    /// Configures the supplied request and returns the raw nonce alongside it
+    /// (the SHA-256 hash is what gets sent to Apple). Hold the request and
+    /// pass it to ASAuthorizationController; once the credential comes back,
+    /// call `completeAppleSignIn(authorization:)`.
+    func prepareAppleSignInRequest(_ request: ASAuthorizationAppleIDRequest) {
+        let nonce = randomNonce()
+        pendingAppleNonce = nonce
+        request.requestedScopes = [.fullName, .email]
+        request.nonce = sha256(nonce)
+    }
+
+    /// Completes the Apple flow by exchanging the identity token for a
+    /// Supabase session.
+    func completeAppleSignIn(authorization: ASAuthorization) async throws {
+        guard let credential = authorization.credential as? ASAuthorizationAppleIDCredential else {
+            throw AppleSignInError.invalidCredential
+        }
+        guard let identityTokenData = credential.identityToken else {
+            throw AppleSignInError.missingIdentityToken
+        }
+        guard let identityToken = String(data: identityTokenData, encoding: .utf8) else {
+            throw AppleSignInError.tokenEncoding
+        }
+        guard let nonce = pendingAppleNonce else {
+            throw AppleSignInError.invalidCredential
+        }
+        pendingAppleNonce = nil
+
+        let session = try await supabase.auth.signInWithIdToken(
+            credentials: .init(provider: .apple, idToken: identityToken, nonce: nonce)
+        )
+
+        currentUserId = session.user.id
+        isAuthenticated = true
+        isProfileLoaded = false
+        await loadProfile()
+    }
+
+    private func randomNonce(length: Int = 32) -> String {
+        precondition(length > 0)
+        let charset: [Character] =
+            Array("0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz-._")
+        var result = ""
+        var remaining = length
+        while remaining > 0 {
+            var random: UInt8 = 0
+            let status = SecRandomCopyBytes(kSecRandomDefault, 1, &random)
+            if status != errSecSuccess { continue }
+            if random < charset.count {
+                result.append(charset[Int(random)])
+                remaining -= 1
+            }
+        }
+        return result
+    }
+
+    private func sha256(_ input: String) -> String {
+        let inputData = Data(input.utf8)
+        let hashed = SHA256.hash(data: inputData)
+        return hashed.map { String(format: "%02x", $0) }.joined()
     }
 }

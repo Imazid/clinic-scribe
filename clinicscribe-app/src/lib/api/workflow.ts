@@ -17,6 +17,21 @@ import { normalizeVisitBrief } from '@/lib/visit-brief';
 const supabase = () => createClient();
 const missingWorkflowSchemaCodes = new Set(['PGRST200', 'PGRST205']);
 
+/**
+ * Workflow tables (`care_tasks`, `generated_documents`, `visit_briefs`) are
+ * conditionally available depending on which migrations have run. When the
+ * PostgREST relation cache reports them missing, we return an empty list
+ * rather than crashing the page — but in dev we surface a console warning so
+ * the developer knows WHY they're seeing nothing.
+ */
+function noteSchemaSkip(scope: string, error: { code: string; message?: string }) {
+  if (process.env.NODE_ENV !== 'production') {
+    console.warn(
+      `[workflow:${scope}] schema not available (${error.code}): ${error.message ?? ''} — returning empty list. Run the workflow migrations to enable this feature.`
+    );
+  }
+}
+
 export async function getPreparationQueue(clinicId: string) {
   let { data, error } = await supabase()
     .from('consultations')
@@ -53,6 +68,7 @@ export async function getVisitBriefs(clinicId: string) {
     .order('updated_at', { ascending: false });
 
   if (error && missingWorkflowSchemaCodes.has(error.code)) {
+    noteSchemaSkip('visit-briefs', error);
     return [];
   }
   if (error) throw error;
@@ -235,6 +251,7 @@ export async function getCareTasks(clinicId: string, status: CareTaskStatus | 'a
 
   const { data, error } = await query;
   if (error && missingWorkflowSchemaCodes.has(error.code)) {
+    noteSchemaSkip('care-tasks', error);
     return [];
   }
   if (error) throw error;
@@ -297,6 +314,7 @@ export async function getGeneratedDocuments(clinicId: string) {
     .order('updated_at', { ascending: false });
 
   if (error && missingWorkflowSchemaCodes.has(error.code)) {
+    noteSchemaSkip('generated-documents', error);
     return [];
   }
   if (error) throw error;

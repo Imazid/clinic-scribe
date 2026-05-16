@@ -1,8 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { PageHeader } from '@/components/layout/PageHeader';
-import { MetricCard } from '@/components/dashboard/MetricCard';
+import { HeroStrip, HeroAccent, type HeroStripStat } from '@/components/ui/HeroStrip';
 import { Card, CardTitle } from '@/components/ui/Card';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { WeeklyTrendChart } from '@/components/analytics/WeeklyTrendChart';
@@ -201,41 +200,59 @@ export default function AnalyticsPage() {
       ? Math.round((stats.approvedNotes / stats.totalConsultations) * 100)
       : null;
 
+  const heroStats: HeroStripStat[] = [
+    {
+      label: 'Total consultations',
+      value: stats.totalConsultations,
+      sub: 'All-time',
+      icon: BarChart3,
+      tone: 'default',
+    },
+    {
+      label: 'Approved notes',
+      value: stats.approvedNotes,
+      sub: 'Signed off',
+      icon: FileCheck,
+      tone: 'default',
+    },
+    {
+      label: 'Approval rate',
+      value: approvalRate !== null ? `${approvalRate}%` : '—',
+      sub: approvalRate !== null && approvalRate >= 80 ? 'Healthy' : 'Track',
+      icon: TrendingUp,
+      tone: approvalRate !== null && approvalRate >= 80 ? 'success' : 'default',
+    },
+    {
+      label: 'Avg confidence',
+      value:
+        stats.avgConfidence > 0
+          ? `${Math.round(stats.avgConfidence * 100)}%`
+          : '—',
+      sub: stats.avgConfidence >= 0.85 ? 'High' : stats.avgConfidence >= 0.6 ? 'Mid' : 'Review',
+      icon: Gauge,
+      tone:
+        stats.avgConfidence >= 0.85
+          ? 'success'
+          : stats.avgConfidence >= 0.6
+            ? 'warning'
+            : 'default',
+    },
+  ];
+
   return (
-    <div>
-      <PageHeader
-        title="Analytics"
-        description="Track documentation performance and clinical insights."
+    <div className="space-y-6">
+      <HeroStrip
+        eyebrow="Analytics"
+        title={
+          <>
+            Documentation <HeroAccent>at a glance</HeroAccent>.
+          </>
+        }
+        description="Track approval rate, AI confidence, and documentation efficiency across the clinic. Built to support clinical documentation, not replace clinician judgement."
+        stats={heroStats}
       />
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        <MetricCard
-          icon={BarChart3}
-          label="Total Consultations"
-          value={stats.totalConsultations}
-        />
-        <MetricCard
-          icon={FileCheck}
-          label="Approved Notes"
-          value={stats.approvedNotes}
-        />
-        <MetricCard
-          icon={TrendingUp}
-          label="Approval Rate"
-          value={approvalRate !== null ? `${approvalRate}%` : '--'}
-        />
-        <MetricCard
-          icon={Gauge}
-          label="Avg Confidence"
-          value={
-            stats.avgConfidence > 0
-              ? `${Math.round(stats.avgConfidence * 100)}%`
-              : '--'
-          }
-        />
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card>
           <CardTitle className="mb-4">Weekly Trend</CardTitle>
           <WeeklyTrendChart data={stats.weeklyTrend} />

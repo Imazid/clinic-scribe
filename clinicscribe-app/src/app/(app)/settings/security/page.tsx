@@ -1,7 +1,6 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import { PageHeader } from '@/components/layout/PageHeader';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { Card, CardTitle } from '@/components/ui/Card';
@@ -121,12 +120,6 @@ export default function SecurityPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader
-        eyebrow="Settings"
-        title="Security"
-        description="Manage multi-factor authentication and session security."
-      />
-
       <Card className="overflow-hidden p-0">
         <div className="border-b border-outline-variant/40 px-6 py-5">
           <div className="flex items-center justify-between">

@@ -1,7 +1,26 @@
 import { createClient } from '@/lib/supabase/client';
 import type { Prescription, PrescriptionItem, PrescriptionStatus } from '@/lib/types';
+import { createAuditLog } from '@/lib/api/audit';
 
 const supabase = () => createClient();
+
+/** Best-effort audit write — never blocks the caller, never throws. */
+async function audit(
+  clinicId: string,
+  action: string,
+  prescriptionId: string,
+  details: Record<string, unknown> = {}
+) {
+  try {
+    const { data: { user } } = await supabase().auth.getUser();
+    if (!user) return;
+    await createAuditLog(clinicId, user.id, action, 'prescription', prescriptionId, details);
+  } catch (err) {
+    if (process.env.NODE_ENV !== 'production') {
+      console.error('[audit:prescription]', action, err);
+    }
+  }
+}
 const missingRelationCodes = new Set(['PGRST200', 'PGRST205']);
 
 const FULL_SELECT =
@@ -34,7 +53,12 @@ export async function createPrescriptionDraft(input: CreatePrescriptionInput) {
     .single();
 
   if (error) throw error;
-  return data as Prescription;
+  const created = data as Prescription;
+  audit(input.clinicId, 'prescription_drafted', created.id, {
+    item_count: input.items.length,
+    consultation_id: input.consultationId,
+  });
+  return created;
 }
 
 export interface UpdatePrescriptionInput {
@@ -58,7 +82,12 @@ export async function updatePrescription(
     .single();
 
   if (error) throw error;
-  return data as Prescription;
+  const updated = data as Prescription;
+  audit(updated.clinic_id, 'prescription_updated', updated.id, {
+    item_count: updates.items?.length,
+    has_status_change: Boolean(updates.status),
+  });
+  return updated;
 }
 
 export async function approvePrescription(
@@ -79,7 +108,33 @@ export async function approvePrescription(
     .single();
 
   if (error) throw error;
-  return data as Prescription;
+  const approved = data as Prescription;
+  audit(approved.clinic_id, 'prescription_approved', approved.id, {
+    approved_at: approved.approved_at,
+    item_count: approved.items.length,
+  });
+  return approved;
+}
+
+/**
+ * Server-side AI prescription draft. Returns extracted PrescriptionItems for
+ * the dialog to populate locally — does NOT save. The clinician reviews and
+ * approves via the existing Save Draft / Approve flow.
+ */
+export async function generateAIPrescriptionDraft(
+  consultationId: string
+): Promise<PrescriptionItem[]> {
+  const res = await fetch(
+    `/api/consultations/${consultationId}/prescription/draft-ai`,
+    { method: 'POST', headers: { 'Content-Type': 'application/json' } }
+  );
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    throw new Error(
+      (data as { error?: string }).error ?? 'Failed to generate prescription draft'
+    );
+  }
+  return ((data as { items?: PrescriptionItem[] }).items ?? []) as PrescriptionItem[];
 }
 
 export async function getPrescription(prescriptionId: string) {

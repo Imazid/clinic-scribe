@@ -2,7 +2,15 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { normalizeVisitBrief } from '@/lib/visit-brief';
 import { buildVisitBriefArtifact } from '@/lib/workflow/artifacts';
-import { checkOrigin, forbidden, rateLimit, requireUser, tooMany } from '@/lib/apiSecurity';
+import {
+  checkOrigin,
+  forbidden,
+  notFound,
+  rateLimit,
+  requireCallerClinic,
+  requireUser,
+  tooMany,
+} from '@/lib/apiSecurity';
 import type { CareTask, ClinicalNote, Consultation, VisitBrief } from '@/lib/types';
 
 const missingWorkflowSchemaCodes = new Set(['PGRST200', 'PGRST205']);
@@ -37,7 +45,7 @@ export async function POST(
   if (!checkOrigin(request)) return forbidden('Invalid origin');
   const { user, response } = await requireUser();
   if (response) return response;
-  if (!rateLimit(`brief-generate:${user.id}`, 10, 60_000)) return tooMany();
+  if (!(await rateLimit(`brief-generate:${user.id}`, 10, 60_000))) return tooMany();
 
   try {
     const { id } = await context.params;
@@ -45,15 +53,20 @@ export async function POST(
     const url = new URL(request.url);
     const force = url.searchParams.get('force') === 'true';
 
+    const { clinicId, response: clinicError } = await requireCallerClinic(
+      supabase,
+      user.id
+    );
+    if (clinicError) return clinicError;
+
     const { data: consultation, error: consultationError } = await supabase
       .from('consultations')
       .select('*, patient:patients(*), clinical_note:clinical_notes(*)')
       .eq('id', id)
-      .single();
+      .maybeSingle();
 
-    if (consultationError || !consultation) {
-      return NextResponse.json({ error: 'Consultation not found' }, { status: 404 });
-    }
+    if (consultationError || !consultation) return notFound('Consultation not found');
+    if (consultation.clinic_id !== clinicId) return notFound('Consultation not found');
 
     const typedConsultation = consultation as unknown as ConsultationRow;
     if (!typedConsultation.patient) {
@@ -109,20 +122,15 @@ export async function POST(
     }
 
     // --- Regenerate path ---
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+    // Reuse the user-scoped client + verified user from requireUser above —
+    // no need for a second auth.getUser() round-trip.
+    const { data: currentProfile } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('user_id', user.id)
+      .maybeSingle();
 
-    let currentProfileId: string | null = null;
-    if (user?.id) {
-      const { data: currentProfile } = await supabase
-        .from('profiles')
-        .select('id')
-        .eq('user_id', user.id)
-        .single();
-
-      currentProfileId = currentProfile?.id ?? null;
-    }
+    const currentProfileId: string | null = currentProfile?.id ?? null;
 
     const { data: priorConsultations } = await supabase
       .from('consultations')

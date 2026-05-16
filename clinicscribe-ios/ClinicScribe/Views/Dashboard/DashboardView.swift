@@ -7,117 +7,199 @@ struct DashboardView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: Theme.spacingLg) {
-                Text("\(DateFormatters.timeGreeting()), \(auth.currentProfile?.firstName ?? vm.profile?.firstName ?? "Doctor")")
-                    .font(.title2.weight(.bold))
-                    .foregroundStyle(Theme.primary)
+                heroStrip
 
                 if vm.isLoading {
-                    LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: Theme.spacingMd) {
-                        ForEach(0..<4, id: \.self) { _ in
-                            VStack(alignment: .leading, spacing: Theme.spacingSm) {
-                                RoundedRectangle(cornerRadius: Theme.radiusXS)
-                                    .fill(Theme.surfaceContainerHigh)
-                                    .frame(width: 36, height: 36)
-                                RoundedRectangle(cornerRadius: Theme.radiusXS)
-                                    .fill(Theme.surfaceContainerHigh)
-                                    .frame(width: 48, height: 28)
-                                RoundedRectangle(cornerRadius: Theme.radiusXS)
-                                    .fill(Theme.surfaceContainerHigh)
-                                    .frame(width: 80, height: 14)
-                            }
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .cardStyle()
-                            .redacted(reason: .placeholder)
-                        }
-                    }
-
-                    VStack(alignment: .leading, spacing: Theme.spacingSm) {
-                        RoundedRectangle(cornerRadius: Theme.radiusXS)
-                            .fill(Theme.surfaceContainerHigh)
-                            .frame(width: 180, height: 18)
-                        ForEach(0..<3, id: \.self) { _ in
-                            HStack(spacing: Theme.spacingSm) {
-                                Circle()
-                                    .fill(Theme.surfaceContainerHigh)
-                                    .frame(width: 36, height: 36)
-                                VStack(alignment: .leading, spacing: Theme.spacingXS) {
-                                    RoundedRectangle(cornerRadius: Theme.radiusXS)
-                                        .fill(Theme.surfaceContainerHigh)
-                                        .frame(width: 120, height: 14)
-                                    RoundedRectangle(cornerRadius: Theme.radiusXS)
-                                        .fill(Theme.surfaceContainerHigh)
-                                        .frame(width: 80, height: 12)
-                                }
-                                Spacer()
-                                RoundedRectangle(cornerRadius: Theme.radiusXS)
-                                    .fill(Theme.surfaceContainerHigh)
-                                    .frame(width: 60, height: 20)
-                            }
-                        }
-                    }
-                    .cardStyle()
-                    .redacted(reason: .placeholder)
+                    skeletonContent
                 } else {
-                    LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: Theme.spacingMd) {
-                        MetricCard(icon: "person.2", label: "Total Patients", value: "\(vm.totalPatients)")
-                        MetricCard(icon: "stethoscope", label: "This Week", value: "\(vm.consultationsThisWeek)")
-                        MetricCard(icon: "clock", label: "Avg Doc Time", value: "--")
-                        MetricCard(icon: "exclamationmark.circle", label: "Pending Reviews", value: "\(vm.pendingReviews)", variant: vm.pendingReviews > 0 ? .warning : .default)
-                    }
-
                     if vm.recentConsultations.isEmpty {
                         CSEmptyState(
                             icon: "doc.text.magnifyingglass",
-                            title: "No Recent Consultations",
-                            description: "Start a new consultation to see it here."
+                            title: "No recent consultations",
+                            description: "Start a new consultation and it'll surface here as you go."
                         )
                         .cardStyle()
                     } else {
                         RecentConsultationsCard(consultations: vm.recentConsultations)
                     }
 
-                    VStack(alignment: .leading, spacing: Theme.spacingMd) {
-                        Text("Quick Actions")
-                            .font(.headline)
-                            .foregroundStyle(Theme.onSurface)
-
-                        HStack(spacing: Theme.spacingMd) {
-                            NavigationLink {
-                                NewConsultationView(clinicId: auth.clinicId, clinicianId: auth.profileId)
-                            } label: {
-                                CSButton(title: "New Consultation", variant: .secondary, size: .sm, isFullWidth: true) {}
-                                    .allowsHitTesting(false)
-                                    .overlay(alignment: .leading) {
-                                        Image(systemName: "plus.circle.fill")
-                                            .foregroundStyle(Theme.onSurface)
-                                            .padding(.leading, Theme.spacingMd)
-                                    }
-                            }
-                            .accessibilityLabel("New Consultation")
-                            .accessibilityHint("Start a new patient consultation")
-
-                            NavigationLink {
-                                PatientFormView(clinicId: auth.clinicId)
-                            } label: {
-                                CSButton(title: "Add Patient", variant: .outline, size: .sm, isFullWidth: true) {}
-                                    .allowsHitTesting(false)
-                                    .overlay(alignment: .leading) {
-                                        Image(systemName: "person.badge.plus")
-                                            .foregroundStyle(Theme.primary)
-                                            .padding(.leading, Theme.spacingMd)
-                                    }
-                            }
-                            .accessibilityLabel("Add Patient")
-                            .accessibilityHint("Register a new patient")
-                        }
-                    }
+                    quickActionsSection
                 }
             }
             .padding(Theme.spacingMd)
         }
         .background(Theme.surface)
-        .navigationTitle("Prepare")
+        .navigationTitle("Today")
         .refreshable { await vm.load() }
         .task { await vm.load() }
+    }
+
+    // MARK: - Hero
+
+    private var heroStrip: some View {
+        let firstName = auth.currentProfile?.firstName ?? vm.profile?.firstName ?? "Doctor"
+        let pendingTone: CSStat.Tone = vm.pendingReviews > 0 ? .warning : .default
+        let stats: [CSStat] = [
+            CSStat(
+                label: "This week",
+                value: "\(vm.consultationsThisWeek)",
+                sub: "Consultations",
+                systemImage: "stethoscope"
+            ),
+            CSStat(
+                label: "Pending review",
+                value: "\(vm.pendingReviews)",
+                sub: vm.pendingReviews == 0 ? "Clear" : "Awaiting sign-off",
+                systemImage: "checkmark.shield",
+                tone: pendingTone
+            ),
+            CSStat(
+                label: "Patients",
+                value: "\(vm.totalPatients)",
+                sub: "Total",
+                systemImage: "person.2"
+            ),
+            CSStat(
+                label: "Status",
+                value: "Active",
+                sub: "Live signal",
+                systemImage: "waveform",
+                tone: .success
+            ),
+        ]
+
+        return CSHeroStrip(
+            eyebrow: DateFormatters.todayEyebrow().uppercased(),
+            title: {
+                HStack(alignment: .firstTextBaseline, spacing: 6) {
+                    Text("\(DateFormatters.timeGreeting()),")
+                    CSHeroAccent(firstName + ".")
+                }
+            },
+            description: vm.pendingReviews > 0
+                ? "\(vm.pendingReviews) note\(vm.pendingReviews == 1 ? "" : "s") need your sign-off. Nothing leaves the system without you."
+                : "Inbox is clear. Nothing leaves the system without you.",
+            stats: stats
+        )
+    }
+
+    // MARK: - Skeleton
+
+    @ViewBuilder
+    private var skeletonContent: some View {
+        VStack(alignment: .leading, spacing: Theme.spacingMd) {
+            ForEach(0..<3, id: \.self) { _ in
+                HStack(spacing: Theme.spacingSm) {
+                    Circle().fill(Theme.surfaceContainerHigh).frame(width: 40, height: 40)
+                    VStack(alignment: .leading, spacing: Theme.spacingXS) {
+                        RoundedRectangle(cornerRadius: 4)
+                            .fill(Theme.surfaceContainerHigh)
+                            .frame(width: 140, height: 14)
+                        RoundedRectangle(cornerRadius: 4)
+                            .fill(Theme.surfaceContainerHigh)
+                            .frame(width: 90, height: 12)
+                    }
+                    Spacer()
+                }
+            }
+        }
+        .cardStyle()
+        .redacted(reason: .placeholder)
+    }
+
+    // MARK: - Quick actions
+
+    private var quickActionsSection: some View {
+        VStack(alignment: .leading, spacing: Theme.spacingMd) {
+            Text("QUICK ACTIONS")
+                .font(.system(size: 11, weight: .bold))
+                .tracking(1.2)
+                .foregroundStyle(Theme.outline)
+
+            HStack(spacing: Theme.spacingMd) {
+                NavigationLink {
+                    NewConsultationView(clinicId: auth.clinicId, clinicianId: auth.profileId)
+                } label: {
+                    quickActionLabel(
+                        title: "New consultation",
+                        sub: "Record or upload a session",
+                        systemImage: "mic.fill",
+                        tint: Theme.primary,
+                        background: Theme.primary,
+                        foreground: Theme.onPrimary
+                    )
+                }
+                .accessibilityLabel("New consultation")
+                .accessibilityHint("Start a new patient consultation")
+
+                NavigationLink {
+                    PatientFormView(clinicId: auth.clinicId)
+                } label: {
+                    quickActionLabel(
+                        title: "Add patient",
+                        sub: "Create a new patient record",
+                        systemImage: "person.badge.plus",
+                        tint: Theme.secondary,
+                        background: Theme.surfaceContainerLowest,
+                        foreground: Theme.onSurface
+                    )
+                }
+                .accessibilityLabel("Add patient")
+                .accessibilityHint("Register a new patient")
+            }
+        }
+    }
+
+    private func quickActionLabel(
+        title: String,
+        sub: String,
+        systemImage: String,
+        tint: Color,
+        background: Color,
+        foreground: Color
+    ) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            ZStack {
+                RoundedRectangle(cornerRadius: 10)
+                    .fill(background == Theme.primary
+                          ? Color.white.opacity(0.12)
+                          : Theme.secondaryFixed)
+                    .frame(width: 36, height: 36)
+                Image(systemName: systemImage)
+                    .font(.system(size: 16, weight: .semibold))
+                    .foregroundStyle(background == Theme.primary ? foreground : tint)
+            }
+            Text(title)
+                .font(.system(size: 14, weight: .bold))
+                .foregroundStyle(foreground)
+            Text(sub)
+                .font(.system(size: 12))
+                .foregroundStyle(background == Theme.primary
+                                 ? foreground.opacity(0.7)
+                                 : Theme.onSurfaceVariant)
+        }
+        .padding(Theme.spacingMd)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(background)
+        .clipShape(RoundedRectangle(cornerRadius: Theme.radiusMd))
+        .overlay(
+            RoundedRectangle(cornerRadius: Theme.radiusMd)
+                .strokeBorder(
+                    background == Theme.primary ? Color.clear : Theme.outlineVariant,
+                    lineWidth: 1
+                )
+        )
+        .themeShadow(Theme.shadowAmbientSm)
+    }
+}
+
+// MARK: - DateFormatters helper
+
+extension DateFormatters {
+    static func todayEyebrow() -> String {
+        let f = DateFormatter()
+        f.locale = Locale(identifier: "en_AU")
+        f.dateFormat = "EEEE · d MMMM"
+        return f.string(from: Date())
     }
 }

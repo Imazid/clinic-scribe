@@ -6,6 +6,9 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Sidebar } from '@/components/layout/Sidebar';
 import { Header } from '@/components/layout/Header';
 import { ToastContainer } from '@/components/ui/Toast';
+import { CommandPalette } from '@/components/polish/CommandPalette';
+import { KeyboardShortcuts } from '@/components/polish/KeyboardShortcuts';
+import { NotificationsPanel } from '@/components/polish/NotificationsPanel';
 import { useUIStore } from '@/lib/stores/ui-store';
 import { useAuthStore } from '@/lib/stores/auth-store';
 import { createClient } from '@/lib/supabase/client';
@@ -143,7 +146,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         )}
       >
         <Header />
-        <main className="p-4 lg:p-8 min-h-[calc(100vh-var(--header-height))]">
+        <main className="p-4 lg:p-8 min-h-[calc(100vh-var(--header-height))] min-w-0 overflow-x-hidden">
           {mounted && profileError ? (
             <div className="flex flex-col items-center justify-center h-64 gap-4">
               <p className="text-sm text-error">{profileError}</p>
@@ -170,6 +173,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         </main>
       </div>
       <ToastContainer />
+      <CommandPalette />
+      <KeyboardShortcuts />
+      <NotificationsPanel />
     </div>
   );
 }

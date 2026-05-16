@@ -1,12 +1,20 @@
 import { NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
 import {
   buildGeneratedDocuments,
   buildPatientSummary,
   materializeCareTasks,
 } from '@/lib/workflow/artifacts';
 import type { ClinicalNote, Consultation, Patient } from '@/lib/types';
-import { checkOrigin, forbidden } from '@/lib/apiSecurity';
+import {
+  checkOrigin,
+  forbidden,
+  logError,
+  notFound,
+  rateLimit,
+  requireCallerClinic,
+  requireUser,
+  tooMany,
+} from '@/lib/apiSecurity';
 
 const missingWorkflowSchemaCodes = new Set(['PGRST200', 'PGRST205']);
 
@@ -15,20 +23,29 @@ export async function POST(
   context: { params: Promise<{ id: string }> }
 ) {
   if (!checkOrigin(request)) return forbidden('Invalid origin');
+
+  const { user, supabase, response: authError } = await requireUser();
+  if (authError) return authError;
+  if (!(await rateLimit(`closeout-materialize:${user.id}`, 20, 60_000))) return tooMany();
+
   try {
     const { id } = await context.params;
     const { noteId } = (await request.json()) as { noteId?: string };
-    const supabase = await createClient();
+
+    const { clinicId, response: clinicError } = await requireCallerClinic(
+      supabase,
+      user.id
+    );
+    if (clinicError) return clinicError;
 
     const { data: consultation, error } = await supabase
       .from('consultations')
       .select('*, patient:patients(*), clinical_note:clinical_notes(*)')
       .eq('id', id)
-      .single();
+      .maybeSingle();
 
-    if (error || !consultation) {
-      return NextResponse.json({ error: 'Consultation not found' }, { status: 404 });
-    }
+    if (error || !consultation) return notFound('Consultation not found');
+    if (consultation.clinic_id !== clinicId) return notFound('Consultation not found');
 
     const typedConsultation = consultation as unknown as Consultation & {
       patient: Patient | null;
@@ -136,8 +153,10 @@ export async function POST(
       document_count: workflowPersistenceAvailable ? documents.length : 0,
     });
   } catch (error) {
-    console.error('Closeout materialization error:', error);
-    const message = error instanceof Error ? error.message : 'Failed to materialize closeout artifacts';
-    return NextResponse.json({ error: message }, { status: 500 });
+    logError('closeout-materialize', error);
+    return NextResponse.json(
+      { error: 'Failed to materialize closeout artifacts' },
+      { status: 500 }
+    );
   }
 }

@@ -10,9 +10,46 @@ struct PatientListView: View {
         self.navigationTitle = navigationTitle
     }
 
+    private var heroStrip: some View {
+        let total = vm.patients.count
+        let granted = vm.patients.filter { $0.consentStatus == .granted }.count
+        let pending = vm.patients.filter { $0.consentStatus == .pending }.count
+        let stats: [CSStat] = [
+            CSStat(label: "Total", value: "\(total)", sub: "On record",
+                   systemImage: "person.2"),
+            CSStat(label: "Consent granted", value: "\(granted)",
+                   sub: granted == total ? "All set" : "Of \(total)",
+                   systemImage: "checkmark.shield",
+                   tone: .success),
+            CSStat(label: "Pending", value: "\(pending)",
+                   sub: pending == 0 ? "None" : "To capture",
+                   systemImage: "clock",
+                   tone: pending > 0 ? .warning : .default),
+            CSStat(label: "Status", value: "Live",
+                   sub: "Synced",
+                   systemImage: "waveform",
+                   tone: .success),
+        ]
+        return CSHeroStrip(
+            eyebrow: "PATIENTS",
+            title: {
+                HStack(alignment: .firstTextBaseline, spacing: 6) {
+                    Text("Your")
+                    CSHeroAccent("clinic")
+                    Text(", at a glance.")
+                }
+            },
+            description: "Search, filter by consent, and open a profile to start a consultation.",
+            stats: stats
+        )
+    }
+
     var body: some View {
         VStack(spacing: 0) {
             VStack(spacing: Theme.spacingSm) {
+                heroStrip
+                    .padding(.bottom, Theme.spacingXS)
+
                 CSSearchBar(text: $vm.searchText, placeholder: "Search patients...")
 
                 ZStack {

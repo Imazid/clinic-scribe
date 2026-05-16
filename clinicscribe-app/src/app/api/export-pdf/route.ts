@@ -42,7 +42,7 @@ export async function POST(request: Request) {
   const { user, supabase, response } = await requireUser();
   if (response) return response;
 
-  if (!rateLimit(`export-pdf:${user.id}`, 30, 60_000)) return tooMany();
+  if (!(await rateLimit(`export-pdf:${user.id}`, 30, 60_000))) return tooMany();
 
   try {
     const body = (await request.json()) as ExportPdfPayload;

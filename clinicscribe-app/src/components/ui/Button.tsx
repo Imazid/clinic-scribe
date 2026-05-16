@@ -3,7 +3,7 @@
 import { forwardRef } from 'react';
 import { cn } from '@/lib/utils';
 
-type ButtonVariant = 'primary' | 'secondary' | 'outline' | 'ghost' | 'danger';
+type ButtonVariant = 'primary' | 'secondary' | 'outline' | 'ghost' | 'danger' | 'soft';
 type ButtonSize = 'sm' | 'md' | 'lg' | 'action';
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
@@ -22,6 +22,11 @@ const variantStyles: Record<ButtonVariant, string> = {
   ghost: 'text-on-surface-variant hover:bg-surface-container-high',
   danger:
     'border border-error/40 bg-error text-white shadow-ambient-sm hover:-translate-y-px hover:bg-error/90 hover:shadow-ambient active:translate-y-0',
+  // Chip-style button — tinted secondary fill with secondary text. Used for
+  // tertiary actions across the design package (matches `variant="soft"` in
+  // the design's Button component).
+  soft:
+    'border border-transparent bg-secondary-fixed text-secondary hover:-translate-y-px hover:bg-secondary-container hover:shadow-ambient-sm',
 };
 
 const sizeStyles: Record<ButtonSize, string> = {

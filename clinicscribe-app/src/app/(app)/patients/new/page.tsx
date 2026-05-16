@@ -3,7 +3,6 @@
 import { useRouter } from 'next/navigation';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { BreadcrumbNav } from '@/components/layout/BreadcrumbNav';
-import { Card } from '@/components/ui/Card';
 import { PatientForm } from '@/components/patients/PatientForm';
 import { useAuthStore } from '@/lib/stores/auth-store';
 import { useUIStore } from '@/lib/stores/ui-store';
@@ -31,12 +30,21 @@ export default function NewPatientPage() {
   }
 
   return (
-    <div>
-      <BreadcrumbNav items={[{ label: 'Patients', href: '/patients' }, { label: 'New Patient' }]} />
-      <PageHeader title="Add Patient" className="mt-4" />
-      <Card className="max-w-3xl">
-        <PatientForm onSubmit={handleSubmit} submitLabel="Add Patient" />
-      </Card>
+    <div className="space-y-6">
+      <BreadcrumbNav
+        items={[{ label: 'Patients', href: '/patients' }, { label: 'New patient' }]}
+      />
+      <PageHeader
+        eyebrow="Patients"
+        title="Add a new patient"
+        description="Enter what you know — required fields are name, date of birth, and sex. Everything else helps the consultation brief and follow-up workflows."
+        variant="feature"
+      />
+      <PatientForm
+        onSubmit={handleSubmit}
+        onCancel={() => router.push('/patients')}
+        submitLabel="Add patient"
+      />
     </div>
   );
 }

@@ -41,7 +41,9 @@ export const SECONDARY_NAV = [
   { label: 'Prescriptions', href: '/prescriptions', icon: 'Pill' },
   { label: 'Analytics', href: '/analytics', icon: 'BarChart3' },
   { label: 'Integrations', href: '/integrations', icon: 'Plug' },
+  { label: 'Refer & earn', href: '/refer', icon: 'Gift' },
   { label: 'Audit Log', href: '/audit', icon: 'FileClock' },
+  { label: 'Help', href: '/help', icon: 'LifeBuoy' },
   { label: 'Settings', href: '/settings', icon: 'Settings' },
 ] as const;
 

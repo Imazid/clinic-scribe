@@ -69,7 +69,7 @@ export function useRealtimeTranscription() {
   const [segments, setSegments] = useState<LiveSegment[]>([]);
   const [interimText, setInterimText] = useState('');
   const [error, setError] = useState<string | null>(null);
-  const [engine, setEngine] = useState<TranscriptionEngine>('on-device');
+  const [engine, setEngine] = useState<TranscriptionEngine>('deepgram');
 
   // On-device refs
   const recognitionRef = useRef<SpeechRecognition | null>(null);

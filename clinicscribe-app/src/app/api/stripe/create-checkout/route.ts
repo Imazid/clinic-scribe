@@ -15,7 +15,13 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { plan, seats } = body as { plan?: string; seats?: number };
+    const { plan, seats, referralCode } = body as {
+      plan?: string;
+      seats?: number;
+      /** Optional promo code from `/r/<slug>` flow — pre-applied if it
+       *  resolves to an active Stripe promotion code. */
+      referralCode?: string;
+    };
 
     if (!plan || !['solo', 'clinic', 'group'].includes(plan)) {
       return NextResponse.json(
@@ -84,6 +90,42 @@ export async function POST(request: NextRequest) {
         .eq('id', clinic.id);
     }
 
+    // Resolve a referral input to a Stripe promotion_code id. The input
+    // can be either:
+    //   (a) a direct promo code string (e.g. "WELCOME3", "DEMO3M") — try
+    //       `code` filter first.
+    //   (b) a referral slug from /r/<slug> (e.g. "demo-3m") — list active
+    //       codes and find one whose metadata.referral_slug matches.
+    // If matched + active, we pre-apply via `discounts`; otherwise we
+    // surface the "Enter promo code" field via `allow_promotion_codes`.
+    // Stripe disallows both in the same session.
+    let resolvedPromotionCodeId: string | null = null;
+    if (referralCode) {
+      try {
+        // Try (a) — direct code match.
+        const byCode = await stripe.promotionCodes.list({
+          code: referralCode,
+          active: true,
+          limit: 1,
+        });
+        resolvedPromotionCodeId = byCode.data[0]?.id ?? null;
+
+        // Fall back to (b) — slug match via metadata. List ~100 active
+        // codes (we expect a small set for now). Move this to a server-
+        // side index if the catalog ever grows past a few hundred.
+        if (!resolvedPromotionCodeId) {
+          const slug = referralCode.trim().toLowerCase();
+          const bySlug = await stripe.promotionCodes.list({ active: true, limit: 100 });
+          const hit = bySlug.data.find(
+            (p) => (p.metadata?.referral_slug ?? '').toLowerCase() === slug
+          );
+          resolvedPromotionCodeId = hit?.id ?? null;
+        }
+      } catch (err) {
+        logError('stripe-checkout-promo-lookup', err);
+      }
+    }
+
     // Create Checkout Session — redirect URLs must be server-controlled to
     // prevent open-redirect via forged Origin header.
     const session = await stripe.checkout.sessions.create({
@@ -95,17 +137,22 @@ export async function POST(request: NextRequest) {
           quantity,
         },
       ],
+      ...(resolvedPromotionCodeId
+        ? { discounts: [{ promotion_code: resolvedPromotionCodeId }] }
+        : { allow_promotion_codes: true }),
       subscription_data: {
         trial_period_days: 14,
         metadata: {
           clinic_id: clinic.id,
           plan,
+          ...(referralCode ? { referral_code: referralCode } : {}),
         },
       },
       metadata: {
         clinic_id: clinic.id,
         user_id: user.id,
         plan,
+        ...(referralCode ? { referral_code: referralCode } : {}),
       },
       success_url: `${APP_URL}/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${APP_URL}/checkout?plan=${plan}&canceled=true`,
