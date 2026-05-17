@@ -1,275 +1,150 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
+import { useMemo, useState } from 'react';
 import { cn } from '@/lib/utils';
 import { useAuthStore } from '@/lib/stores/auth-store';
-import type { LucideIcon } from 'lucide-react';
-import {
-  Bell,
-  ChevronRight,
-  CreditCard,
-  FileText,
-  LayoutDashboard,
-  LifeBuoy,
-  Palette,
-  Plug,
-  Shield,
-  Sliders,
-  User,
-  Users,
-} from 'lucide-react';
-
-/**
- * Settings shell — left sidebar, right pane.
- *
- * Rail (left, 17rem): grounded card with a section list. Each row is icon
- * + label, no descriptions; the active row uses a filled slate-blue pill.
- *
- * Pane (right): owns ALL of its own chrome — a section header (eyebrow +
- * title + summary) followed by the child page's content. Children are
- * pure content blocks; they don't bring their own max-width / breadcrumb /
- * page-background, those live here.
- */
-
-type SectionMeta = {
-  href: string;
-  label: string;
-  icon: LucideIcon;
-  /** Used in the right-pane header. */
-  eyebrow: string;
-  title: string;
-  summary: string;
-};
-
-const SECTIONS: SectionMeta[] = [
-  {
-    href: '/settings',
-    label: 'Overview',
-    icon: LayoutDashboard,
-    eyebrow: 'Settings',
-    title: 'Account overview',
-    summary: 'Your profile, clinic, and workflow preferences at a glance.',
-  },
-  {
-    href: '/settings/profile',
-    label: 'Profile',
-    icon: User,
-    eyebrow: 'You',
-    title: 'Profile',
-    summary: 'Personal details, specialty, and provider context.',
-  },
-  {
-    href: '/settings/security',
-    label: 'Security',
-    icon: Shield,
-    eyebrow: 'You',
-    title: 'Security',
-    summary: 'Sign-in controls, multi-factor authentication, and sessions.',
-  },
-  {
-    href: '/settings/notifications',
-    label: 'Notifications',
-    icon: Bell,
-    eyebrow: 'You',
-    title: 'Notifications',
-    summary: 'How Miraa reaches you — email, in-app, and quiet hours.',
-  },
-  {
-    href: '/settings/team',
-    label: 'Team',
-    icon: Users,
-    eyebrow: 'Clinic',
-    title: 'Team',
-    summary: 'Members, roles, and pending invitations.',
-  },
-  {
-    href: '/settings/billing',
-    label: 'Billing',
-    icon: CreditCard,
-    eyebrow: 'Clinic',
-    title: 'Billing & subscription',
-    summary: 'Plan, seats, payment method, and invoices.',
-  },
-  {
-    href: '/settings/integrations',
-    label: 'Integrations',
-    icon: Plug,
-    eyebrow: 'Clinic',
-    title: 'Integrations',
-    summary: 'EMR sync, calendar, and connected services.',
-  },
-  {
-    href: '/settings/workflow',
-    label: 'Workflow',
-    icon: Sliders,
-    eyebrow: 'Preferences',
-    title: 'Workflow preferences',
-    summary: 'How you step through capture, review, and approval.',
-  },
-  {
-    href: '/settings/appearance',
-    label: 'Appearance',
-    icon: Palette,
-    eyebrow: 'Preferences',
-    title: 'Appearance',
-    summary: 'Theme, density, and visual preferences.',
-  },
-  {
-    href: '/settings/legal',
-    label: 'Legal & privacy',
-    icon: FileText,
-    eyebrow: 'Reference',
-    title: 'Legal & privacy',
-    summary: 'Terms, privacy policy, and AI safety documents.',
-  },
-];
-
-const GROUPS: Array<{ label: string; sections: SectionMeta[] }> = [
-  { label: 'You',         sections: SECTIONS.filter((s) => s.eyebrow === 'You' || s.label === 'Overview') },
-  { label: 'Clinic',      sections: SECTIONS.filter((s) => s.eyebrow === 'Clinic') },
-  { label: 'Preferences', sections: SECTIONS.filter((s) => s.eyebrow === 'Preferences') },
-  { label: 'Reference',   sections: SECTIONS.filter((s) => s.eyebrow === 'Reference') },
-];
-
-function isActive(pathname: string, href: string) {
-  if (href === '/settings') return pathname === '/settings';
-  return pathname === href || pathname.startsWith(`${href}/`);
-}
-
-function activeSection(pathname: string): SectionMeta {
-  // Prefer the most specific match (longest href) to avoid /settings matching
-  // for /settings/billing.
-  return (
-    SECTIONS.filter((s) => isActive(pathname, s.href)).sort(
-      (a, b) => b.href.length - a.href.length
-    )[0] ?? SECTIONS[0]
-  );
-}
+import { createClient } from '@/lib/supabase/client';
+import { Avatar } from '@/components/ui/Avatar';
+import { LogOut, Search } from 'lucide-react';
+import { SETTINGS_CATEGORIES, activeCategory } from '@/lib/settings/categories';
 
 export default function SettingsLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const clinic = useAuthStore((s) => s.clinic);
+  const router = useRouter();
   const profile = useAuthStore((s) => s.profile);
-  const current = activeSection(pathname);
+  const clinic = useAuthStore((s) => s.clinic);
+  const [query, setQuery] = useState('');
 
-  const roleLabel =
-    profile?.role === 'admin' ? 'Owner' : profile?.role ? capitalize(profile.role) : null;
+  const current = activeCategory(pathname);
+
+  const filtered = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    if (!q) return SETTINGS_CATEGORIES;
+    return SETTINGS_CATEGORIES.filter(
+      (c) => c.label.toLowerCase().includes(q) || c.description.toLowerCase().includes(q),
+    );
+  }, [query]);
+
+  async function handleSignOut() {
+    const supabase = createClient();
+    await supabase.auth.signOut();
+    router.push('/login');
+  }
+
+  const firstName = profile?.first_name ?? '';
+  const lastName = profile?.last_name ?? '';
+  const displayName = lastName ? `Dr. ${lastName}` : firstName || 'Account';
+  const roleLine = clinic?.name
+    ? `${clinic.name}${profile?.role ? ` · ${capitalize(profile.role)}` : ''}`
+    : profile?.role
+      ? capitalize(profile.role)
+      : '—';
 
   return (
-    <div
-      className="flex gap-6 items-start"
-      style={{ flexDirection: 'row' }}
-    >
-      {/* ─── Sidebar ─── */}
-      <aside
-        className="
-          shrink-0 self-start rounded-2xl border border-outline-variant/40 bg-surface-container-lowest
-          shadow-[0_18px_40px_-12px_rgba(0,23,54,0.18),0_4px_12px_-4px_rgba(0,23,54,0.08)]
-          sticky
-          flex flex-col
-        "
-        style={{
-          width: '17rem',
-          top: 'calc(var(--header-height) + 1rem)',
-          height: 'calc(100vh - var(--header-height) - 2rem)',
-        }}
-      >
-        {/* Workspace header */}
-        <div className="border-b border-outline-variant/40 px-4 pb-3.5 pt-4">
-          <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-secondary">
-            Settings
-          </p>
-          <p className="mt-1.5 truncate font-display text-[17px] font-semibold leading-tight tracking-[-0.02em] text-on-surface">
-            {clinic?.name ?? 'Your workspace'}
-          </p>
-          {roleLabel && (
-            <span className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-secondary/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-secondary">
-              <span className="h-1 w-1 rounded-full bg-secondary" />
-              {roleLabel}
-            </span>
-          )}
+    <div className="space-y-5">
+      {/* ── Hero strip ────────────────────────────────────────────────── */}
+      <div className="mesh-bg relative overflow-hidden rounded-3xl border border-outline-variant/60 bg-gradient-to-br from-surface-container-lowest to-surface-container-low px-7 py-6">
+        <div className="relative z-10 flex flex-wrap items-center justify-between gap-5">
+          <div>
+            <p className="eyebrow">Settings</p>
+            <h1 className="mt-1.5 font-display text-[28px] font-semibold leading-tight tracking-[-0.02em] text-on-surface">
+              Everything about{' '}
+              <span className="italic text-secondary">your Miraa.</span>
+            </h1>
+            <p className="mt-1 text-[13px] text-on-surface-variant">
+              Profile, safety, integrations and the rest. Changes apply instantly.
+            </p>
+          </div>
+          <div className="flex h-11 w-full max-w-sm items-center gap-2.5 rounded-xl border border-outline-variant bg-surface-container-lowest px-3.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.7)]">
+            <Search className="h-4 w-4 text-outline" />
+            <input
+              type="search"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Search settings"
+              className="flex-1 border-none bg-transparent text-[13px] text-on-surface placeholder:text-outline focus:outline-none"
+            />
+            <span className="kbd">⌘.</span>
+          </div>
         </div>
+      </div>
 
-        {/* Nav */}
-        <nav className="flex-1 space-y-5 overflow-y-auto px-3 py-4">
-          {GROUPS.map((group) => (
-            <div key={group.label}>
-              <p className="px-2 pb-1.5 text-[10px] font-bold uppercase tracking-[0.12em] text-outline">
-                {group.label}
-              </p>
-              <ul className="space-y-0.5">
-                {group.sections.map((section) => {
-                  const active = isActive(pathname, section.href);
-                  const Icon = section.icon;
-                  return (
-                    <li key={section.href}>
-                      <Link
-                        href={section.href}
-                        aria-current={active ? 'page' : undefined}
-                        className={cn(
-                          'group relative flex items-center gap-2.5 rounded-xl px-2.5 py-2 text-[13px] font-semibold transition-colors',
-                          active
-                            ? 'bg-on-surface text-surface'
-                            : 'text-on-surface-variant hover:bg-surface-container/60 hover:text-on-surface'
-                        )}
-                      >
-                        {active && (
-                          <span
-                            aria-hidden="true"
-                            className="absolute -left-[3px] top-1/2 h-5 w-0.5 -translate-y-1/2 rounded-full bg-secondary"
-                          />
-                        )}
-                        <Icon
-                          className={cn(
-                            'h-4 w-4 shrink-0',
-                            active ? 'text-surface' : 'text-on-surface-variant group-hover:text-on-surface'
-                          )}
-                        />
-                        <span className="flex-1 truncate">{section.label}</span>
-                        <ChevronRight
-                          className={cn(
-                            'h-3.5 w-3.5 shrink-0 transition-opacity',
-                            active ? 'text-surface/70' : 'text-outline opacity-0 group-hover:opacity-100'
-                          )}
-                        />
-                      </Link>
-                    </li>
-                  );
-                })}
-              </ul>
+      {/* ── Two-pane ──────────────────────────────────────────────────── */}
+      <div className="grid gap-5 lg:grid-cols-[260px_minmax(0,1fr)]">
+        {/* Left rail */}
+        <aside
+          className="sticky self-start rounded-2xl border border-outline-variant/60 bg-surface-container-lowest p-2 shadow-ambient-sm"
+          style={{ top: 'calc(var(--header-height) + 1rem)' }}
+        >
+          <p className="px-2.5 pb-1 pt-2 text-[10px] font-bold uppercase tracking-[0.10em] text-outline">
+            Categories
+          </p>
+          <ul className="space-y-0.5">
+            {filtered.map((c) => {
+              const isActive =
+                c.href === '/settings' ? pathname === '/settings' : pathname.startsWith(c.href);
+              const Icon = c.icon;
+              return (
+                <li key={c.id}>
+                  <Link
+                    href={c.href}
+                    aria-current={isActive ? 'page' : undefined}
+                    className={cn(
+                      'flex items-center gap-3 rounded-[10px] px-3 py-2.5 text-[13px] transition-colors',
+                      isActive
+                        ? 'bg-secondary-fixed font-semibold text-secondary'
+                        : 'font-medium text-on-surface hover:bg-surface-container-low',
+                    )}
+                  >
+                    <Icon
+                      className={cn(
+                        'h-4 w-4 shrink-0',
+                        isActive ? 'text-secondary' : 'text-on-surface-variant',
+                      )}
+                    />
+                    <span className="truncate">{c.label}</span>
+                  </Link>
+                </li>
+              );
+            })}
+            {filtered.length === 0 && (
+              <li className="px-3 py-3 text-center text-xs text-outline">No matches</li>
+            )}
+          </ul>
+
+          {/* Account chip */}
+          <div className="mt-3 rounded-xl border border-outline-variant/60 bg-surface-container-low p-3">
+            <div className="flex items-center gap-2.5">
+              <Avatar firstName={firstName} lastName={lastName} size="sm" />
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-[12px] font-bold text-on-surface">{displayName}</p>
+                <p className="truncate text-[11px] text-outline">{roleLine}</p>
+              </div>
             </div>
-          ))}
-        </nav>
+            <button
+              type="button"
+              onClick={handleSignOut}
+              className="mt-2.5 flex h-9 w-full items-center justify-center gap-1.5 rounded-[9px] border border-outline-variant bg-surface-container-lowest text-[12px] font-semibold text-on-surface transition-colors hover:bg-surface-container"
+            >
+              <LogOut className="h-3.5 w-3.5" />
+              Sign out
+            </button>
+          </div>
+        </aside>
 
-        {/* Footer */}
-        <div className="border-t border-outline-variant/40 px-3 py-3">
-          <Link
-            href="/help"
-            className="flex items-center gap-2.5 rounded-xl px-2.5 py-2 text-[12px] font-semibold text-on-surface-variant transition-colors hover:bg-surface-container/60 hover:text-on-surface"
-          >
-            <LifeBuoy className="h-3.5 w-3.5" />
-            <span className="flex-1">Need help?</span>
-            <ChevronRight className="h-3 w-3 text-outline" />
-          </Link>
+        {/* Right pane */}
+        <div className="min-w-0 rounded-2xl border border-outline-variant/60 bg-surface-container-lowest shadow-ambient-sm">
+          <header className="border-b border-outline-variant/60 px-7 py-6">
+            <p className="eyebrow">{current.eyebrow}</p>
+            <h2 className="mt-1 font-display text-[24px] font-semibold leading-tight tracking-[-0.02em] text-on-surface">
+              {current.label}
+            </h2>
+            <p className="mt-1.5 text-[13px] text-on-surface-variant">{current.description}</p>
+          </header>
+          <div className="px-7 py-7">{children}</div>
         </div>
-      </aside>
-
-      {/* ─── Right pane ─── */}
-      <div
-        className="min-w-0 rounded-2xl border border-outline-variant/40 bg-surface-container-lowest shadow-[0_12px_28px_-12px_rgba(0,23,54,0.10)]"
-        style={{ flex: '1 1 0%' }}
-      >
-        <header className="border-b border-outline-variant/40 px-7 py-6">
-          <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-secondary">
-            {current.eyebrow}
-          </p>
-          <h1 className="mt-1 font-display text-[26px] font-semibold leading-tight tracking-[-0.02em]">
-            {current.title}
-          </h1>
-          <p className="mt-1.5 text-[13px] text-on-surface-variant">{current.summary}</p>
-        </header>
-        <div className="px-7 py-7">{children}</div>
       </div>
     </div>
   );

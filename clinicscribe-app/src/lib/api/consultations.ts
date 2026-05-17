@@ -152,6 +152,64 @@ export async function createConsultation(
   return data as Consultation;
 }
 
+export interface ScheduleAppointmentInput {
+  clinicId: string;
+  clinicianId: string;
+  patientId: string;
+  consultationType: string;
+  /** ISO 8601 datetime when the consult should start. */
+  scheduledFor: string;
+  /** Optional duration in minutes — persisted as `duration_seconds`. */
+  durationMinutes?: number;
+  reasonForVisit?: string;
+  templateKey?: string | null;
+}
+
+/**
+ * Books a future appointment as a `scheduled` consultation row. The row is
+ * the same `consultations` table we use for in-progress work — picking it up
+ * later just transitions its status. Older DB envs that don't accept the
+ * `scheduled` status fall back to inserting with no status (which Supabase
+ * will default-fill).
+ */
+export async function createScheduledConsultation(input: ScheduleAppointmentInput): Promise<Consultation> {
+  const payload: Record<string, unknown> = {
+    clinic_id: input.clinicId,
+    clinician_id: input.clinicianId,
+    patient_id: input.patientId,
+    consultation_type: input.consultationType,
+    template_key: input.templateKey ?? null,
+    status: 'scheduled' as ConsultationStatus,
+    scheduled_for: input.scheduledFor,
+    reason_for_visit: input.reasonForVisit ?? input.consultationType,
+    source: 'manual',
+    duration_seconds: input.durationMinutes ? input.durationMinutes * 60 : null,
+  };
+
+  let { data, error } = await supabase()
+    .from('consultations')
+    .insert(payload)
+    .select('*, patient:patients(*), clinician:profiles(*)')
+    .single();
+
+  // Older environments may not accept either the `scheduled` status enum or
+  // the `duration_seconds` column. Retry with a leaner payload before giving up.
+  if (error) {
+    delete payload.duration_seconds;
+    const retry = await supabase()
+      .from('consultations')
+      .insert(payload)
+      .select('*, patient:patients(*), clinician:profiles(*)')
+      .single();
+    data = retry.data;
+    error = retry.error;
+  }
+
+  if (error) throw error;
+  await touchPatientLastAppointment(input.patientId);
+  return data as Consultation;
+}
+
 export async function updateConsultationStatus(id: string, status: ConsultationStatus) {
   const updates: Record<string, unknown> = { status, updated_at: new Date().toISOString() };
   if (status === 'closed' || status === 'exported') updates.completed_at = new Date().toISOString();

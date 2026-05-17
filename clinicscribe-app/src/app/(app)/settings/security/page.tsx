@@ -3,11 +3,19 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
-import { Card, CardTitle } from '@/components/ui/Card';
 import { Input } from '@/components/ui/Input';
+import { SettingsSection, SettingsRow } from '@/components/settings/SettingsRow';
 import { useUIStore } from '@/lib/stores/ui-store';
 import { createClient } from '@/lib/supabase/client';
-import { KeyRound, QrCode, ShieldCheck, ShieldOff, Trash2 } from 'lucide-react';
+import {
+  Globe,
+  KeyRound,
+  Laptop,
+  QrCode,
+  ShieldCheck,
+  ShieldOff,
+  Trash2,
+} from 'lucide-react';
 
 type MfaState = 'loading' | 'disabled' | 'enrolling' | 'verifying' | 'enabled';
 
@@ -15,6 +23,13 @@ interface TotpFactor {
   id: string;
   friendly_name?: string;
   status: string;
+}
+
+interface SessionRow {
+  id: string;
+  label: string;
+  meta: string;
+  current: boolean;
 }
 
 export default function SecurityPage() {
@@ -27,13 +42,13 @@ export default function SecurityPage() {
   const [verifyCode, setVerifyCode] = useState('');
   const [verifying, setVerifying] = useState(false);
   const [unenrolling, setUnenrolling] = useState(false);
+  const [sessions, setSessions] = useState<SessionRow[]>([]);
 
   const loadFactors = useCallback(async () => {
     try {
       const supabase = createClient();
       const { data, error } = await supabase.auth.mfa.listFactors();
       if (error) throw error;
-
       const verified = (data.totp || []).filter((f) => f.status === 'verified');
       setFactors(verified as TotpFactor[]);
       setMfaState(verified.length > 0 ? 'enabled' : 'disabled');
@@ -47,6 +62,43 @@ export default function SecurityPage() {
     loadFactors();
   }, [loadFactors]);
 
+  useEffect(() => {
+    async function loadSessions() {
+      try {
+        const supabase = createClient();
+        const { data } = await supabase.auth.getUser();
+        const ua = typeof navigator !== 'undefined' ? navigator.userAgent : '';
+        const browser = /Chrome\//.test(ua)
+          ? 'Chrome'
+          : /Safari\//.test(ua)
+            ? 'Safari'
+            : /Firefox\//.test(ua)
+              ? 'Firefox'
+              : 'Browser';
+        const platform = /Mac/.test(ua) ? 'macOS' : /Windows/.test(ua) ? 'Windows' : /Linux/.test(ua) ? 'Linux' : 'Device';
+        const lastSignIn = data.user?.last_sign_in_at
+          ? new Date(data.user.last_sign_in_at).toLocaleString('en-AU', {
+              day: 'numeric',
+              month: 'short',
+              hour: 'numeric',
+              minute: '2-digit',
+            })
+          : 'Just now';
+        setSessions([
+          {
+            id: 'current',
+            label: `${browser} on ${platform}`,
+            meta: `This device · last activity ${lastSignIn}`,
+            current: true,
+          },
+        ]);
+      } catch {
+        setSessions([]);
+      }
+    }
+    loadSessions();
+  }, []);
+
   async function handleEnroll() {
     try {
       const supabase = createClient();
@@ -55,16 +107,12 @@ export default function SecurityPage() {
         friendlyName: 'Authenticator app',
       });
       if (error) throw error;
-
       setQrCode(data.totp.qr_code);
       setSecret(data.totp.secret);
       setPendingFactorId(data.id);
       setMfaState('enrolling');
     } catch (err) {
-      addToast(
-        err instanceof Error ? err.message : 'Failed to start MFA enrollment',
-        'error'
-      );
+      addToast(err instanceof Error ? err.message : 'Failed to start MFA enrollment', 'error');
     }
   }
 
@@ -91,10 +139,7 @@ export default function SecurityPage() {
       setVerifyCode('');
       await loadFactors();
     } catch (err) {
-      addToast(
-        err instanceof Error ? err.message : 'Verification failed — check your code',
-        'error'
-      );
+      addToast(err instanceof Error ? err.message : 'Verification failed — check your code', 'error');
     } finally {
       setVerifying(false);
     }
@@ -109,85 +154,76 @@ export default function SecurityPage() {
       addToast('MFA disabled', 'success');
       await loadFactors();
     } catch (err) {
-      addToast(
-        err instanceof Error ? err.message : 'Failed to disable MFA',
-        'error'
-      );
+      addToast(err instanceof Error ? err.message : 'Failed to disable MFA', 'error');
     } finally {
       setUnenrolling(false);
     }
   }
 
+  async function handleSignOutAll() {
+    const supabase = createClient();
+    await supabase.auth.signOut();
+    window.location.href = '/login';
+  }
+
   return (
     <div className="space-y-6">
-      <Card className="overflow-hidden p-0">
-        <div className="border-b border-outline-variant/40 px-6 py-5">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-secondary/10 text-secondary">
-                <KeyRound className="h-5 w-5" />
-              </div>
-              <div>
-                <CardTitle className="text-base">Multi-Factor Authentication</CardTitle>
-                <p className="mt-0.5 text-sm text-on-surface-variant">
-                  Add a second layer of protection to your account.
-                </p>
-              </div>
-            </div>
-            {mfaState === 'enabled' ? (
-              <Badge variant="success">Enabled</Badge>
-            ) : mfaState === 'disabled' ? (
-              <Badge variant="default">Not enabled</Badge>
-            ) : null}
-          </div>
-        </div>
-
-        <div className="px-6 py-6">
-          {mfaState === 'loading' ? (
-            <div className="h-20 flex items-center justify-center text-sm text-on-surface-variant">
-              Loading security settings...
-            </div>
+      <SettingsSection
+        eyebrow="Two-factor"
+        title="Multi-factor authentication"
+        description="Require a one-time code from your authenticator app on sign-in."
+        trailing={
+          mfaState === 'enabled' ? (
+            <Badge variant="success">Enabled</Badge>
           ) : mfaState === 'disabled' ? (
-            <div className="flex flex-col items-center gap-4 py-6">
+            <Badge variant="default">Not enabled</Badge>
+          ) : null
+        }
+      >
+        <div className="px-6 py-6">
+          {mfaState === 'loading' && (
+            <div className="flex h-20 items-center justify-center text-sm text-on-surface-variant">
+              Loading security settings…
+            </div>
+          )}
+          {mfaState === 'disabled' && (
+            <div className="flex flex-col items-center gap-4 py-4 text-center">
               <ShieldOff className="h-12 w-12 text-on-surface-variant/40" />
-              <p className="text-sm text-on-surface-variant text-center max-w-md">
-                MFA is not enabled. Enable it to require a verification code from your
-                authenticator app each time you sign in.
+              <p className="max-w-md text-sm text-on-surface-variant">
+                MFA is not enabled. Enable it to require a verification code from your authenticator
+                app each time you sign in.
               </p>
               <Button onClick={handleEnroll}>
                 <ShieldCheck className="h-4 w-4" />
                 Enable MFA
               </Button>
             </div>
-          ) : mfaState === 'enrolling' ? (
+          )}
+          {mfaState === 'enrolling' && (
             <div className="space-y-6">
               <div className="flex flex-col items-center gap-4">
                 <p className="text-sm font-medium text-on-surface">
                   Scan this QR code with your authenticator app
                 </p>
                 {qrCode ? (
-                  <div className="rounded-xl border border-outline-variant/30 bg-white p-4">
-                    <img
-                      src={qrCode}
-                      alt="MFA QR Code"
-                      className="h-48 w-48"
-                    />
+                  <div className="rounded-xl border border-outline-variant/40 bg-white p-4">
+                    <img src={qrCode} alt="MFA QR Code" className="h-48 w-48" />
                   </div>
                 ) : (
                   <div className="flex h-48 w-48 items-center justify-center rounded-xl bg-surface-container-low">
                     <QrCode className="h-12 w-12 text-on-surface-variant/30" />
                   </div>
                 )}
-                {secret ? (
+                {secret && (
                   <div className="rounded-lg bg-surface-container-low px-4 py-3 text-center">
-                    <p className="text-xs text-on-surface-variant mb-1">
+                    <p className="mb-1 text-xs text-on-surface-variant">
                       Or enter this code manually:
                     </p>
-                    <p className="font-mono text-sm font-semibold text-on-surface tracking-wider select-all">
+                    <p className="select-all font-mono text-sm font-semibold tracking-wider text-on-surface">
                       {secret}
                     </p>
                   </div>
-                ) : null}
+                )}
               </div>
               <div className="flex flex-col items-center gap-3">
                 <p className="text-sm text-on-surface-variant">
@@ -196,19 +232,13 @@ export default function SecurityPage() {
                 <Input
                   className="max-w-xs text-center font-mono text-lg tracking-[0.3em]"
                   value={verifyCode}
-                  onChange={(e) =>
-                    setVerifyCode(e.target.value.replace(/\D/g, '').slice(0, 6))
-                  }
+                  onChange={(e) => setVerifyCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
                   placeholder="000000"
                   maxLength={6}
                   autoFocus
                 />
                 <div className="flex items-center gap-3">
-                  <Button
-                    onClick={handleVerify}
-                    disabled={verifyCode.length !== 6}
-                    isLoading={verifying}
-                  >
+                  <Button onClick={handleVerify} disabled={verifyCode.length !== 6} isLoading={verifying}>
                     Verify and enable
                   </Button>
                   <Button
@@ -226,8 +256,9 @@ export default function SecurityPage() {
                 </div>
               </div>
             </div>
-          ) : mfaState === 'enabled' ? (
-            <div className="space-y-4">
+          )}
+          {mfaState === 'enabled' && (
+            <div className="space-y-3">
               {factors.map((factor) => (
                 <div
                   key={factor.id}
@@ -242,21 +273,60 @@ export default function SecurityPage() {
                       <p className="text-xs text-on-surface-variant">TOTP · Active</p>
                     </div>
                   </div>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleUnenroll(factor.id)}
-                    isLoading={unenrolling}
-                  >
+                  <Button variant="outline" size="sm" onClick={() => handleUnenroll(factor.id)} isLoading={unenrolling}>
                     <Trash2 className="h-3.5 w-3.5" />
                     Disable
                   </Button>
                 </div>
               ))}
             </div>
-          ) : null}
+          )}
         </div>
-      </Card>
+      </SettingsSection>
+
+      <SettingsSection
+        eyebrow="Devices"
+        title="Active sessions"
+        description="Devices signed in to your account."
+        trailing={
+          <Button size="sm" variant="outline" onClick={handleSignOutAll}>
+            Sign out all
+          </Button>
+        }
+      >
+        {sessions.length === 0 ? (
+          <div className="px-6 py-8 text-center text-sm text-on-surface-variant">
+            No active sessions detected.
+          </div>
+        ) : (
+          sessions.map((s, i) => (
+            <SettingsRow
+              key={s.id}
+              icon={s.label.includes('Mac') || s.label.includes('Windows') || s.label.includes('Linux') ? Laptop : Globe}
+              label={s.label}
+              description={s.meta}
+              control={
+                s.current ? (
+                  <Badge variant="info">Current</Badge>
+                ) : (
+                  <Button size="sm" variant="outline">Sign out</Button>
+                )
+              }
+              last={i === sessions.length - 1}
+            />
+          ))
+        )}
+      </SettingsSection>
+
+      <SettingsSection eyebrow="Single sign-on" title="SSO & access" description="Reserved for enterprise plans.">
+        <SettingsRow
+          icon={KeyRound}
+          label="SAML / SCIM"
+          description="Provision and authenticate users via your identity provider."
+          control={<Badge variant="default">Enterprise only</Badge>}
+          last
+        />
+      </SettingsSection>
     </div>
   );
 }
