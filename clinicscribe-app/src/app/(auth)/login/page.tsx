@@ -97,7 +97,10 @@ function LoginForm() {
   const searchParams = useSearchParams();
   const returnTo = searchParams.get('returnTo') || '/dashboard';
   const justConfirmed = searchParams.get('confirmed') === '1';
-  const [form, setForm] = useState<LoginInput>({ email: '', password: '' });
+  const [form, setForm] = useState<LoginInput>({
+    email: searchParams.get('email') || '',
+    password: '',
+  });
   const [errors, setErrors] = useState<Partial<Record<keyof LoginInput, string>>>({});
   const [serverError, setServerError] = useState('');
   const [loading, setLoading] = useState(false);

@@ -2,7 +2,7 @@
 
 import { Suspense, useEffect, useState } from 'react';
 import Link from 'next/link';
-import { useSearchParams } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { AnimatePresence, motion } from 'framer-motion';
 import { ArrowRight, Check, Eye, EyeOff, Mail } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
@@ -34,6 +34,7 @@ export default function SignupPage() {
 }
 
 function SignupInner() {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const inviteToken = searchParams.get('token');
   // `/r/<slug>` landing forwards these so the signup form can render the
@@ -124,7 +125,7 @@ function SignupInner() {
     const cookieRef = readCookie('miraa_ref');
     const refSlug = referralSlug ?? cookieRef ?? null;
 
-    const { error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email: form.email,
       password: form.password,
       options: {
@@ -144,6 +145,16 @@ function SignupInner() {
     if (error) {
       setServerError(error.message);
       setLoading(false);
+      return;
+    }
+
+    const emailAlreadyConfirmed = Boolean(
+      data.user?.email_confirmed_at ??
+      (data.user as { confirmed_at?: string | null } | null)?.confirmed_at
+    );
+    if (data.session || emailAlreadyConfirmed) {
+      router.push('/onboarding');
+      router.refresh();
       return;
     }
 
@@ -499,6 +510,9 @@ function VerifyEmailSuccess({
   resentAt,
   resendError,
 }: VerifyEmailSuccessProps) {
+  const loginHref = `/login?email=${encodeURIComponent(email)}`;
+  const forgotPasswordHref = `/forgot-password?email=${encodeURIComponent(email)}`;
+
   return (
     <div className="relative">
       {/* Animated envelope */}
@@ -522,23 +536,24 @@ function VerifyEmailSuccess({
         </div>
       </div>
 
-      <div className="mt-6 mb-1.5 inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-[0.14em] text-secondary">
+      <div className="mb-1.5 mt-6 inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-[0.14em] text-secondary">
         <span className="h-1 w-1 rounded-full bg-secondary" />
-        Account created
+        Almost there
       </div>
 
       <h2 className="m-0 font-display text-4xl font-semibold leading-[1.05] tracking-[-0.03em] text-on-surface">
-        Confirm your <span className="italic text-secondary">email.</span>
+        Check your <span className="italic text-secondary">inbox.</span>
       </h2>
       <p className="mt-3 max-w-[520px] text-[15px] leading-relaxed text-on-surface-variant">
-        We sent a verification link to{' '}
-        <span className="font-semibold text-on-surface">{email}</span>. Click it
-        to activate your account, then sign in to set up your workspace.
+        If this is your first time using{' '}
+        <span className="font-semibold text-on-surface">{email}</span> with Miraa,
+        a verification link should arrive shortly. If you&apos;ve used this address
+        before, sign in or reset your password instead.
       </p>
 
       <div className="mt-6 rounded-2xl border border-outline-variant/40 bg-surface-container-lowest p-5">
         <p className="text-[12px] font-bold uppercase tracking-[0.12em] text-outline">
-          What happens next
+          First time with this email
         </p>
         <ol className="mt-3 space-y-2.5 text-[14px] leading-relaxed text-on-surface">
           <li className="flex items-start gap-3">
@@ -546,8 +561,8 @@ function VerifyEmailSuccess({
               1
             </span>
             <span>
-              <strong className="font-semibold">Open your inbox.</strong> The
-              email is from <span className="font-mono text-[12.5px]">no-reply@miraa.com.au</span>. Check spam if you don&apos;t see it.
+              <strong className="font-semibold">Open your inbox.</strong> Give it
+              a minute, then check spam or promotions if nothing lands.
             </span>
           </li>
           <li className="flex items-start gap-3">
@@ -569,36 +584,65 @@ function VerifyEmailSuccess({
             </span>
           </li>
         </ol>
+
+        <div className="mt-5 flex flex-wrap items-center gap-x-5 gap-y-2 text-[14px]">
+          <button
+            type="button"
+            onClick={onResend}
+            disabled={resending}
+            className="group inline-flex items-center gap-1.5 font-semibold text-secondary transition-colors hover:text-secondary/80 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            {resending ? (
+              <>
+                <span className="h-3 w-3 animate-spin rounded-full border-[1.5px] border-secondary border-t-transparent" />
+                Requesting…
+              </>
+            ) : resentAt ? (
+              <>
+                <Check className="h-3.5 w-3.5" />
+                Request received
+              </>
+            ) : (
+              <>Request another email</>
+            )}
+          </button>
+        </div>
+      </div>
+
+      <div className="mt-4 rounded-2xl border border-secondary/18 bg-secondary/6 p-5">
+        <p className="text-[12px] font-bold uppercase tracking-[0.12em] text-secondary">
+          Seen this address before?
+        </p>
+        <p className="mt-2 max-w-[560px] text-[14px] leading-relaxed text-on-surface-variant">
+          Supabase can mask existing accounts during signup, so a fresh
+          verification email may never arrive for an address that&apos;s already
+          confirmed. In that case, go straight to sign in or reset your password.
+        </p>
+
+        <div className="mt-4 flex flex-wrap items-center gap-3 text-[14px]">
+          <Link
+            href={loginHref}
+            className="inline-flex items-center gap-1.5 rounded-xl bg-on-surface px-5 py-2.5 font-semibold text-surface transition-colors hover:bg-on-surface/90"
+          >
+            Sign in <ArrowRight className="h-4 w-4" />
+          </Link>
+
+          <Link
+            href={forgotPasswordHref}
+            className="inline-flex items-center gap-1.5 rounded-xl border border-outline-variant bg-surface-container-lowest px-5 py-2.5 font-semibold text-on-surface transition-colors hover:border-secondary/30 hover:bg-secondary/10 hover:text-secondary"
+          >
+            Reset password
+          </Link>
+        </div>
       </div>
 
       <div className="mt-6 flex flex-wrap items-center gap-x-5 gap-y-2 text-[14px]">
         <Link
-          href="/login"
-          className="inline-flex items-center gap-1.5 rounded-xl bg-on-surface px-5 py-2.5 font-semibold text-surface transition-colors hover:bg-on-surface/90"
+          href={loginHref}
+          className="font-semibold text-secondary transition-colors hover:text-secondary/80"
         >
-          Sign in <ArrowRight className="h-4 w-4" />
+          Back to sign in
         </Link>
-
-        <button
-          type="button"
-          onClick={onResend}
-          disabled={resending}
-          className="group inline-flex items-center gap-1.5 font-semibold text-secondary transition-colors hover:text-secondary/80 disabled:cursor-not-allowed disabled:opacity-50"
-        >
-          {resending ? (
-            <>
-              <span className="h-3 w-3 animate-spin rounded-full border-[1.5px] border-secondary border-t-transparent" />
-              Sending…
-            </>
-          ) : resentAt ? (
-            <>
-              <Check className="h-3.5 w-3.5" />
-              Sent again
-            </>
-          ) : (
-            <>Resend email</>
-          )}
-        </button>
       </div>
 
       {resendError && (

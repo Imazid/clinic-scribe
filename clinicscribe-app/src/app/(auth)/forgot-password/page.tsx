@@ -1,14 +1,24 @@
 'use client';
 
-import { useState } from 'react';
+import { Suspense, useState } from 'react';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { ArrowLeft } from 'lucide-react';
 
 export default function ForgotPasswordPage() {
-  const [email, setEmail] = useState('');
+  return (
+    <Suspense fallback={null}>
+      <ForgotPasswordInner />
+    </Suspense>
+  );
+}
+
+function ForgotPasswordInner() {
+  const searchParams = useSearchParams();
+  const [email, setEmail] = useState(searchParams.get('email') || '');
   const [sent, setSent] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
